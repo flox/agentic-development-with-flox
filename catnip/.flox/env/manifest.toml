@@ -1,0 +1,200 @@
+## Flox Environment Manifest -----------------------------------------
+##
+## Catnip - Multi-Agent Agentic Development Environment
+##
+## This environment provides Catnip for running multiple Claude Code
+## sessions in parallel with git worktree management, web UI, and
+## container isolation.
+##
+## -------------------------------------------------------------------
+version = 1
+
+## Install Packages --------------------------------------------------
+[install]
+# Core: Catnip for multi-agent orchestration
+catnip.pkg-path = "flox/catnip"
+catnip.systems = ["x86_64-linux", "x86_64-darwin"]
+
+# Git tools
+git.pkg-path = "gitFull"  # Full git with all features
+gh.pkg-path = "gh"        # GitHub CLI for authentication and repo access
+
+## Environment Variables ---------------------------------------------
+[vars]
+# Pass API keys from host environment
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY:-}"
+OPENAI_API_KEY = "${OPENAI_API_KEY:-}"
+
+# Catnip configuration
+CATNIP_HOST = "${CATNIP_HOST:-127.0.0.1}"  # Bind address (use 0.0.0.0 for network access)
+CATNIP_PORT = "6369"
+
+# Colima resource allocation (increase for Catnip)
+COLIMA_CPU = "4"
+COLIMA_MEMORY = "4"
+
+# Language version defaults (override at runtime if needed)
+CATNIP_PYTHON_VERSION = "${CATNIP_PYTHON_VERSION:-3.12}"
+CATNIP_NODE_VERSION = "${CATNIP_NODE_VERSION:-20.11.0}"
+CATNIP_GO_VERSION = "${CATNIP_GO_VERSION:-1.22}"
+CATNIP_RUST_VERSION = "${CATNIP_RUST_VERSION:-1.75.0}"
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+setup_catnip_env() {
+  cd "$FLOX_ENV_PROJECT"
+
+  # Check if a container runtime is available
+  if ! docker ps >/dev/null 2>&1; then
+    echo "ℹ️  No container runtime detected" >&2
+    echo "" >&2
+    echo "   Catnip requires a container runtime (Docker/Colima/Podman)" >&2
+    echo "" >&2
+    echo "   Options:" >&2
+    echo "   1. Start Colima (included): flox activate -s" >&2
+    echo "   2. Use existing Docker:     sudo systemctl start docker (Linux)" >&2
+    echo "   3. Use Docker Desktop:      Start Docker Desktop (macOS)" >&2
+    echo "" >&2
+  else
+    echo "✅ Container runtime ready" >&2
+  fi
+
+  echo "🐱 Catnip environment ready!" >&2
+  echo "" >&2
+  echo "Quick start:" >&2
+  echo "  catnip-start              # Launch Catnip with API keys" >&2
+  echo "  catnip-start-dind         # Launch with Docker-in-Docker" >&2
+  echo "" >&2
+  echo "With Colima runtime:" >&2
+  echo "  flox activate -s          # Start Colima service" >&2
+  echo "  catnip-start              # Then launch Catnip" >&2
+  echo "" >&2
+  echo "Network access:" >&2
+  echo "  CATNIP_HOST=0.0.0.0 flox activate  # Bind to all interfaces" >&2
+  echo "" >&2
+  echo "Access: http://$CATNIP_HOST:$CATNIP_PORT" >&2
+}
+setup_catnip_env
+'''
+
+## Profile script ----------------------------------------------------
+[profile]
+common = '''
+# Setup Catnip SSH keys in Flox-managed location
+# This ensures SSH keys are stored in a portable location that works
+# with different container runtime configurations
+setup_catnip_ssh_keys() {
+  local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
+  mkdir -p "$catnip_ssh_dir"
+
+  # Generate keys in Flox cache if they don't exist
+  if [ ! -f "$catnip_ssh_dir/catnip_remote" ]; then
+    ssh-keygen -t ed25519 -f "$catnip_ssh_dir/catnip_remote" -N "" -C "catnip@flox" >/dev/null 2>&1
+  fi
+
+  # Ensure ~/.ssh directory exists
+  mkdir -p ~/.ssh
+
+  # Copy keys to ~/.ssh where Catnip expects them
+  # Note: Catnip hardcodes ~/.ssh/catnip_remote, so we must place files there
+  # If your ~/.ssh is a symlink to a location outside $HOME, you may need to:
+  #   1. Mount that location in your container runtime (e.g., Colima mounts config)
+  #   2. Or make ~/.ssh a regular directory instead of a symlink
+  # See CATNIP_SETUP.md for detailed troubleshooting
+  cp -f "$catnip_ssh_dir/catnip_remote" ~/.ssh/catnip_remote
+  cp -f "$catnip_ssh_dir/catnip_remote.pub" ~/.ssh/catnip_remote.pub
+  chmod 600 ~/.ssh/catnip_remote
+  chmod 644 ~/.ssh/catnip_remote.pub
+}
+
+# Convenient launcher functions
+catnip-start() {
+  setup_catnip_ssh_keys
+
+  # Check for API keys
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo "⚠️  Warning: ANTHROPIC_API_KEY not set" >&2
+    echo "Set it with: export ANTHROPIC_API_KEY=your-key" >&2
+    echo "Or: ANTHROPIC_API_KEY=your-key flox activate" >&2
+  fi
+
+  # Check for GitHub CLI authentication (for private repo access)
+  if ! gh auth status >/dev/null 2>&1; then
+    echo "" >&2
+    echo "ℹ️  GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
+    echo "To enable private repo access: gh auth login" >&2
+    echo "" >&2
+  fi
+
+  local extra_args=()
+  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
+  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
+  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
+
+  catnip run "${extra_args[@]}" "$@"
+}
+
+# Launch with Docker-in-Docker support
+catnip-start-dind() {
+  setup_catnip_ssh_keys
+
+  # Check for API keys
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo "⚠️  Warning: ANTHROPIC_API_KEY not set" >&2
+  fi
+
+  # Check for GitHub CLI authentication (for private repo access)
+  if ! gh auth status >/dev/null 2>&1; then
+    echo "" >&2
+    echo "ℹ️  GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
+    echo "To enable private repo access: gh auth login" >&2
+    echo "" >&2
+  fi
+
+  local extra_args=()
+  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
+  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
+  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
+
+  catnip run --dind "${extra_args[@]}" "$@"
+}
+
+# Quick status check
+catnip-info() {
+  echo "Catnip Configuration:"
+  echo "  Host: $CATNIP_HOST"
+  echo "  Port: $CATNIP_PORT"
+  echo "  Access: http://$CATNIP_HOST:$CATNIP_PORT"
+  echo "  Python: $CATNIP_PYTHON_VERSION"
+  echo "  Node: $CATNIP_NODE_VERSION"
+  echo "  Go: $CATNIP_GO_VERSION"
+  echo "  Rust: $CATNIP_RUST_VERSION"
+  echo ""
+  echo "API Keys:"
+  [ -n "$ANTHROPIC_API_KEY" ] && echo "  ✓ ANTHROPIC_API_KEY set" || echo "  ✗ ANTHROPIC_API_KEY missing"
+  [ -n "$OPENAI_API_KEY" ] && echo "  ✓ OPENAI_API_KEY set" || echo "  ✗ OPENAI_API_KEY missing"
+  echo ""
+  echo "GitHub Access:"
+  if gh auth status >/dev/null 2>&1; then
+    echo "  ✓ GitHub CLI authenticated"
+  else
+    echo "  ✗ GitHub CLI not authenticated (run: gh auth login)"
+  fi
+}
+'''
+
+## Include ----------------------------------------------------------
+## Compose Colima container runtime for users without Docker Desktop
+## ------------------------------------------------------------------
+[include]
+environments = [
+    { remote = "barstoolbluz/colima-headless" }
+]
+
+## Other Environment Options -----------------------------------------
+[options]
+systems = [
+  "x86_64-darwin",
+  "x86_64-linux",
+]
