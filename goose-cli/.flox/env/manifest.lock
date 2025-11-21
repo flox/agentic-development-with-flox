@@ -1,0 +1,142 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "goose-cli": {
+        "pkg-path": "flox/goose-cli"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🪿 Goose - Local AI Agent for Engineering Tasks\"\necho \"\"\necho \"An open-source, extensible AI agent that automates engineering tasks.\"\necho \"\"\necho \"First-time setup:\"\necho \"  goose configure             # Configure LLM provider and API keys\"\necho \"                              # Choose from OpenAI, Anthropic, Gemini, Azure, Bedrock\"\necho \"\"\necho \"Usage:\"\necho \"  goose session               # Start interactive session\"\necho \"  goose session -r            # Resume previous session\"\necho \"  goose web --open            # Launch web interface\"\necho \"  goose configure             # Update configuration or add extensions\"\necho \"\"\necho \"Features:\"\necho \"  • Autonomous task execution (build, debug, test)\"\necho \"  • Multi-model support (optimize for cost and performance)\"\necho \"  • MCP server integration (extend with custom tools)\"\necho \"  • Extensions system (add capabilities)\"\necho \"\"\necho \"From Block • Open Source\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "goose-cli",
+      "broken": false,
+      "derivation": "/nix/store/3fcy0a98db1c2yn5a2575q6x3r27yach-goose-1.15.0.drv",
+      "description": "An AI agent that automates complex development tasks from start to finish",
+      "install_id": "goose-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=59c8723371afed50d50e3ac4fecd34a95caddfad",
+      "name": "goose-1.15.0",
+      "pname": "goose",
+      "rev": "59c8723371afed50d50e3ac4fecd34a95caddfad",
+      "rev_count": 16,
+      "rev_date": "2025-11-21T04:56:40Z",
+      "scrape_date": "2025-11-21T05:04:10.876178348Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.15.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/aaqgb6b4s7sxf9931jc5yarllfqkgxzv-goose-1.15.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "goose-cli",
+      "broken": false,
+      "derivation": "/nix/store/fqx3vl8x6vyjbdag78r97pr22d3hq76d-goose-1.15.0.drv",
+      "description": "An AI agent that automates complex development tasks from start to finish",
+      "install_id": "goose-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=5810080c693a60d2420158ef84c0b55f9e6916f1",
+      "name": "goose-1.15.0",
+      "pname": "goose",
+      "rev": "5810080c693a60d2420158ef84c0b55f9e6916f1",
+      "rev_count": 18,
+      "rev_date": "2025-11-21T05:02:30Z",
+      "scrape_date": "2025-11-21T05:04:10.876192048Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.15.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/xwdwdpdwpzqgna3n5a5lbpr0z1zkx0cx-goose-1.15.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "goose-cli",
+      "broken": false,
+      "derivation": "/nix/store/2hspfgvsgw1cl7gcw4h35h5cds0vkhdy-goose-1.15.0.drv",
+      "description": "An AI agent that automates complex development tasks from start to finish",
+      "install_id": "goose-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=bc16da6d7057fce4f2783888c2b5570327ecff19",
+      "name": "goose-1.15.0",
+      "pname": "goose",
+      "rev": "bc16da6d7057fce4f2783888c2b5570327ecff19",
+      "rev_count": 17,
+      "rev_date": "2025-11-21T04:58:45Z",
+      "scrape_date": "2025-11-21T05:04:10.876195068Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.15.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/his7v3pnwl7jfyypqdbxw7ly31zi8ss5-goose-1.15.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "goose-cli",
+      "broken": false,
+      "derivation": "/nix/store/8qx8v3njdlk5m0f9lqw8wzlxma6z92xg-goose-1.15.0.drv",
+      "description": "An AI agent that automates complex development tasks from start to finish",
+      "install_id": "goose-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=c3d6e34e9d6d3777a1d71f55c3cb0032f3673c35",
+      "name": "goose-1.15.0",
+      "pname": "goose",
+      "rev": "c3d6e34e9d6d3777a1d71f55c3cb0032f3673c35",
+      "rev_count": 15,
+      "rev_date": "2025-11-21T04:54:19Z",
+      "scrape_date": "2025-11-21T05:04:10.876196655Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.15.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/111yqwn79af3piw9ayrpcp9im4nqh7i9-goose-1.15.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

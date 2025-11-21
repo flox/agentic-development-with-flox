@@ -1,0 +1,98 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "eca": {
+        "pkg-path": "flox/eca",
+        "pkg-group": "eca",
+        "systems": [
+          "aarch64-darwin",
+          "x86_64-linux"
+        ]
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 ECA - Editor Code Assistant\"\necho \"\"\necho \"Free, open-source AI pair programming for your favorite editor.\"\necho \"\"\necho \"First-time setup:\"\necho \"  eca-config                  # Configure AI model and API keys\"\necho \"  eca-init-context            # Create project context file\"\necho \"  flox activate -s            # Start ECA service\"\necho \"\"\necho \"Service management:\"\necho \"  flox activate -s            # Start ECA service\"\necho \"  flox services status        # Check service status\"\necho \"  flox services logs eca      # View ECA logs\"\necho \"  flox services restart eca   # Restart ECA\"\necho \"\"\necho \"Helper commands:\"\necho \"  eca-config                  # Edit ECA configuration\"\necho \"  eca-init-context            # Create project context template\"\necho \"\"\necho \"Features:\"\necho \"  • Multi-editor support (Emacs, VS Code, Vim, IntelliJ)\"\necho \"  • Model-agnostic (OpenAI, Anthropic, Copilot, Ollama)\"\necho \"  • Agentic capabilities with native tools and MCPs\"\necho \"  • Layer Ollama: flox activate -r flox/ollama\"\necho \"\"\necho \"Open Source • Apache-2.0 License\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Create project context template\neca-init-context() {\n    if [[ -f .eca/context.md ]]; then\n        echo \"⚠️  .eca/context.md already exists\"\n        echo \"Edit it directly or remove it first\"\n        return 1\n    fi\n\n    mkdir -p .eca\n    cat > .eca/context.md <<'EOF'\n# Project Context\n\n## Overview\n[Brief project description]\n\n## Architecture\n[System design and components]\n\n## Coding Standards\n[Style guide, patterns, conventions]\n\n## Dependencies\n[Key libraries and frameworks]\n\n## Notes\n[Additional context for AI assistance]\nEOF\n    echo \"✅ Created .eca/context.md\"\n    echo \"   Edit with: ${EDITOR:-nano} .eca/context.md\"\n}\n\n# Helper: Edit ECA configuration\neca-config() {\n    local config_file=\"${HOME}/.config/eca/config.json\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create config directory if it doesn't exist\n    mkdir -p \"$(dirname \"$config_file\")\"\n\n    # Create template config if it doesn't exist\n    if [[ ! -f \"$config_file\" ]]; then\n        cat > \"$config_file\" <<'EOF'\n{\n  \"_comment\": \"ECA Configuration - https://eca.dev/configuration\",\n\n  \"defaultBehavior\": \"agent\",\n\n  \"toolCall\": {\n    \"approval\": {\n      \"byDefault\": \"ask\",\n      \"allow\": {\n        \"eca__read_file\": {},\n        \"eca__list_directory\": {}\n      }\n    }\n  },\n\n  \"_comment_providers\": \"Uncomment and configure your preferred provider below\",\n\n  \"_provider_openai\": {\n    \"openai\": {\n      \"keyEnv\": \"OPENAI_API_KEY\",\n      \"models\": {\n        \"gpt-4\": {},\n        \"gpt-4o\": {},\n        \"o1\": {}\n      }\n    }\n  },\n\n  \"_provider_anthropic\": {\n    \"anthropic\": {\n      \"keyEnv\": \"ANTHROPIC_API_KEY\",\n      \"models\": {\n        \"claude-sonnet-4-5\": {},\n        \"claude-opus-4\": {}\n      }\n    }\n  },\n\n  \"_provider_ollama\": {\n    \"_comment\": \"Requires: flox activate -r flox/ollama\",\n    \"ollama\": {\n      \"url\": \"http://localhost:11434\",\n      \"models\": {\n        \"qwen2.5-coder:7b\": {},\n        \"qwen2.5-coder:32b\": {},\n        \"deepseek-coder-v2\": {},\n        \"codellama\": {}\n      }\n    }\n  }\n}\nEOF\n        echo \"✅ Created config template at $config_file\"\n        echo \"   Configure your AI provider (OpenAI, Anthropic, or Ollama)\"\n        echo \"   See template comments for examples\"\n    fi\n\n    \"$editor\" \"$config_file\"\n}\n\nexport -f eca-init-context eca-config\n",
+      "zsh": "# Helper: Create project context template\neca-init-context() {\n    if [[ -f .eca/context.md ]]; then\n        echo \"⚠️  .eca/context.md already exists\"\n        echo \"Edit it directly or remove it first\"\n        return 1\n    fi\n\n    mkdir -p .eca\n    cat > .eca/context.md <<'EOF'\n# Project Context\n\n## Overview\n[Brief project description]\n\n## Architecture\n[System design and components]\n\n## Coding Standards\n[Style guide, patterns, conventions]\n\n## Dependencies\n[Key libraries and frameworks]\n\n## Notes\n[Additional context for AI assistance]\nEOF\n    echo \"✅ Created .eca/context.md\"\n    echo \"   Edit with: ${EDITOR:-nano} .eca/context.md\"\n}\n\n# Helper: Edit ECA configuration\neca-config() {\n    local config_file=\"${HOME}/.config/eca/config.json\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create config directory if it doesn't exist\n    mkdir -p \"$(dirname \"$config_file\")\"\n\n    # Create template config if it doesn't exist\n    if [[ ! -f \"$config_file\" ]]; then\n        cat > \"$config_file\" <<'EOF'\n{\n  \"_comment\": \"ECA Configuration - https://eca.dev/configuration\",\n\n  \"defaultBehavior\": \"agent\",\n\n  \"toolCall\": {\n    \"approval\": {\n      \"byDefault\": \"ask\",\n      \"allow\": {\n        \"eca__read_file\": {},\n        \"eca__list_directory\": {}\n      }\n    }\n  },\n\n  \"_comment_providers\": \"Uncomment and configure your preferred provider below\",\n\n  \"_provider_openai\": {\n    \"openai\": {\n      \"keyEnv\": \"OPENAI_API_KEY\",\n      \"models\": {\n        \"gpt-4\": {},\n        \"gpt-4o\": {},\n        \"o1\": {}\n      }\n    }\n  },\n\n  \"_provider_anthropic\": {\n    \"anthropic\": {\n      \"keyEnv\": \"ANTHROPIC_API_KEY\",\n      \"models\": {\n        \"claude-sonnet-4-5\": {},\n        \"claude-opus-4\": {}\n      }\n    }\n  },\n\n  \"_provider_ollama\": {\n    \"_comment\": \"Requires: flox activate -r flox/ollama\",\n    \"ollama\": {\n      \"url\": \"http://localhost:11434\",\n      \"models\": {\n        \"qwen2.5-coder:7b\": {},\n        \"qwen2.5-coder:32b\": {},\n        \"deepseek-coder-v2\": {},\n        \"codellama\": {}\n      }\n    }\n  }\n}\nEOF\n        echo \"✅ Created config template at $config_file\"\n        echo \"   Configure your AI provider (OpenAI, Anthropic, or Ollama)\"\n        echo \"   See template comments for examples\"\n    fi\n\n    \"$editor\" \"$config_file\"\n}\n",
+      "fish": "# Helper: Create project context template\nfunction eca-init-context\n    if test -f .eca/context.md\n        echo \"⚠️  .eca/context.md already exists\"\n        echo \"Edit it directly or remove it first\"\n        return 1\n    end\n\n    mkdir -p .eca\n    echo \"# Project Context\n\n## Overview\n[Brief project description]\n\n## Architecture\n[System design and components]\n\n## Coding Standards\n[Style guide, patterns, conventions]\n\n## Dependencies\n[Key libraries and frameworks]\n\n## Notes\n[Additional context for AI assistance]\" > .eca/context.md\n    echo \"✅ Created .eca/context.md\"\n    echo \"   Edit with: \"(set -q EDITOR; and echo $EDITOR; or echo \"nano\")\" .eca/context.md\"\nend\n\n# Helper: Edit ECA configuration\nfunction eca-config\n    set config_file \"$HOME/.config/eca/config.json\"\n    set editor (set -q EDITOR; and echo $EDITOR; or echo \"nano\")\n\n    # Create config directory if it doesn't exist\n    mkdir -p (dirname \"$config_file\")\n\n    # Create template config if it doesn't exist\n    if not test -f \"$config_file\"\n        echo '{\n  \"_comment\": \"ECA Configuration - https://eca.dev/configuration\",\n\n  \"defaultBehavior\": \"agent\",\n\n  \"toolCall\": {\n    \"approval\": {\n      \"byDefault\": \"ask\",\n      \"allow\": {\n        \"eca__read_file\": {},\n        \"eca__list_directory\": {}\n      }\n    }\n  },\n\n  \"_comment_providers\": \"Uncomment and configure your preferred provider below\",\n\n  \"_provider_openai\": {\n    \"openai\": {\n      \"keyEnv\": \"OPENAI_API_KEY\",\n      \"models\": {\n        \"gpt-4\": {},\n        \"gpt-4o\": {},\n        \"o1\": {}\n      }\n    }\n  },\n\n  \"_provider_anthropic\": {\n    \"anthropic\": {\n      \"keyEnv\": \"ANTHROPIC_API_KEY\",\n      \"models\": {\n        \"claude-sonnet-4-5\": {},\n        \"claude-opus-4\": {}\n      }\n    }\n  },\n\n  \"_provider_ollama\": {\n    \"_comment\": \"Requires: flox activate -r flox/ollama\",\n    \"ollama\": {\n      \"url\": \"http://localhost:11434\",\n      \"models\": {\n        \"qwen2.5-coder:7b\": {},\n        \"qwen2.5-coder:32b\": {},\n        \"deepseek-coder-v2\": {},\n        \"codellama\": {}\n      }\n    }\n  }\n}' > \"$config_file\"\n        echo \"✅ Created config template at $config_file\"\n        echo \"   Configure your AI provider (OpenAI, Anthropic, or Ollama)\"\n        echo \"   See template comments for examples\"\n    end\n\n    eval $editor \"$config_file\"\nend\n"
+    },
+    "options": {},
+    "services": {
+      "eca": {
+        "command": "eca server",
+        "is-daemon": true,
+        "shutdown": {
+          "command": "pkill -f 'eca server'"
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "eca",
+      "broken": false,
+      "derivation": "/nix/store/as2p0bxcgx1nfmfcgd2h00q6sakv4gb7-eca-0.78.4.drv",
+      "description": "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor",
+      "install_id": "eca",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "eca-0.78.4",
+      "pname": "eca",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-20T14:47:05.388915930Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.78.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c533dp1fr8j7id6r63h7z9va5i2pp3a3-eca-0.78.4"
+      },
+      "system": "aarch64-darwin",
+      "group": "eca",
+      "priority": 5
+    },
+    {
+      "attr_path": "eca",
+      "broken": false,
+      "derivation": "/nix/store/lnn2d0264a0x518bfiksp3hwddgv6qhj-eca-0.78.4.drv",
+      "description": "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor",
+      "install_id": "eca",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "eca-0.78.4",
+      "pname": "eca",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T14:47:05.388920096Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.78.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ia1j8105pif5qa79jzrzmnxs61f9a1z4-eca-0.78.4"
+      },
+      "system": "x86_64-linux",
+      "group": "eca",
+      "priority": 5
+    }
+  ]
+}

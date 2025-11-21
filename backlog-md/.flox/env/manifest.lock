@@ -1,0 +1,69 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "backlog-md": {
+        "pkg-path": "flox/backlog-md"
+      }
+    },
+    "vars": {
+      "BACKLOG_AUTO_OPEN": "true",
+      "BACKLOG_PORT": "6420"
+    },
+    "hook": {
+      "on-activate": "backlog completion install --shell bash >/dev/null 2>&1 || true\nbacklog completion install --shell zsh >/dev/null 2>&1 || true\ncd \"$FLOX_ENV_PROJECT\"\n"
+    },
+    "profile": {
+      "bash": "[ -f \"$HOME/.local/share/bash-completion/completions/backlog\" ] && \\\n  source \"$HOME/.local/share/bash-completion/completions/backlog\"\n\nalias bb=\"backlog board\"\nalias bt=\"backlog task\"\nalias bw=\"backlog browser\"\nalias bl=\"backlog task list\"\n",
+      "zsh": "[ -f \"$HOME/.local/share/zsh/site-functions/_backlog\" ] && \\\n  fpath=(\"$HOME/.local/share/zsh/site-functions\" $fpath) && \\\n  autoload -Uz compinit && compinit\n\nalias bb=\"backlog board\"\nalias bt=\"backlog task\"\nalias bw=\"backlog browser\"\nalias bl=\"backlog task list\"\n"
+    },
+    "options": {
+      "systems": [
+        "x86_64-linux"
+      ]
+    },
+    "services": {
+      "backlog-mcp": {
+        "command": "mkdir -p \"$FLOX_ENV_CACHE/logs\"\nbacklog mcp start 2>&1 | tee -a \"$FLOX_ENV_CACHE/logs/backlog-mcp.log\" &\nwait\n",
+        "is-daemon": true,
+        "shutdown": {
+          "command": "pkill -f 'backlog mcp start'"
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "backlog-md",
+      "broken": false,
+      "derivation": "/nix/store/7sp5q2imr6g1c9q9vkpnq28mahvbfd8h-backlog-md-1.20.1.drv",
+      "description": "Backlog.md - A tool for managing project collaboration between humans and AI Agents in a git ecosystem",
+      "install_id": "backlog-md",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "backlog-md-1.20.1",
+      "pname": "backlog-md",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-20T02:53:19.661838068Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.20.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/sc4yv9vjivswalbn9lpbc8hnxkdh9j5a-backlog-md-1.20.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##               https://flox.dev/docs/concepts/manifest
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+[install]
+coderabbit-cli.pkg-path = "flox/coderabbit-cli"
+coderabbit-cli.systems = ["x86_64-linux"]
+coderabbit-cli.pkg-group = "coderabbit-cli"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🐰 CodeRabbit CLI - AI Code Reviews in Your Terminal"
+echo ""
+echo "CodeRabbit provides AI-powered code reviews that catch bugs, security"
+echo "issues, and code smells before you commit."
+echo ""
+echo "First-time setup:"
+echo "  coderabbit auth login       # Authenticate (required)"
+echo "  cr auth login               # Short alias"
+echo ""
+echo "Usage:"
+echo "  coderabbit                  # Interactive review"
+echo "  coderabbit-uncommitted      # Review uncommitted changes"
+echo "  coderabbit-plain            # Plain text output"
+echo "  coderabbit-ai               # Prompt-only mode for AI agents"
+echo "  cr --help                   # Show all options"
+echo ""
+echo "Features:"
+echo "  • Reads claude.md, .cursorrules for team standards"
+echo "  • Catches race conditions, memory leaks, security issues"
+echo "  • Provides actionable fix suggestions"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+bash = '''
+# Helper: Review uncommitted changes only
+coderabbit-uncommitted() {
+    coderabbit --type uncommitted "$@"
+}
+
+# Helper: Plain text output (no colors)
+coderabbit-plain() {
+    coderabbit --plain "$@"
+}
+
+# Helper: Prompt-only mode for AI agents
+coderabbit-ai() {
+    coderabbit --prompt-only "$@"
+}
+
+# Helper: Review with custom base branch
+coderabbit-base() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: coderabbit-base <branch>"
+        echo "Example: coderabbit-base develop"
+        return 1
+    fi
+    coderabbit --base "$1" "${@:2}"
+}
+
+# Helper: Show help
+coderabbit-help() {
+    coderabbit --help
+}
+
+export -f coderabbit-uncommitted coderabbit-plain coderabbit-ai coderabbit-base coderabbit-help
+'''
+
+zsh = '''
+# Helper: Review uncommitted changes only
+coderabbit-uncommitted() {
+    coderabbit --type uncommitted "$@"
+}
+
+# Helper: Plain text output (no colors)
+coderabbit-plain() {
+    coderabbit --plain "$@"
+}
+
+# Helper: Prompt-only mode for AI agents
+coderabbit-ai() {
+    coderabbit --prompt-only "$@"
+}
+
+# Helper: Review with custom base branch
+coderabbit-base() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: coderabbit-base <branch>"
+        echo "Example: coderabbit-base develop"
+        return 1
+    fi
+    coderabbit --base "$1" "${@:2}"
+}
+
+# Helper: Show help
+coderabbit-help() {
+    coderabbit --help
+}
+'''
+
+fish = '''
+# Helper: Review uncommitted changes only
+function coderabbit-uncommitted
+    coderabbit --type uncommitted $argv
+end
+
+# Helper: Plain text output (no colors)
+function coderabbit-plain
+    coderabbit --plain $argv
+end
+
+# Helper: Prompt-only mode for AI agents
+function coderabbit-ai
+    coderabbit --prompt-only $argv
+end
+
+# Helper: Review with custom base branch
+function coderabbit-base
+    if test (count $argv) -eq 0
+        echo "Usage: coderabbit-base <branch>"
+        echo "Example: coderabbit-base develop"
+        return 1
+    end
+    coderabbit --base $argv[1] $argv[2..-1]
+end
+
+# Helper: Show help
+function coderabbit-help
+    coderabbit --help
+end
+'''
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+systems = [
+  "x86_64-linux",
+]

@@ -1,0 +1,111 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+cursor-agent.pkg-path = "flox/cursor-agent"
+cursor-agent.systems = ["x86_64-linux"]
+cursor-agent.pkg-group = "cursor-agent"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🤖 Cursor Agent CLI - Autonomous AI Coding from Your Terminal"
+echo ""
+echo "Use Cursor's powerful AI agent directly from the command line."
+echo ""
+echo "First-time setup:"
+echo "  cursor-agent                # Launch interactive TUI"
+echo "                              # Authenticate on first run"
+echo ""
+echo "Usage:"
+echo "  cursor-agent                # Interactive TUI mode"
+echo "  cursor-agent \"prompt\"       # Non-interactive mode (scripts/CI)"
+echo "  cursor-agent chat \"prompt\"  # Start chat with initial prompt"
+echo ""
+echo "Features:"
+echo "  • Autonomous AI agent that plans and executes changes"
+echo "  • Interactive TUI for hands-on coding sessions"
+echo "  • Non-interactive mode for scripts and CI/CD"
+echo "  • Read/write files, search codebase, run shell commands"
+echo "  • Works with any model from your Cursor subscription"
+echo ""
+echo "Requires: Active Cursor subscription"
+echo "Status: Beta"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+# No helper functions needed - cursor-agent is self-contained
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Build and publish your own packages ------------------------------
+##  $ flox build
+##  $ flox publish
+## ------------------------------------------------------------------
+[build]
+# [build.myproject]
+# description = "The coolest project ever"
+# version = "0.0.1"
+# command = """
+#   mkdir -p $out/bin
+#   cargo build --release
+#   cp target/release/myproject $out/bin/myproject
+# """
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

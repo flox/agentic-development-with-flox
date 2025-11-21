@@ -1,0 +1,61 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "codex-acp": {
+        "pkg-path": "flox/codex-acp"
+      }
+    },
+    "hook": {
+      "on-activate": "mkdir -p \"$FLOX_ENV_CACHE/logs\"\ncd \"$FLOX_ENV_PROJECT\"\n"
+    },
+    "options": {
+      "systems": [
+        "x86_64-linux"
+      ]
+    },
+    "services": {
+      "codex-acp": {
+        "command": "exec codex-acp 2>&1 | tee -a \"$FLOX_ENV_CACHE/logs/codex-acp.log\"\n",
+        "is-daemon": true,
+        "shutdown": {
+          "command": "pkill -f codex-acp"
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "codex-acp",
+      "broken": false,
+      "derivation": "/nix/store/zf94xhpqvkqhaii0mqp2x9ij6sg02ky5-codex-acp-0.4.0.drv",
+      "description": "An ACP-compatible coding agent powered by Codex",
+      "install_id": "codex-acp",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "codex-acp-0.4.0",
+      "pname": "codex-acp",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T04:36:11.050031124Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/v1wkvvqlmqcpwdirfp93qn099nz1wsj5-codex-acp-0.4.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

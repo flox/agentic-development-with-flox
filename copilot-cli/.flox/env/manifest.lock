@@ -1,0 +1,134 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "github-copilot-cli": {
+        "pkg-path": "github-copilot-cli"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal\"\necho \"\"\necho \"Copilot CLI brings the power of GitHub Copilot directly to your command line.\"\necho \"\"\necho \"First-time setup:\"\necho \"  copilot                     # Launch interactive session\"\necho \"  /login                      # Authenticate with GitHub (in session)\"\necho \"\"\necho \"Usage:\"\necho \"  copilot                     # Start conversational coding assistant\"\necho \"  copilot --help              # Show all options\"\necho \"\"\necho \"In-session commands:\"\necho \"  /login                      # Authenticate with GitHub\"\necho \"  /model                      # Switch AI models (Claude Sonnet 4.5, GPT-5)\"\necho \"  /feedback                   # Submit feedback\"\necho \"\"\necho \"Features:\"\necho \"  • Natural language conversations about code\"\necho \"  • Build, debug, and understand code\"\necho \"  • GitHub context awareness (repos, issues, PRs)\"\necho \"  • Preview-before-execution safety\"\necho \"  • MCP extensibility\"\necho \"\"\necho \"Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "github-copilot-cli",
+      "broken": false,
+      "derivation": "/nix/store/n4kh24dmyidw1z7w9ir2bh9f41rf4anw-github-copilot-cli-0.0.351.drv",
+      "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
+      "install_id": "github-copilot-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "github-copilot-cli-0.0.351",
+      "pname": "github-copilot-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:19.172097Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.351",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/4xh3b09nh1mab7rwc3wa2dg5las130dn-github-copilot-cli-0.0.351"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "github-copilot-cli",
+      "broken": false,
+      "derivation": "/nix/store/a0s30avp47k3biywzzjxzv4kpy00nqm0-github-copilot-cli-0.0.351.drv",
+      "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
+      "install_id": "github-copilot-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "github-copilot-cli-0.0.351",
+      "pname": "github-copilot-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:58.873180Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.351",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/n2w1prrycl8l4b6p8hmn4kxs8db7aigx-github-copilot-cli-0.0.351"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "github-copilot-cli",
+      "broken": false,
+      "derivation": "/nix/store/97qg2n3fw8llk6p3nrrhdccvfymb7lgz-github-copilot-cli-0.0.351.drv",
+      "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
+      "install_id": "github-copilot-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "github-copilot-cli-0.0.351",
+      "pname": "github-copilot-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:58.195862Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.351",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/9c1gm6jn95jywhz4iqhcqh5cfdyzhc5j-github-copilot-cli-0.0.351"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "github-copilot-cli",
+      "broken": false,
+      "derivation": "/nix/store/l8wi8il13vs1gb6l9hljy6p4yq3ciq57-github-copilot-cli-0.0.351.drv",
+      "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
+      "install_id": "github-copilot-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "github-copilot-cli-0.0.351",
+      "pname": "github-copilot-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:48.311745Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.351",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vkcq09y5rq5y45niaygd93l26dj9n60i-github-copilot-cli-0.0.351"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

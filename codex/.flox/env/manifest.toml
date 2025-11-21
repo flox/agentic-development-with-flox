@@ -1,0 +1,244 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+codex.pkg-path = "codex"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🤖 Codex CLI - Local AI Coding Agent from OpenAI"
+echo ""
+echo "Codex is a lightweight coding agent that runs locally on your computer."
+echo ""
+echo "First-time setup:"
+echo "  codex                       # Launch and sign in with ChatGPT account"
+echo "                              # (Plus, Pro, Team, Edu, or Enterprise)"
+echo ""
+echo "Usage:"
+echo "  codex                       # Interactive conversational mode"
+echo "  codex exec <prompt>         # Non-interactive mode for scripting"
+echo "  codex --help                # Show all options"
+echo ""
+echo "Configuration (optional):"
+echo "  codex-config                # Edit ~/.codex/config.toml"
+echo "  codex-policy                # Manage execution policies"
+echo ""
+echo "Features:"
+echo "  • Executes shell commands with approval system"
+echo "  • Memory system via AGENTS.md files"
+echo "  • MCP server integration"
+echo "  • Zero Data Retention option"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+bash = '''
+# Helper: Edit Codex configuration
+codex-config() {
+    local config_file="$HOME/.codex/config.toml"
+    local editor="${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create empty config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        echo "# Codex configuration" > "$config_file"
+        echo "# See https://github.com/openai/codex for options" >> "$config_file"
+    fi
+
+    "$editor" "$config_file"
+}
+
+# Helper: Manage execution policies
+codex-policy() {
+    local policy_dir="$HOME/.codex/policy"
+    local editor="${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$policy_dir"
+
+    if [[ -n "$1" ]]; then
+        # Edit specific policy file
+        "$editor" "$policy_dir/$1"
+    else
+        # Show policy directory
+        echo "Codex policy directory: $policy_dir"
+        echo ""
+        if command -v tree &> /dev/null; then
+            tree "$policy_dir"
+        else
+            ls -la "$policy_dir"
+        fi
+        echo ""
+        echo "Usage: codex-policy <filename>  # Edit a policy file"
+        echo "Example: codex-policy default.codexpolicy"
+    fi
+}
+
+export -f codex-config codex-policy
+'''
+
+zsh = '''
+# Helper: Edit Codex configuration
+codex-config() {
+    local config_file="$HOME/.codex/config.toml"
+    local editor="${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create empty config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        echo "# Codex configuration" > "$config_file"
+        echo "# See https://github.com/openai/codex for options" >> "$config_file"
+    fi
+
+    "$editor" "$config_file"
+}
+
+# Helper: Manage execution policies
+codex-policy() {
+    local policy_dir="$HOME/.codex/policy"
+    local editor="${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$policy_dir"
+
+    if [[ -n "$1" ]]; then
+        # Edit specific policy file
+        "$editor" "$policy_dir/$1"
+    else
+        # Show policy directory
+        echo "Codex policy directory: $policy_dir"
+        echo ""
+        if command -v tree &> /dev/null; then
+            tree "$policy_dir"
+        else
+            ls -la "$policy_dir"
+        fi
+        echo ""
+        echo "Usage: codex-policy <filename>  # Edit a policy file"
+        echo "Example: codex-policy default.codexpolicy"
+    fi
+}
+'''
+
+fish = '''
+# Helper: Edit Codex configuration
+function codex-config
+    set config_file "$HOME/.codex/config.toml"
+    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
+
+    # Create directory if it doesn't exist
+    mkdir -p (dirname "$config_file")
+
+    # Create empty config if it doesn't exist
+    if not test -f "$config_file"
+        echo "# Codex configuration" > "$config_file"
+        echo "# See https://github.com/openai/codex for options" >> "$config_file"
+    end
+
+    eval $editor "$config_file"
+end
+
+# Helper: Manage execution policies
+function codex-policy
+    set policy_dir "$HOME/.codex/policy"
+    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
+
+    # Create directory if it doesn't exist
+    mkdir -p "$policy_dir"
+
+    if test (count $argv) -gt 0
+        # Edit specific policy file
+        eval $editor "$policy_dir/$argv[1]"
+    else
+        # Show policy directory
+        echo "Codex policy directory: $policy_dir"
+        echo ""
+        if command -v tree &> /dev/null
+            tree "$policy_dir"
+        else
+            ls -la "$policy_dir"
+        end
+        echo ""
+        echo "Usage: codex-policy <filename>  # Edit a policy file"
+        echo "Example: codex-policy default.codexpolicy"
+    end
+end
+'''
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Build and publish your own packages ------------------------------
+##  $ flox build
+##  $ flox publish
+## ------------------------------------------------------------------
+[build]
+# [build.myproject]
+# description = "The coolest project ever"
+# version = "0.0.1"
+# command = """
+#   mkdir -p $out/bin
+#   cargo build --release
+#   cp target/release/myproject $out/bin/myproject
+# """
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

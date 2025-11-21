@@ -1,0 +1,51 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "cursor-agent": {
+        "pkg-path": "flox/cursor-agent",
+        "pkg-group": "cursor-agent",
+        "systems": [
+          "x86_64-linux"
+        ]
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "cursor-agent",
+      "broken": false,
+      "derivation": "/nix/store/jsfyrjayv8h168f706y2c4dzash50nc4-cursor-agent-2025.11.06-8fe8a63.drv",
+      "description": "Cursor Agent - CLI tool for Cursor AI code editor",
+      "install_id": "cursor-agent",
+      "license": "Unfree",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "cursor-agent-2025.11.06-8fe8a63",
+      "pname": "cursor-agent",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T05:26:54.796978996Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2025.11.06-8fe8a63",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/l12q8zl0l3h484i8qnslp5vk37bj6yhz-cursor-agent-2025.11.06-8fe8a63"
+      },
+      "system": "x86_64-linux",
+      "group": "cursor-agent",
+      "priority": 5
+    }
+  ]
+}

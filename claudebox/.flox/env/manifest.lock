@@ -1,0 +1,421 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "claude-code": {
+        "pkg-path": "claude-code"
+      },
+      "claudebox": {
+        "pkg-path": "flox/claudebox",
+        "pkg-group": "claudebox",
+        "systems": [
+          "x86_64-linux"
+        ]
+      },
+      "tmux": {
+        "pkg-path": "tmux"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🔒 Claudebox - Sandboxed Claude Code Environment\"\necho \"\"\necho \"Claudebox wraps Claude Code in a lightweight sandbox for transparency:\"\necho \"  • Shadows \\$HOME (no credentials except ~/.claude)\"\necho \"  • Mounts project parent read-only\"\necho \"  • Shows executed commands in real-time via tmux\"\necho \"\"\necho \"Usage:\"\necho \"  claudebox                    # Start with default settings\"\necho \"  claudebox-vertical           # Start with vertical split\"\necho \"  claudebox-no-monitor         # Start without tmux monitoring\"\necho \"  claudebox --help             # Show all options\"\necho \"\"\necho \"Note: Not a security boundary - designed for transparency, not isolation.\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Start claudebox with vertical split\nclaudebox-vertical() {\n    claudebox --split-direction vertical \"$@\"\n}\n\n# Helper: Start claudebox without tmux monitoring\nclaudebox-no-monitor() {\n    claudebox --no-monitor \"$@\"\n}\n\n# Helper: Start claudebox with minimal settings (no tmux config, no monitor)\nclaudebox-minimal() {\n    claudebox --no-tmux-config --no-monitor \"$@\"\n}\n\n# Helper: Show claudebox help\nclaudebox-help() {\n    claudebox --help\n}\n\nexport -f claudebox-vertical claudebox-no-monitor claudebox-minimal claudebox-help\n",
+      "zsh": "# Helper: Start claudebox with vertical split\nclaudebox-vertical() {\n    claudebox --split-direction vertical \"$@\"\n}\n\n# Helper: Start claudebox without tmux monitoring\nclaudebox-no-monitor() {\n    claudebox --no-monitor \"$@\"\n}\n\n# Helper: Start claudebox with minimal settings (no tmux config, no monitor)\nclaudebox-minimal() {\n    claudebox --no-tmux-config --no-monitor \"$@\"\n}\n\n# Helper: Show claudebox help\nclaudebox-help() {\n    claudebox --help\n}\n",
+      "fish": "# Helper: Start claudebox with vertical split\nfunction claudebox-vertical\n    claudebox --split-direction vertical $argv\nend\n\n# Helper: Start claudebox without tmux monitoring\nfunction claudebox-no-monitor\n    claudebox --no-monitor $argv\nend\n\n# Helper: Start claudebox with minimal settings (no tmux config, no monitor)\nfunction claudebox-minimal\n    claudebox --no-tmux-config --no-monitor $argv\nend\n\n# Helper: Show claudebox help\nfunction claudebox-help\n    claudebox --help\nend\n"
+    },
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "claudebox",
+      "broken": false,
+      "derivation": "/nix/store/0rs0swav13kfk5idxfcdr75mf8gj0kch-claudebox.drv",
+      "description": "Sandboxed environment for Claude Code",
+      "install_id": "claudebox",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "claudebox",
+      "pname": "claudebox",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T03:01:15.334871389Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "unknown",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/mmr5nwlsjqk60gblzqzdyisb21i3ghn1-claudebox"
+      },
+      "system": "x86_64-linux",
+      "group": "claudebox",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/srvg9lydbqzfrd7wks0kbcd24681whv9-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.119212Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/m1s1wqd7nswi7jnlg146g0m3rsvsg9a7-bat-0.26.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/qyad5lwriw7xi08g13wb05fmxi5n2dp0-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.331574Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/0am602vqa4zyl5m75na8gl47dk66zzid-bat-0.26.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/w66rdmpxy0kyrwxwakf5xxcr9sqlarva-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.153535Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/7f6piwxyq7g8lw0d61bzy9nvmq1lsxv7-bat-0.26.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/xnaki7m9rslvjfxabad5jqibsjjhqpgw-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.605748Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vsih714glpw1gdr86yrif87pf0cvj9ha-bat-0.26.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/wm3898aygscqcryq92qaxqwzlldwdg1s-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.367967Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/hzqj7n02j0rdgjxmhdnpxn94910dszlg-claude-code-2.0.30"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/iyqnvbygw7qnmhy3q0a3xah0x2172xrs-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.669127Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/103scqn5wpjx1qrqqlbpl4xv1ja58q5j-claude-code-2.0.30"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/6arwb3n3gcq2nwmqz0a723v3gy3shh05-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.409416Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1g6a26grxq4awpc6z6w08fivzvcnqizv-claude-code-2.0.30"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/kiwizv3bh2xrs15qaxnb6ialq08dla2v-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.975714Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/6is1i3m8viihhhlxjlvmjlq359x3rdrn-claude-code-2.0.30"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "tmux",
+      "broken": false,
+      "derivation": "/nix/store/5ld9z1al3831n29dirjnj4x7mmg7c9sh-tmux-3.5a.drv",
+      "description": "Terminal multiplexer",
+      "install_id": "tmux",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "tmux-3.5a",
+      "pname": "tmux",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:37:25.354856Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5a",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "man": "/nix/store/26kqy82fkbl1qwm14m7viijj6kbc98gk-tmux-3.5a-man",
+        "out": "/nix/store/i82z9pffyvhyxmk8gzz3b4blarjscp99-tmux-3.5a"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "tmux",
+      "broken": false,
+      "derivation": "/nix/store/5hz7jz5kl1lj3nbwv24y0jbnzsd3bcyl-tmux-3.5a.drv",
+      "description": "Terminal multiplexer",
+      "install_id": "tmux",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "tmux-3.5a",
+      "pname": "tmux",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:31:49.594851Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5a",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "man": "/nix/store/d6x63sjia3z1pb8a16cchv3slf3q5dga-tmux-3.5a-man",
+        "out": "/nix/store/xsapgl8vk49xyjmvvpycj02j4yjn428d-tmux-3.5a"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "tmux",
+      "broken": false,
+      "derivation": "/nix/store/gph3r0bqyd9z9hpsapnc39gyd6f5h7zx-tmux-3.5a.drv",
+      "description": "Terminal multiplexer",
+      "install_id": "tmux",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "tmux-3.5a",
+      "pname": "tmux",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:56:58.713836Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5a",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "man": "/nix/store/93n52xvvhxpl7h35ncmz1grzrqfp3f67-tmux-3.5a-man",
+        "out": "/nix/store/yvmqhydr4rk6b5z95iy2ms7gx8g5q6xi-tmux-3.5a"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "tmux",
+      "broken": false,
+      "derivation": "/nix/store/ag3rknk94vfkhnjlgalcp5bgj69iq4g8-tmux-3.5a.drv",
+      "description": "Terminal multiplexer",
+      "install_id": "tmux",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "tmux-3.5a",
+      "pname": "tmux",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:23:55.289561Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5a",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "man": "/nix/store/q151xd0mm73r41dak1x2d3klsbqhk52v-tmux-3.5a-man",
+        "out": "/nix/store/r55k7xr3vsll00ghx173q0d74h2a8l4y-tmux-3.5a"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

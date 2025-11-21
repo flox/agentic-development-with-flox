@@ -1,0 +1,170 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+claudebox.pkg-path = "flox/claudebox"
+claudebox.systems = ["x86_64-linux"]
+claudebox.pkg-group = "claudebox"
+claude-code.pkg-path = "claude-code"
+tmux.pkg-path = "tmux"
+bat.pkg-path = "bat"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🔒 Claudebox - Sandboxed Claude Code Environment"
+echo ""
+echo "Claudebox wraps Claude Code in a lightweight sandbox for transparency:"
+echo "  • Shadows \$HOME (no credentials except ~/.claude)"
+echo "  • Mounts project parent read-only"
+echo "  • Shows executed commands in real-time via tmux"
+echo ""
+echo "Usage:"
+echo "  claudebox                    # Start with default settings"
+echo "  claudebox-vertical           # Start with vertical split"
+echo "  claudebox-no-monitor         # Start without tmux monitoring"
+echo "  claudebox --help             # Show all options"
+echo ""
+echo "Note: Not a security boundary - designed for transparency, not isolation."
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+bash = '''
+# Helper: Start claudebox with vertical split
+claudebox-vertical() {
+    claudebox --split-direction vertical "$@"
+}
+
+# Helper: Start claudebox without tmux monitoring
+claudebox-no-monitor() {
+    claudebox --no-monitor "$@"
+}
+
+# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
+claudebox-minimal() {
+    claudebox --no-tmux-config --no-monitor "$@"
+}
+
+# Helper: Show claudebox help
+claudebox-help() {
+    claudebox --help
+}
+
+export -f claudebox-vertical claudebox-no-monitor claudebox-minimal claudebox-help
+'''
+
+zsh = '''
+# Helper: Start claudebox with vertical split
+claudebox-vertical() {
+    claudebox --split-direction vertical "$@"
+}
+
+# Helper: Start claudebox without tmux monitoring
+claudebox-no-monitor() {
+    claudebox --no-monitor "$@"
+}
+
+# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
+claudebox-minimal() {
+    claudebox --no-tmux-config --no-monitor "$@"
+}
+
+# Helper: Show claudebox help
+claudebox-help() {
+    claudebox --help
+}
+'''
+
+fish = '''
+# Helper: Start claudebox with vertical split
+function claudebox-vertical
+    claudebox --split-direction vertical $argv
+end
+
+# Helper: Start claudebox without tmux monitoring
+function claudebox-no-monitor
+    claudebox --no-monitor $argv
+end
+
+# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
+function claudebox-minimal
+    claudebox --no-tmux-config --no-monitor $argv
+end
+
+# Helper: Show claudebox help
+function claudebox-help
+    claudebox --help
+end
+'''
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Build and publish your own packages ------------------------------
+##  $ flox build
+##  $ flox publish
+## ------------------------------------------------------------------
+[build]
+# [build.myproject]
+# description = "The coolest project ever"
+# version = "0.0.1"
+# command = """
+#   mkdir -p $out/bin
+#   cargo build --release
+#   cp target/release/myproject $out/bin/myproject
+# """
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

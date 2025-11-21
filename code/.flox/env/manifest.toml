@@ -1,0 +1,16 @@
+version = 1
+
+[install]
+code.pkg-path = "flox/code"
+
+[vars]
+CODE_HOME = "$FLOX_ENV_CACHE/code"
+
+[hook]
+on-activate = '''
+mkdir -p "$CODE_HOME"
+cd "$FLOX_ENV_PROJECT"
+'''
+
+[options]
+systems = ["x86_64-linux"]

@@ -1,0 +1,668 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "amp-cli": {
+        "pkg-path": "amp-cli"
+      },
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "gum": {
+        "pkg-path": "gum"
+      },
+      "jq": {
+        "pkg-path": "jq"
+      }
+    },
+    "vars": {
+      "AMP_CONFIG_DIR": "$FLOX_ENV_CACHE/amp-config",
+      "AMP_THREADS_DIR": "$HOME/.amp/threads",
+      "AMP_TOOLS_DIR": "$FLOX_ENV_CACHE/amp-tools"
+    },
+    "hook": {
+      "on-activate": "# Create required directories\nmkdir -p \"$AMP_CONFIG_DIR\"\nmkdir -p \"$AMP_TOOLS_DIR\"\nmkdir -p \"$FLOX_ENV_CACHE/amp-logs\"\n\n# Configuration file path\nexport AMP_CONFIG_FILE=\"$AMP_CONFIG_DIR/amp.config\"\n\n# Default configuration values\nDEFAULT_AMP_MODE=\"smart\"\nDEFAULT_AMP_EDITOR=\"vscode\"\n\n# Check if configuration exists\ncheck_amp_config() {\n    [[ -f \"$AMP_CONFIG_FILE\" ]] || return 1\n    source \"$AMP_CONFIG_FILE\" 2>/dev/null || return 1\n    [[ -n \"$AMP_MODE\" ]] || return 1\n    return 0\n}\n\n# Load existing configuration\nload_amp_config() {\n    if [[ -f \"$AMP_CONFIG_FILE\" ]]; then\n        source \"$AMP_CONFIG_FILE\"\n        export AMP_MODE\n        export AMP_API_KEY\n        export AMP_EDITOR\n        export AMP_MCP_SERVERS\n        export HTTP_PROXY\n        export HTTPS_PROXY\n        export NODE_EXTRA_CA_CERTS\n        return 0\n    fi\n    return 1\n}\n\n# Save configuration\nsave_amp_config() {\n    cat > \"$AMP_CONFIG_FILE\" << EOF\n# Amp configuration - Generated on $(date)\nexport AMP_MODE=\"$AMP_MODE\"\nexport AMP_API_KEY=\"$AMP_API_KEY\"\nexport AMP_EDITOR=\"$AMP_EDITOR\"\nexport AMP_MCP_SERVERS=\"$AMP_MCP_SERVERS\"\nexport HTTP_PROXY=\"$HTTP_PROXY\"\nexport HTTPS_PROXY=\"$HTTPS_PROXY\"\nexport NODE_EXTRA_CA_CERTS=\"$NODE_EXTRA_CA_CERTS\"\nEOF\n    chmod 600 \"$AMP_CONFIG_FILE\"\n}\n\n# Bootstrap Amp configuration\nbootstrap_amp() {\n    clear\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        \"$(gum style --foreground 27 --bold 'Amp Configuration')\n\n$(gum style --foreground 240 'First-time setup for your Amp coding agent')\"\n\n    echo \"\"\n\n    # Mode selection\n    echo \"$(gum style --foreground 141 --bold '1. Select Default Mode')\"\n    echo \"\"\n    AMP_MODE=$(gum choose --header \"Choose your default Amp mode:\" \\\n        \"smart\" \\\n        \"rush\" \\\n        \"free\")\n\n    echo \"\"\n    case \"$AMP_MODE\" in\n        \"smart\")\n            gum style --foreground 240 \"  ℹ️  Smart mode: State-of-the-art models, maximum capability (paid credits)\"\n            ;;\n        \"rush\")\n            gum style --foreground 240 \"  ℹ️  Rush mode: Faster, cheaper, suitable for small tasks (paid credits)\"\n            ;;\n        \"free\")\n            gum style --foreground 240 \"  ℹ️  Free mode: No charge, using fast basic models\"\n            ;;\n    esac\n\n    # API Key configuration\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '2. API Key Configuration')\"\n    echo \"\"\n\n    if [[ \"$AMP_MODE\" != \"free\" ]]; then\n        if gum confirm \"Do you have an Amp API key?\" --default=false; then\n            AMP_API_KEY=$(gum input --prompt \"Enter your Amp API key: \" --password)\n        else\n            gum style --foreground 212 \"  👉 Get your API key at: https://ampcode.com/install\"\n            gum style --foreground 240 \"  You can add it later by running 'amp-config' or setting AMP_API_KEY\"\n            AMP_API_KEY=\"\"\n        fi\n    else\n        AMP_API_KEY=\"\"\n        gum style --foreground 240 \"  ℹ️  Free mode doesn't require an API key\"\n    fi\n\n    # Editor integration\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '3. Editor Integration')\"\n    echo \"\"\n    AMP_EDITOR=$(gum choose --header \"Which editor do you primarily use?\" \\\n        \"vscode\" \\\n        \"cursor\" \\\n        \"jetbrains\" \\\n        \"neovim\" \\\n        \"cli-only\")\n\n    case \"$AMP_EDITOR\" in\n        \"vscode\"|\"cursor\")\n            gum style --foreground 240 \"  ℹ️  Install the Amp extension from the marketplace\"\n            ;;\n        \"jetbrains\")\n            gum style --foreground 240 \"  ℹ️  Run 'amp --jetbrains' to enable IDE integration\"\n            ;;\n        \"neovim\")\n            gum style --foreground 240 \"  ℹ️  Install Amp Neovim plugin and run 'amp --ide'\"\n            ;;\n        \"cli-only\")\n            gum style --foreground 240 \"  ℹ️  You can use 'amp' command for CLI-only usage\"\n            ;;\n    esac\n\n    # Proxy configuration\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '4. Network Configuration (Optional)')\"\n    echo \"\"\n\n    if gum confirm \"Are you behind a corporate proxy?\" --default=false; then\n        HTTP_PROXY=$(gum input --prompt \"HTTP Proxy: \" --placeholder \"http://proxy.company.com:8080\")\n        HTTPS_PROXY=$(gum input --prompt \"HTTPS Proxy: \" --placeholder \"http://proxy.company.com:8080\")\n\n        if gum confirm \"Do you need custom CA certificates?\" --default=false; then\n            NODE_EXTRA_CA_CERTS=$(gum input --prompt \"Path to CA certs: \" --placeholder \"/path/to/certificates.pem\")\n        else\n            NODE_EXTRA_CA_CERTS=\"\"\n        fi\n    else\n        HTTP_PROXY=\"\"\n        HTTPS_PROXY=\"\"\n        NODE_EXTRA_CA_CERTS=\"\"\n    fi\n\n    # MCP servers (optional advanced)\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '5. MCP Servers (Advanced - Optional)')\"\n    echo \"\"\n\n    if gum confirm \"Configure MCP servers now?\" --default=false; then\n        gum style --foreground 240 \"  ℹ️  You can add MCP servers like Playwright, Semgrep, Linear, etc.\"\n        gum style --foreground 240 \"  We'll set this up interactively in your shell after configuration\"\n        AMP_MCP_SERVERS=\"configure-later\"\n    else\n        AMP_MCP_SERVERS=\"none\"\n        gum style --foreground 240 \"  You can add MCP servers later with 'amp-mcp-add'\"\n    fi\n\n    # Save configuration\n    export AMP_MODE AMP_API_KEY AMP_EDITOR AMP_MCP_SERVERS HTTP_PROXY HTTPS_PROXY NODE_EXTRA_CA_CERTS\n    save_amp_config\n\n    echo \"\"\n    gum style --foreground 34 --bold \"✓ Amp configuration saved!\"\n    echo \"\"\n}\n\n# Display help information\nshow_amp_help() {\n    local auth_status\n    if [[ -n \"$AMP_API_KEY\" ]]; then\n        auth_status=\"$(gum style --foreground 82 '✓ Configured')\"\n    else\n        auth_status=\"$(gum style --foreground 240 'Not set')\"\n    fi\n\n    local header_content=$(cat << EOF\n$(gum style --foreground 141 --bold 'This is a  F l o x  Amp Environment')\n\n🤖  Core Amp Commands:\n    $(gum style --foreground 212 'amp')                    Start Amp CLI interactively\n    $(gum style --foreground 212 'amp -x \"task\"')          Execute a task and exit\n    $(gum style --foreground 212 'amp threads list')       List your conversation threads\n    $(gum style --foreground 212 'amp threads continue')   Continue a previous thread\n\n🛠️  Environment Management:\n    $(gum style --foreground 212 'amp-mode')               Switch between smart/rush/free modes\n    $(gum style --foreground 212 'amp-config')             Reconfigure Amp settings\n    $(gum style --foreground 212 'amp-info')               Show current configuration\n    $(gum style --foreground 212 'amp-mcp-add')            Add MCP server interactively\n    $(gum style --foreground 212 'amp-test')               Test Amp authentication\n\n📚  Documentation:\n    $(gum style --foreground 212 'amp-help')               Show this help message\n    $(gum style --foreground 212 'amp-docs')               Open Amp documentation\n    $(gum style --foreground 212 'readme')                 View README.md\n\n👉  Flox Environment Details:\n    Mode:           $(gum style --foreground 212 \"${AMP_MODE:-Not configured}\")\n    Editor:         $(gum style --foreground 212 \"${AMP_EDITOR:-Not configured}\")\n    API Key:        ${auth_status}\n    Threads:        $(gum style --foreground 212 \"$AMP_THREADS_DIR\")\n    Config:         $(gum style --foreground 212 \"$AMP_CONFIG_FILE\")\nEOF\n)\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 96 \\\n        \"$header_content\"\n\n    echo \"\"\n}\n\n# Download README if not exists\ndownload_readme() {\n    local readme_path=\"$FLOX_ENV_PROJECT/README.md\"\n\n    if [ ! -f \"$readme_path\" ] || [ ! -s \"$readme_path\" ]; then\n        cat > \"$readme_path\" << 'EOFREADME'\n# Amp Flox Environment\n\nThis is a Flox environment for Amp, the frontier coding agent.\n\n## Quick Start\n\n1. Start Amp interactively:\n   ```bash\n   amp\n   ```\n\n2. Execute a task:\n   ```bash\n   amp -x \"explain this codebase\"\n   ```\n\n3. Configure your environment:\n   ```bash\n   amp-config\n   ```\n\n## Learn More\n\n- Documentation: https://docs.ampcode.com/\n- Install Guide: https://ampcode.com/install\n- GitHub: https://github.com/sourcegraph/amp\n\n## Helper Commands\n\n- `amp-mode` - Switch between smart/rush/free modes\n- `amp-info` - Show current configuration\n- `amp-help` - Display help message\n- `amp-mcp-add` - Add MCP servers\nEOFREADME\n    fi\n}\n\n# Main initialization\nmain() {\n    if check_amp_config; then\n        load_amp_config\n    else\n        bootstrap_amp\n    fi\n\n    show_amp_help\n    download_readme\n}\n\n# Run main\nmain\n"
+    },
+    "profile": {
+      "bash": "# Source configuration\nsource \"$AMP_CONFIG_FILE\" 2>/dev/null || true\n\n# Switch Amp mode interactively\namp-mode() {\n    local new_mode\n    new_mode=$(gum choose --header \"Select Amp mode:\" \"smart\" \"rush\" \"free\")\n\n    if [[ -n \"$new_mode\" ]]; then\n        AMP_MODE=\"$new_mode\"\n        export AMP_MODE\n\n        # Update config file\n        if [[ -f \"$AMP_CONFIG_FILE\" ]]; then\n            sed -i \"s/^export AMP_MODE=.*/export AMP_MODE=\\\"$new_mode\\\"/\" \"$AMP_CONFIG_FILE\"\n        fi\n\n        gum style --foreground 82 \"✓ Switched to $new_mode mode\"\n\n        case \"$new_mode\" in\n            \"smart\")\n                echo \"  State-of-the-art models, maximum capability\"\n                ;;\n            \"rush\")\n                echo \"  Faster, cheaper, suitable for small tasks\"\n                ;;\n            \"free\")\n                echo \"  Free of charge, using fast basic models\"\n                ;;\n        esac\n    fi\n}\n\n# Reconfigure Amp\namp-config() {\n    if [[ -f \"$AMP_CONFIG_FILE\" ]]; then\n        if gum confirm \"This will replace your current configuration. Continue?\" --default=false; then\n            rm -f \"$AMP_CONFIG_FILE\"\n            source \"${FLOX_ENV_CACHE}/amp-config/amp.config\" 2>/dev/null || true\n            bootstrap_amp\n        fi\n    else\n        bootstrap_amp\n    fi\n}\n\n# Show Amp info\namp-info() {\n    local auth_status\n    if [[ -n \"$AMP_API_KEY\" ]]; then\n        auth_status=\"$(gum style --foreground 82 '✓ Configured')\"\n    else\n        auth_status=\"$(gum style --foreground 196 '✗ Not set')\"\n    fi\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        \"$(gum style --foreground 141 --bold 'Amp Environment Information')\n\n$(gum style --foreground 69 'Mode:')          $AMP_MODE\n$(gum style --foreground 69 'Editor:')        $AMP_EDITOR\n$(gum style --foreground 69 'API Key:')       $auth_status\n$(gum style --foreground 69 'Threads:')       $AMP_THREADS_DIR\n$(gum style --foreground 69 'Config:')        $AMP_CONFIG_FILE\n$(gum style --foreground 69 'Cache:')         $FLOX_ENV_CACHE\n\n$(gum style --foreground 240 --italic 'Run amp-config to reconfigure')\"\n}\n\n# Add MCP server interactively\namp-mcp-add() {\n    gum style --foreground 141 --bold \"Add MCP Server\"\n    echo \"\"\n\n    local server_type\n    server_type=$(gum choose --header \"Select server type:\" \\\n        \"Local (command)\" \\\n        \"Remote (HTTP/SSE)\" \\\n        \"Cancel\")\n\n    [[ \"$server_type\" == \"Cancel\" ]] && return 0\n\n    local server_name\n    server_name=$(gum input --prompt \"Server name: \" --placeholder \"playwright\")\n\n    [[ -z \"$server_name\" ]] && { echo \"Server name required\"; return 1; }\n\n    if [[ \"$server_type\" == \"Local (command)\" ]]; then\n        local command\n        command=$(gum input --prompt \"Command: \" --placeholder \"npx\")\n\n        local args\n        args=$(gum input --prompt \"Arguments: \" --placeholder \"-y @playwright/mcp@latest\")\n\n        echo \"\"\n        gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n        echo \"\"\n        cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"command\": \"$command\",\n      \"args\": $(echo \"$args\" | jq -R 'split(\" \")')\n    }\n  }\n}\nEOF\n    else\n        local url\n        url=$(gum input --prompt \"Server URL: \" --placeholder \"https://mcp.semgrep.ai/mcp\")\n\n        if gum confirm \"Does this server require authentication?\" --default=false; then\n            local auth_header\n            auth_header=$(gum input --prompt \"Auth header value: \" --placeholder \"Bearer token\" --password)\n\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"url\": \"$url\",\n      \"headers\": {\n        \"Authorization\": \"$auth_header\"\n      }\n    }\n  }\n}\nEOF\n        else\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"url\": \"$url\"\n    }\n  }\n}\nEOF\n        fi\n    fi\n\n    echo \"\"\n    gum style --foreground 82 \"✓ MCP server configuration generated\"\n}\n\n# Test Amp authentication\namp-test() {\n    echo \"Testing Amp authentication...\"\n\n    if [[ -z \"$AMP_API_KEY\" ]] && [[ \"$AMP_MODE\" != \"free\" ]]; then\n        gum style --foreground 196 \"✗ API key not configured for $AMP_MODE mode\"\n        echo \"\"\n        if gum confirm \"Configure API key now?\"; then\n            amp-config\n        fi\n        return 1\n    fi\n\n    # Try a simple amp command\n    if timeout 10s amp -x \"what is 2+2?\" > /dev/null 2>&1; then\n        gum style --foreground 82 \"✓ Amp authentication successful\"\n        return 0\n    else\n        gum style --foreground 196 \"✗ Amp authentication failed\"\n        echo \"  Check your API key or network connection\"\n        return 1\n    fi\n}\n\n# Show help\namp-help() {\n    show_amp_help\n}\n\n# Open Amp documentation\namp-docs() {\n    local url=\"https://docs.ampcode.com/\"\n\n    if command -v xdg-open &> /dev/null; then\n        xdg-open \"$url\"\n    elif command -v open &> /dev/null; then\n        open \"$url\"\n    else\n        echo \"Open in browser: $url\"\n    fi\n}\n\n# View README\nreadme() {\n    if [[ \"$1\" == \"--refresh\" ]] || [ ! -s \"$FLOX_ENV_PROJECT/README.md\" ]; then\n        download_readme\n    fi\n    bat --language markdown \"$FLOX_ENV_PROJECT/README.md\" 2>/dev/null\n}\n\n# Export functions\nexport -f amp-mode amp-config amp-info amp-mcp-add amp-test amp-help amp-docs readme\n",
+      "zsh": "# Source configuration\nsource \"$AMP_CONFIG_FILE\" 2>/dev/null || true\n\n# Switch Amp mode interactively\namp-mode() {\n    local new_mode\n    new_mode=$(gum choose --header \"Select Amp mode:\" \"smart\" \"rush\" \"free\")\n\n    if [[ -n \"$new_mode\" ]]; then\n        AMP_MODE=\"$new_mode\"\n        export AMP_MODE\n\n        # Update config file\n        if [[ -f \"$AMP_CONFIG_FILE\" ]]; then\n            sed -i \"s/^export AMP_MODE=.*/export AMP_MODE=\\\"$new_mode\\\"/\" \"$AMP_CONFIG_FILE\"\n        fi\n\n        gum style --foreground 82 \"✓ Switched to $new_mode mode\"\n\n        case \"$new_mode\" in\n            \"smart\")\n                echo \"  State-of-the-art models, maximum capability\"\n                ;;\n            \"rush\")\n                echo \"  Faster, cheaper, suitable for small tasks\"\n                ;;\n            \"free\")\n                echo \"  Free of charge, using fast basic models\"\n                ;;\n        esac\n    fi\n}\n\n# Reconfigure Amp\namp-config() {\n    if [[ -f \"$AMP_CONFIG_FILE\" ]]; then\n        if gum confirm \"This will replace your current configuration. Continue?\" --default=false; then\n            rm -f \"$AMP_CONFIG_FILE\"\n            source \"${FLOX_ENV_CACHE}/amp-config/amp.config\" 2>/dev/null || true\n            bootstrap_amp\n        fi\n    else\n        bootstrap_amp\n    fi\n}\n\n# Show Amp info\namp-info() {\n    local auth_status\n    if [[ -n \"$AMP_API_KEY\" ]]; then\n        auth_status=\"$(gum style --foreground 82 '✓ Configured')\"\n    else\n        auth_status=\"$(gum style --foreground 196 '✗ Not set')\"\n    fi\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        \"$(gum style --foreground 141 --bold 'Amp Environment Information')\n\n$(gum style --foreground 69 'Mode:')          $AMP_MODE\n$(gum style --foreground 69 'Editor:')        $AMP_EDITOR\n$(gum style --foreground 69 'API Key:')       $auth_status\n$(gum style --foreground 69 'Threads:')       $AMP_THREADS_DIR\n$(gum style --foreground 69 'Config:')        $AMP_CONFIG_FILE\n$(gum style --foreground 69 'Cache:')         $FLOX_ENV_CACHE\n\n$(gum style --foreground 240 --italic 'Run amp-config to reconfigure')\"\n}\n\n# Add MCP server interactively\namp-mcp-add() {\n    gum style --foreground 141 --bold \"Add MCP Server\"\n    echo \"\"\n\n    local server_type\n    server_type=$(gum choose --header \"Select server type:\" \\\n        \"Local (command)\" \\\n        \"Remote (HTTP/SSE)\" \\\n        \"Cancel\")\n\n    [[ \"$server_type\" == \"Cancel\" ]] && return 0\n\n    local server_name\n    server_name=$(gum input --prompt \"Server name: \" --placeholder \"playwright\")\n\n    [[ -z \"$server_name\" ]] && { echo \"Server name required\"; return 1; }\n\n    if [[ \"$server_type\" == \"Local (command)\" ]]; then\n        local command\n        command=$(gum input --prompt \"Command: \" --placeholder \"npx\")\n\n        local args\n        args=$(gum input --prompt \"Arguments: \" --placeholder \"-y @playwright/mcp@latest\")\n\n        echo \"\"\n        gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n        echo \"\"\n        cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"command\": \"$command\",\n      \"args\": $(echo \"$args\" | jq -R 'split(\" \")')\n    }\n  }\n}\nEOF\n    else\n        local url\n        url=$(gum input --prompt \"Server URL: \" --placeholder \"https://mcp.semgrep.ai/mcp\")\n\n        if gum confirm \"Does this server require authentication?\" --default=false; then\n            local auth_header\n            auth_header=$(gum input --prompt \"Auth header value: \" --placeholder \"Bearer token\" --password)\n\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"url\": \"$url\",\n      \"headers\": {\n        \"Authorization\": \"$auth_header\"\n      }\n    }\n  }\n}\nEOF\n        else\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            cat << EOF | bat --language json --plain\n{\n  \"amp.mcpServers\": {\n    \"$server_name\": {\n      \"url\": \"$url\"\n    }\n  }\n}\nEOF\n        fi\n    fi\n\n    echo \"\"\n    gum style --foreground 82 \"✓ MCP server configuration generated\"\n}\n\n# Test Amp authentication\namp-test() {\n    echo \"Testing Amp authentication...\"\n\n    if [[ -z \"$AMP_API_KEY\" ]] && [[ \"$AMP_MODE\" != \"free\" ]]; then\n        gum style --foreground 196 \"✗ API key not configured for $AMP_MODE mode\"\n        echo \"\"\n        if gum confirm \"Configure API key now?\"; then\n            amp-config\n        fi\n        return 1\n    fi\n\n    # Try a simple amp command\n    if timeout 10s amp -x \"what is 2+2?\" > /dev/null 2>&1; then\n        gum style --foreground 82 \"✓ Amp authentication successful\"\n        return 0\n    else\n        gum style --foreground 196 \"✗ Amp authentication failed\"\n        echo \"  Check your API key or network connection\"\n        return 1\n    fi\n}\n\n# Show help\namp-help() {\n    show_amp_help\n}\n\n# Open Amp documentation\namp-docs() {\n    local url=\"https://docs.ampcode.com/\"\n\n    if command -v xdg-open &> /dev/null; then\n        xdg-open \"$url\"\n    elif command -v open &> /dev/null; then\n        open \"$url\"\n    else\n        echo \"Open in browser: $url\"\n    fi\n}\n\n# View README\nreadme() {\n    if [[ \"$1\" == \"--refresh\" ]] || [ ! -s \"$FLOX_ENV_PROJECT/README.md\" ]; then\n        download_readme\n    fi\n    bat --language markdown \"$FLOX_ENV_PROJECT/README.md\" 2>/dev/null\n}\n",
+      "fish": "# Source configuration\nsource \"$AMP_CONFIG_FILE\" 2>/dev/null || true\n\n# Switch Amp mode interactively\nfunction amp-mode\n    set new_mode (gum choose --header \"Select Amp mode:\" \"smart\" \"rush\" \"free\")\n\n    if test -n \"$new_mode\"\n        set -gx AMP_MODE \"$new_mode\"\n\n        # Update config file\n        if test -f \"$AMP_CONFIG_FILE\"\n            sed -i \"s/^export AMP_MODE=.*/export AMP_MODE=\\\"$new_mode\\\"/\" \"$AMP_CONFIG_FILE\"\n        end\n\n        gum style --foreground 82 \"✓ Switched to $new_mode mode\"\n\n        switch \"$new_mode\"\n            case \"smart\"\n                echo \"  State-of-the-art models, maximum capability\"\n            case \"rush\"\n                echo \"  Faster, cheaper, suitable for small tasks\"\n            case \"free\"\n                echo \"  Free of charge, using fast basic models\"\n        end\n    end\nend\n\n# Reconfigure Amp\nfunction amp-config\n    if test -f \"$AMP_CONFIG_FILE\"\n        if gum confirm \"This will replace your current configuration. Continue?\" --default=false\n            rm -f \"$AMP_CONFIG_FILE\"\n            source \"$FLOX_ENV_CACHE/amp-config/amp.config\" 2>/dev/null || true\n            bootstrap_amp\n        end\n    else\n        bootstrap_amp\n    end\nend\n\n# Show Amp info\nfunction amp-info\n    set auth_status\n    if test -n \"$AMP_API_KEY\"\n        set auth_status (gum style --foreground 82 '✓ Configured')\n    else\n        set auth_status (gum style --foreground 196 '✗ Not set')\n    end\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        (printf '%s\\n\\n%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n\\n%s' \\\n            (gum style --foreground 141 --bold 'Amp Environment Information') \\\n            (printf '%s          %s' (gum style --foreground 69 'Mode:') \"$AMP_MODE\") \\\n            (printf '%s        %s' (gum style --foreground 69 'Editor:') \"$AMP_EDITOR\") \\\n            (printf '%s       %s' (gum style --foreground 69 'API Key:') \"$auth_status\") \\\n            (printf '%s       %s' (gum style --foreground 69 'Threads:') \"$AMP_THREADS_DIR\") \\\n            (printf '%s        %s' (gum style --foreground 69 'Config:') \"$AMP_CONFIG_FILE\") \\\n            (printf '%s         %s' (gum style --foreground 69 'Cache:') \"$FLOX_ENV_CACHE\") \\\n            (gum style --foreground 240 --italic 'Run amp-config to reconfigure'))\nend\n\n# Add MCP server interactively\nfunction amp-mcp-add\n    gum style --foreground 141 --bold \"Add MCP Server\"\n    echo \"\"\n\n    set server_type (gum choose --header \"Select server type:\" \\\n        \"Local (command)\" \\\n        \"Remote (HTTP/SSE)\" \\\n        \"Cancel\")\n\n    test \"$server_type\" = \"Cancel\"; and return 0\n\n    set server_name (gum input --prompt \"Server name: \" --placeholder \"playwright\")\n\n    test -z \"$server_name\"; and echo \"Server name required\"; and return 1\n\n    if test \"$server_type\" = \"Local (command)\"\n        set command (gum input --prompt \"Command: \" --placeholder \"npx\")\n        set args (gum input --prompt \"Arguments: \" --placeholder \"-y @playwright/mcp@latest\")\n\n        echo \"\"\n        gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n        echo \"\"\n        printf '{\\n  \"amp.mcpServers\": {\\n    \"%s\": {\\n      \"command\": \"%s\",\\n      \"args\": %s\\n    }\\n  }\\n}\\n' \\\n            \"$server_name\" \"$command\" (echo \"$args\" | jq -R 'split(\" \")') | bat --language json --plain\n    else\n        set url (gum input --prompt \"Server URL: \" --placeholder \"https://mcp.semgrep.ai/mcp\")\n\n        if gum confirm \"Does this server require authentication?\" --default=false\n            set auth_header (gum input --prompt \"Auth header value: \" --placeholder \"Bearer token\" --password)\n\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            printf '{\\n  \"amp.mcpServers\": {\\n    \"%s\": {\\n      \"url\": \"%s\",\\n      \"headers\": {\\n        \"Authorization\": \"%s\"\\n      }\\n    }\\n  }\\n}\\n' \\\n                \"$server_name\" \"$url\" \"$auth_header\" | bat --language json --plain\n        else\n            echo \"\"\n            gum style --foreground 240 \"Add this to your VS Code settings.json:\"\n            echo \"\"\n            printf '{\\n  \"amp.mcpServers\": {\\n    \"%s\": {\\n      \"url\": \"%s\"\\n    }\\n  }\\n}\\n' \\\n                \"$server_name\" \"$url\" | bat --language json --plain\n        end\n    end\n\n    echo \"\"\n    gum style --foreground 82 \"✓ MCP server configuration generated\"\nend\n\n# Test Amp authentication\nfunction amp-test\n    echo \"Testing Amp authentication...\"\n\n    if test -z \"$AMP_API_KEY\"; and test \"$AMP_MODE\" != \"free\"\n        gum style --foreground 196 \"✗ API key not configured for $AMP_MODE mode\"\n        echo \"\"\n        if gum confirm \"Configure API key now?\"\n            amp-config\n        end\n        return 1\n    end\n\n    # Try a simple amp command\n    if timeout 10s amp -x \"what is 2+2?\" > /dev/null 2>&1\n        gum style --foreground 82 \"✓ Amp authentication successful\"\n        return 0\n    else\n        gum style --foreground 196 \"✗ Amp authentication failed\"\n        echo \"  Check your API key or network connection\"\n        return 1\n    end\nend\n\n# Show help\nfunction amp-help\n    show_amp_help\nend\n\n# Open Amp documentation\nfunction amp-docs\n    set url \"https://docs.ampcode.com/\"\n\n    if command -v xdg-open &> /dev/null\n        xdg-open \"$url\"\n    else if command -v open &> /dev/null\n        open \"$url\"\n    else\n        echo \"Open in browser: $url\"\n    end\nend\n\n# View README\nfunction readme\n    if test \"$argv[1]\" = \"--refresh\"; or test ! -s \"$FLOX_ENV_PROJECT/README.md\"\n        download_readme\n    end\n    bat --language markdown \"$FLOX_ENV_PROJECT/README.md\" 2>/dev/null\nend\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/jfngzvl9413212ak130c1szgas1xiw15-amp-cli-0.0.1762056193-g37ad2e.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amp-cli-0.0.1762056193-g37ad2e",
+      "pname": "amp-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:17.894796Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1762056193-g37ad2e",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/j0raz0d8cpf7js8184m3pbl326lpfxv2-amp-cli-0.0.1762056193-g37ad2e"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/d0z2ni6g57gb5jb9rxsfzvk5mbk5h2dp-amp-cli-0.0.1762056193-g37ad2e.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amp-cli-0.0.1762056193-g37ad2e",
+      "pname": "amp-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.165005Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1762056193-g37ad2e",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/4fq6a5wk0g129qs6l135dkr50bq72l7m-amp-cli-0.0.1762056193-g37ad2e"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/n2rg09fzqmgdhjz89srg1x8ahr0s4rp6-amp-cli-0.0.1762056193-g37ad2e.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amp-cli-0.0.1762056193-g37ad2e",
+      "pname": "amp-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.003981Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1762056193-g37ad2e",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/4sgp017gnr1as7kb8cvidsv03cd5b304-amp-cli-0.0.1762056193-g37ad2e"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/n27hbzlpsb0n35vkln5hyj7fmd88c734-amp-cli-0.0.1762056193-g37ad2e.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amp-cli-0.0.1762056193-g37ad2e",
+      "pname": "amp-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.413300Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1762056193-g37ad2e",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/jp0sk60ivplzdigc5ccgi4cz7b71bfz8-amp-cli-0.0.1762056193-g37ad2e"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/srvg9lydbqzfrd7wks0kbcd24681whv9-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.119212Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/m1s1wqd7nswi7jnlg146g0m3rsvsg9a7-bat-0.26.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/qyad5lwriw7xi08g13wb05fmxi5n2dp0-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.331574Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/0am602vqa4zyl5m75na8gl47dk66zzid-bat-0.26.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/w66rdmpxy0kyrwxwakf5xxcr9sqlarva-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.153535Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/7f6piwxyq7g8lw0d61bzy9nvmq1lsxv7-bat-0.26.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/xnaki7m9rslvjfxabad5jqibsjjhqpgw-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.605748Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vsih714glpw1gdr86yrif87pf0cvj9ha-bat-0.26.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/cfq3y8vdnkw626yx70f8dd92gxmkbzzb-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.499679Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/982cq6ga80yn9nghx479fbqqwf7kf8n1-curl-8.16.0-bin",
+        "dev": "/nix/store/qxzi15y4apihsg2infxn66b6hz5lws3h-curl-8.16.0-dev",
+        "devdoc": "/nix/store/bz1ap1ahksz62gz79h8anfhsyz1ir0jw-curl-8.16.0-devdoc",
+        "man": "/nix/store/rsdippinyvz3myz505vi6sgx8vmh30px-curl-8.16.0-man",
+        "out": "/nix/store/8fgfydjv40m1pw8bpwm30kxw24284fvg-curl-8.16.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/lf1pb40nkl3lx7ww85r1pbc8gg89yihb-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.869212Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/qnakzidljavpz27az7gjkyydb7ckjg6r-curl-8.16.0-bin",
+        "debug": "/nix/store/zxlv6n85qw1lzmx4xblgc0lz1vv0hg1f-curl-8.16.0-debug",
+        "dev": "/nix/store/aypq6najvfyhzx4k80a1vy329qmqj9zb-curl-8.16.0-dev",
+        "devdoc": "/nix/store/b7w1516fx1mywmkl9dqsm1rnjmpvz7a3-curl-8.16.0-devdoc",
+        "man": "/nix/store/dfgh660rbbj8s3l3xvy8klmkks4pkg3w-curl-8.16.0-man",
+        "out": "/nix/store/pl917hpmpx64fisdisv2zjmk09grvm4g-curl-8.16.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/djn6c12nnlc62i4akzdrg0i2gylndr4a-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.545728Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/irf7vpckgi9128jh7by1438ns3qgvfqz-curl-8.16.0-bin",
+        "dev": "/nix/store/sv8p7spya9zf0163xb454wvl7jbmws57-curl-8.16.0-dev",
+        "devdoc": "/nix/store/85fm556955nskhdr8q66ny2fk4fggzh1-curl-8.16.0-devdoc",
+        "man": "/nix/store/a6znnvphjwyzhxjq8vbkr35ng6xglbfb-curl-8.16.0-man",
+        "out": "/nix/store/sfr307vn71cyfnfmgckhwggq251rnrfr-curl-8.16.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/cgjg8cb7pdgsqswv5p5n9pr1sm920d8d-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:47.204008Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/xvh4bi0cc2cw18lpn6ax9m4zwnn1s9lj-curl-8.16.0-bin",
+        "debug": "/nix/store/33lwk5v78214pmlnhphbijpvbh8gjbbq-curl-8.16.0-debug",
+        "dev": "/nix/store/b65dj8iryqd1bss2qlg5ipxqndngcl9n-curl-8.16.0-dev",
+        "devdoc": "/nix/store/bz67f9xwj2i7zanwkrxb6dy9bbm2283d-curl-8.16.0-devdoc",
+        "man": "/nix/store/q4jbdyq7f0zks4i9xhfyx2pj6x92g9dj-curl-8.16.0-man",
+        "out": "/nix/store/8np9zvwqmwsnbkbrwm8x7jq4ygdkjz5g-curl-8.16.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/zf2mm2aknwbcii372xhmj22as1x96lhc-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:19.433597Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g384sncfvkxfpiswcg01hk6r3z0681ix-gum-0.17.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/4gqwdw004xlqd75z6kgzwf2q5b2d6hdc-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:59.655446Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vkh7n5a7nhxlv4zzxs1anaqcbpsaakdw-gum-0.17.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/i42jn47b2y9alzsyr5lmssqpdiypcycw-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:58.493483Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/j459dmmrrfzia8zgpykkr4fsv0ydrsvg-gum-0.17.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/pf1hq4v0aqx3agymcgzhxvbcz9g8ww13-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:49.171908Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/bqaqgkwjxdq6vxq210v9893ibmag515f-gum-0.17.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/a50a7kjf83i6i4n2d1bhmkjf3gvx5kg6-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:33.201623Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/vh3xibzhaz3nl5m97ka2i5sxivv59sgn-jq-1.8.1-bin",
+        "dev": "/nix/store/ni42jbsfngy5l81p2lz9v5wcl4kwl9nf-jq-1.8.1-dev",
+        "doc": "/nix/store/hy9hxygqscjkz0faz5xlxwkj7sn6v74i-jq-1.8.1-doc",
+        "man": "/nix/store/k9swya8a42jsa59jd2xcw0pvacj0xxyn-jq-1.8.1-man",
+        "out": "/nix/store/qabxprfzl0lygph7yg3kq6b8si410syd-jq-1.8.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/f2yda9q3f7miq3md0r47d25cbbwqwacw-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:29:18.638953Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/pqr9gww8fksrllfr38k9jvl7k5q5awf7-jq-1.8.1-bin",
+        "dev": "/nix/store/qqcccyr96a1p4j7ywgzhqi06n5y47mk0-jq-1.8.1-dev",
+        "doc": "/nix/store/ankng0jgm40wkgwiz3n8rj6hanmgdsx7-jq-1.8.1-doc",
+        "man": "/nix/store/n0y7a3f5hmglwifndimclg99mpn554bl-jq-1.8.1-man",
+        "out": "/nix/store/6h1mv44dhnq2jb94373cab59yaq5y8wz-jq-1.8.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/i9y8592ghv69f3djcq8fki41ml5b4a6x-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:55:13.062148Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/r52fkpag200agnznp2var2p0f0d0i4ch-jq-1.8.1-bin",
+        "dev": "/nix/store/ijwpwk35g7l8amallvhqymwnnspmxgcy-jq-1.8.1-dev",
+        "doc": "/nix/store/zci6xwc00v98flb0jqhdaac0231pmgvb-jq-1.8.1-doc",
+        "man": "/nix/store/xbvg59a0kdin1fibnqrw4l445a5dh9bc-jq-1.8.1-man",
+        "out": "/nix/store/50fm8yn7mpxfks0cvrjifi58r90q5c6h-jq-1.8.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/qk16np2i3ls20ih6n8lc38l6f3y6s7i3-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:21:09.216301Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/frzsv47z1mcyrp941zab08mx6kardizi-jq-1.8.1-bin",
+        "dev": "/nix/store/caq8n6m9m5zyhf0by83ksbimqmpggkwr-jq-1.8.1-dev",
+        "doc": "/nix/store/n3wl5jkmnzfg0a1vjxxx8w2n7js1b5sr-jq-1.8.1-doc",
+        "man": "/nix/store/rs84gk428azdd7ca46ki3w60yqp54ksk-jq-1.8.1-man",
+        "out": "/nix/store/zsw99s8nv2qffdg47jf8x8pyml9b0x2r-jq-1.8.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

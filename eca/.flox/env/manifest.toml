@@ -1,0 +1,425 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+eca.pkg-path = "flox/eca"
+eca.systems = ["aarch64-darwin", "x86_64-linux"]
+eca.pkg-group = "eca"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🤖 ECA - Editor Code Assistant"
+echo ""
+echo "Free, open-source AI pair programming for your favorite editor."
+echo ""
+echo "First-time setup:"
+echo "  eca-config                  # Configure AI model and API keys"
+echo "  eca-init-context            # Create project context file"
+echo "  flox activate -s            # Start ECA service"
+echo ""
+echo "Service management:"
+echo "  flox activate -s            # Start ECA service"
+echo "  flox services status        # Check service status"
+echo "  flox services logs eca      # View ECA logs"
+echo "  flox services restart eca   # Restart ECA"
+echo ""
+echo "Helper commands:"
+echo "  eca-config                  # Edit ECA configuration"
+echo "  eca-init-context            # Create project context template"
+echo ""
+echo "Features:"
+echo "  • Multi-editor support (Emacs, VS Code, Vim, IntelliJ)"
+echo "  • Model-agnostic (OpenAI, Anthropic, Copilot, Ollama)"
+echo "  • Agentic capabilities with native tools and MCPs"
+echo "  • Layer Ollama: flox activate -r flox/ollama"
+echo ""
+echo "Open Source • Apache-2.0 License"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+bash = '''
+# Helper: Create project context template
+eca-init-context() {
+    if [[ -f .eca/context.md ]]; then
+        echo "⚠️  .eca/context.md already exists"
+        echo "Edit it directly or remove it first"
+        return 1
+    fi
+
+    mkdir -p .eca
+    cat > .eca/context.md <<'EOF'
+# Project Context
+
+## Overview
+[Brief project description]
+
+## Architecture
+[System design and components]
+
+## Coding Standards
+[Style guide, patterns, conventions]
+
+## Dependencies
+[Key libraries and frameworks]
+
+## Notes
+[Additional context for AI assistance]
+EOF
+    echo "✅ Created .eca/context.md"
+    echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
+}
+
+# Helper: Edit ECA configuration
+eca-config() {
+    local config_file="${HOME}/.config/eca/config.json"
+    local editor="${EDITOR:-nano}"
+
+    # Create config directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create template config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        cat > "$config_file" <<'EOF'
+{
+  "_comment": "ECA Configuration - https://eca.dev/configuration",
+
+  "defaultBehavior": "agent",
+
+  "toolCall": {
+    "approval": {
+      "byDefault": "ask",
+      "allow": {
+        "eca__read_file": {},
+        "eca__list_directory": {}
+      }
+    }
+  },
+
+  "_comment_providers": "Uncomment and configure your preferred provider below",
+
+  "_provider_openai": {
+    "openai": {
+      "keyEnv": "OPENAI_API_KEY",
+      "models": {
+        "gpt-4": {},
+        "gpt-4o": {},
+        "o1": {}
+      }
+    }
+  },
+
+  "_provider_anthropic": {
+    "anthropic": {
+      "keyEnv": "ANTHROPIC_API_KEY",
+      "models": {
+        "claude-sonnet-4-5": {},
+        "claude-opus-4": {}
+      }
+    }
+  },
+
+  "_provider_ollama": {
+    "_comment": "Requires: flox activate -r flox/ollama",
+    "ollama": {
+      "url": "http://localhost:11434",
+      "models": {
+        "qwen2.5-coder:7b": {},
+        "qwen2.5-coder:32b": {},
+        "deepseek-coder-v2": {},
+        "codellama": {}
+      }
+    }
+  }
+}
+EOF
+        echo "✅ Created config template at $config_file"
+        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
+        echo "   See template comments for examples"
+    fi
+
+    "$editor" "$config_file"
+}
+
+export -f eca-init-context eca-config
+'''
+
+zsh = '''
+# Helper: Create project context template
+eca-init-context() {
+    if [[ -f .eca/context.md ]]; then
+        echo "⚠️  .eca/context.md already exists"
+        echo "Edit it directly or remove it first"
+        return 1
+    fi
+
+    mkdir -p .eca
+    cat > .eca/context.md <<'EOF'
+# Project Context
+
+## Overview
+[Brief project description]
+
+## Architecture
+[System design and components]
+
+## Coding Standards
+[Style guide, patterns, conventions]
+
+## Dependencies
+[Key libraries and frameworks]
+
+## Notes
+[Additional context for AI assistance]
+EOF
+    echo "✅ Created .eca/context.md"
+    echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
+}
+
+# Helper: Edit ECA configuration
+eca-config() {
+    local config_file="${HOME}/.config/eca/config.json"
+    local editor="${EDITOR:-nano}"
+
+    # Create config directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create template config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        cat > "$config_file" <<'EOF'
+{
+  "_comment": "ECA Configuration - https://eca.dev/configuration",
+
+  "defaultBehavior": "agent",
+
+  "toolCall": {
+    "approval": {
+      "byDefault": "ask",
+      "allow": {
+        "eca__read_file": {},
+        "eca__list_directory": {}
+      }
+    }
+  },
+
+  "_comment_providers": "Uncomment and configure your preferred provider below",
+
+  "_provider_openai": {
+    "openai": {
+      "keyEnv": "OPENAI_API_KEY",
+      "models": {
+        "gpt-4": {},
+        "gpt-4o": {},
+        "o1": {}
+      }
+    }
+  },
+
+  "_provider_anthropic": {
+    "anthropic": {
+      "keyEnv": "ANTHROPIC_API_KEY",
+      "models": {
+        "claude-sonnet-4-5": {},
+        "claude-opus-4": {}
+      }
+    }
+  },
+
+  "_provider_ollama": {
+    "_comment": "Requires: flox activate -r flox/ollama",
+    "ollama": {
+      "url": "http://localhost:11434",
+      "models": {
+        "qwen2.5-coder:7b": {},
+        "qwen2.5-coder:32b": {},
+        "deepseek-coder-v2": {},
+        "codellama": {}
+      }
+    }
+  }
+}
+EOF
+        echo "✅ Created config template at $config_file"
+        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
+        echo "   See template comments for examples"
+    fi
+
+    "$editor" "$config_file"
+}
+'''
+
+fish = '''
+# Helper: Create project context template
+function eca-init-context
+    if test -f .eca/context.md
+        echo "⚠️  .eca/context.md already exists"
+        echo "Edit it directly or remove it first"
+        return 1
+    end
+
+    mkdir -p .eca
+    echo "# Project Context
+
+## Overview
+[Brief project description]
+
+## Architecture
+[System design and components]
+
+## Coding Standards
+[Style guide, patterns, conventions]
+
+## Dependencies
+[Key libraries and frameworks]
+
+## Notes
+[Additional context for AI assistance]" > .eca/context.md
+    echo "✅ Created .eca/context.md"
+    echo "   Edit with: "(set -q EDITOR; and echo $EDITOR; or echo "nano")" .eca/context.md"
+end
+
+# Helper: Edit ECA configuration
+function eca-config
+    set config_file "$HOME/.config/eca/config.json"
+    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
+
+    # Create config directory if it doesn't exist
+    mkdir -p (dirname "$config_file")
+
+    # Create template config if it doesn't exist
+    if not test -f "$config_file"
+        echo '{
+  "_comment": "ECA Configuration - https://eca.dev/configuration",
+
+  "defaultBehavior": "agent",
+
+  "toolCall": {
+    "approval": {
+      "byDefault": "ask",
+      "allow": {
+        "eca__read_file": {},
+        "eca__list_directory": {}
+      }
+    }
+  },
+
+  "_comment_providers": "Uncomment and configure your preferred provider below",
+
+  "_provider_openai": {
+    "openai": {
+      "keyEnv": "OPENAI_API_KEY",
+      "models": {
+        "gpt-4": {},
+        "gpt-4o": {},
+        "o1": {}
+      }
+    }
+  },
+
+  "_provider_anthropic": {
+    "anthropic": {
+      "keyEnv": "ANTHROPIC_API_KEY",
+      "models": {
+        "claude-sonnet-4-5": {},
+        "claude-opus-4": {}
+      }
+    }
+  },
+
+  "_provider_ollama": {
+    "_comment": "Requires: flox activate -r flox/ollama",
+    "ollama": {
+      "url": "http://localhost:11434",
+      "models": {
+        "qwen2.5-coder:7b": {},
+        "qwen2.5-coder:32b": {},
+        "deepseek-coder-v2": {},
+        "codellama": {}
+      }
+    }
+  }
+}' > "$config_file"
+        echo "✅ Created config template at $config_file"
+        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
+        echo "   See template comments for examples"
+    end
+
+    eval $editor "$config_file"
+end
+'''
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+eca.command = "eca server"
+eca.is-daemon = true
+eca.shutdown = { command = "pkill -f 'eca server'" }
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Build and publish your own packages ------------------------------
+##  $ flox build
+##  $ flox publish
+## ------------------------------------------------------------------
+[build]
+# [build.myproject]
+# description = "The coolest project ever"
+# version = "0.0.1"
+# command = """
+#   mkdir -p $out/bin
+#   cargo build --release
+#   cp target/release/myproject $out/bin/myproject
+# """
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

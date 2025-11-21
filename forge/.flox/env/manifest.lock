@@ -1,0 +1,529 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "forge": {
+        "pkg-path": "flox/forge"
+      },
+      "ollama": {
+        "pkg-path": "ollama",
+        "systems": [
+          "x86_64-darwin",
+          "aarch64-darwin"
+        ]
+      },
+      "ollama-cuda": {
+        "pkg-path": "flox/ollama-cuda",
+        "pkg-group": "cuda",
+        "systems": [
+          "x86_64-linux",
+          "aarch64-linux"
+        ]
+      },
+      "ollama-ui": {
+        "pkg-path": "nextjs-ollama-llm-ui"
+      }
+    },
+    "vars": {
+      "FORGE_HISTORY_FILE": "$FLOX_ENV_CACHE/forge_history",
+      "FORGE_HTTP_CONNECT_TIMEOUT": "30",
+      "FORGE_HTTP_READ_TIMEOUT": "900",
+      "FORGE_TOOL_TIMEOUT": "300",
+      "NEXT_PUBLIC_OLLAMA_URL": "http://localhost:11434"
+    },
+    "hook": {
+      "on-activate": "mkdir -p \"$FLOX_ENV_CACHE\"\ncd \"$FLOX_ENV_PROJECT\"\n"
+    },
+    "profile": {
+      "common": "  if ollama list >/dev/null 2>&1; then\n    echo \"🤖 Ollama service running\"\n    echo \"🌐 Web interface running on port 3000\"\n  else\n    echo \"⛔️ Ollama service not available\"\n  fi\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-linux",
+        "x86_64-darwin"
+      ]
+    },
+    "services": {
+      "ollama": {
+        "command": "ollama serve"
+      },
+      "ollama-ui": {
+        "command": "# wait for ollama to be ready\nuntil ollama list; do sleep 1; done\n\nexport NEXT_CACHE_DIR=\"$FLOX_ENV_CACHE/next\"\nmkdir -p $NEXT_CACHE_DIR\nnextjs-ollama-llm-ui\n"
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "ollama-cuda",
+      "broken": false,
+      "derivation": "/nix/store/8whq14v5zgjxz45fiyrnyxlfv7s1j4id-ollama-0.12.6.drv",
+      "description": "Get up and running with large language models locally, using CUDA for NVIDIA GPU acceleration",
+      "install_id": "ollama-cuda",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/ollama-cuda?rev=ddfec7057b493804cc9e3bdfd8452638f496c551",
+      "name": "ollama-0.12.6",
+      "pname": "ollama",
+      "rev": "ddfec7057b493804cc9e3bdfd8452638f496c551",
+      "rev_count": 17,
+      "rev_date": "2025-11-06T02:11:10Z",
+      "scrape_date": "2025-11-20T22:41:24.156048680Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c9757rcmaa3w1xrks2yrywf919w3pyj2-ollama-0.12.6"
+      },
+      "system": "aarch64-linux",
+      "group": "cuda",
+      "priority": 5
+    },
+    {
+      "attr_path": "ollama-cuda",
+      "broken": false,
+      "derivation": "/nix/store/aafbqbjbfy2nyr8k0i03rxgcj57kf8pa-ollama-0.12.6.drv",
+      "description": "Get up and running with large language models locally, using CUDA for NVIDIA GPU acceleration",
+      "install_id": "ollama-cuda",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/ollama-cuda?rev=ddfec7057b493804cc9e3bdfd8452638f496c551",
+      "name": "ollama-0.12.6",
+      "pname": "ollama",
+      "rev": "ddfec7057b493804cc9e3bdfd8452638f496c551",
+      "rev_count": 17,
+      "rev_date": "2025-11-06T02:11:10Z",
+      "scrape_date": "2025-11-20T22:41:24.156059633Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/grr9x96avfn4816j9qadwqda6i7d6dj3-ollama-0.12.6"
+      },
+      "system": "x86_64-linux",
+      "group": "cuda",
+      "priority": 5
+    },
+    {
+      "attr_path": "forge",
+      "broken": false,
+      "derivation": "/nix/store/gpnf76jp86rsh459q18m8hv6c6aa6cs4-forge-1.4.0.drv",
+      "description": "AI-Enhanced Terminal Development Environment - A comprehensive coding agent that integrates AI capabilities with your development environment",
+      "install_id": "forge",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "forge-1.4.0",
+      "pname": "forge",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-20T22:41:24.156099633Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/9fcn90z3vzncg4ww1kprf6c6hy6mh4ly-forge-1.4.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "forge",
+      "broken": false,
+      "derivation": "/nix/store/90dhl1lhd2kmkvjq18kjb2ks2cwclcxd-forge-1.4.0.drv",
+      "description": "AI-Enhanced Terminal Development Environment - A comprehensive coding agent that integrates AI capabilities with your development environment",
+      "install_id": "forge",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "name": "forge-1.4.0",
+      "pname": "forge",
+      "rev": "cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "rev_count": 12,
+      "rev_date": "2025-11-20T14:43:17Z",
+      "scrape_date": "2025-11-20T22:41:24.156101423Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dxam4pbv6g14scl75inh1fam7ab0hx45-forge-1.4.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "forge",
+      "broken": false,
+      "derivation": "/nix/store/srrajmgh9dqyzs66mkb584ihnd6k2d8g-forge-1.4.0.drv",
+      "description": "AI-Enhanced Terminal Development Environment - A comprehensive coding agent that integrates AI capabilities with your development environment",
+      "install_id": "forge",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "name": "forge-1.4.0",
+      "pname": "forge",
+      "rev": "cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "rev_count": 12,
+      "rev_date": "2025-11-20T14:43:17Z",
+      "scrape_date": "2025-11-20T22:41:24.156102889Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/7d0mj2cysh94v746qrwfc08b901aar9n-forge-1.4.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "forge",
+      "broken": false,
+      "derivation": "/nix/store/sk5nd37kcz7igcn3vw0ynrxnh51pdqkc-forge-1.4.0.drv",
+      "description": "AI-Enhanced Terminal Development Environment - A comprehensive coding agent that integrates AI capabilities with your development environment",
+      "install_id": "forge",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "forge-1.4.0",
+      "pname": "forge",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T22:41:24.156112819Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/qxkz9g2iwcwidrcghvxj59bc8rajs2vs-forge-1.4.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "ollama",
+      "broken": false,
+      "derivation": "/nix/store/h22cxs60lyasgam3897kzvcj8bx1z6ch-ollama-0.12.6.drv",
+      "description": "Get up and running with large language models locally",
+      "install_id": "ollama",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "ollama-0.12.6",
+      "pname": "ollama",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T01:12:18.876569Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/qmj8pj0xc62ch9km72i9yhzrkn677jsd-ollama-0.12.6"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "ollama",
+      "broken": false,
+      "derivation": "/nix/store/x3zdhhfj9n66asgn5d58xfhg60yxmva8-ollama-0.12.6.drv",
+      "description": "Get up and running with large language models locally",
+      "install_id": "ollama",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "ollama-0.12.6",
+      "pname": "ollama",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T02:22:10.704989Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/a0h583zbxl2kpzc1rnpjgxhw3d94khhc-ollama-0.12.6"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nextjs-ollama-llm-ui",
+      "broken": false,
+      "derivation": "/nix/store/g2y9q6nq63vlkhifmmhn1zrp1dxbj67y-nextjs-ollama-llm-ui-1.2.0.drv",
+      "description": "Simple chat web interface for Ollama LLMs",
+      "install_id": "ollama-ui",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "nextjs-ollama-llm-ui-1.2.0",
+      "pname": "nextjs-ollama-llm-ui",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T01:12:15.272308Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/hr78nmhc8pk0ab0280i7srzs4wzbfsl6-nextjs-ollama-llm-ui-1.2.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nextjs-ollama-llm-ui",
+      "broken": false,
+      "derivation": "/nix/store/4aavz3qfsi64c3laa0327mq8s6ic7lcg-nextjs-ollama-llm-ui-1.2.0.drv",
+      "description": "Simple chat web interface for Ollama LLMs",
+      "install_id": "ollama-ui",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "nextjs-ollama-llm-ui-1.2.0",
+      "pname": "nextjs-ollama-llm-ui",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T01:49:11.297706Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/nwx96z0v6amkhdrrxz1lrdymsyj20grf-nextjs-ollama-llm-ui-1.2.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nextjs-ollama-llm-ui",
+      "broken": false,
+      "derivation": "/nix/store/55dkf6adx1khy5631n6mc2rc64wf0bmv-nextjs-ollama-llm-ui-1.2.0.drv",
+      "description": "Simple chat web interface for Ollama LLMs",
+      "install_id": "ollama-ui",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "nextjs-ollama-llm-ui-1.2.0",
+      "pname": "nextjs-ollama-llm-ui",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T02:22:06.657069Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/k5scpmhlfwfby9wwpznhgbzhm0k8y8hz-nextjs-ollama-llm-ui-1.2.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nextjs-ollama-llm-ui",
+      "broken": false,
+      "derivation": "/nix/store/byqhws2b8c6hs32yapbwryk34cmpn1ai-nextjs-ollama-llm-ui-1.2.0.drv",
+      "description": "Simple chat web interface for Ollama LLMs",
+      "install_id": "ollama-ui",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "name": "nextjs-ollama-llm-ui-1.2.0",
+      "pname": "nextjs-ollama-llm-ui",
+      "rev": "01f116e4df6a15f4ccdffb1bcd41096869fb385c",
+      "rev_count": 882227,
+      "rev_date": "2025-10-22T06:30:52Z",
+      "scrape_date": "2025-10-24T02:59:15.227947Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/b01flkwv4w3zc8gg4jgw52189iq7l9h3-nextjs-ollama-llm-ui-1.2.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ],
+  "compose": {
+    "composer": {
+      "version": 1,
+      "install": {
+        "forge": {
+          "pkg-path": "flox/forge"
+        },
+        "ollama-cuda": {
+          "pkg-path": "flox/ollama-cuda",
+          "pkg-group": "cuda",
+          "systems": [
+            "x86_64-linux",
+            "aarch64-linux"
+          ]
+        }
+      },
+      "vars": {
+        "FORGE_HISTORY_FILE": "$FLOX_ENV_CACHE/forge_history",
+        "FORGE_HTTP_CONNECT_TIMEOUT": "30",
+        "FORGE_HTTP_READ_TIMEOUT": "900",
+        "FORGE_TOOL_TIMEOUT": "300"
+      },
+      "hook": {
+        "on-activate": "mkdir -p \"$FLOX_ENV_CACHE\"\ncd \"$FLOX_ENV_PROJECT\"\n"
+      },
+      "options": {},
+      "include": {
+        "environments": [
+          {
+            "remote": "flox/ollama"
+          }
+        ]
+      }
+    },
+    "include": [
+      {
+        "manifest": {
+          "version": 1,
+          "install": {
+            "ollama": {
+              "pkg-path": "ollama",
+              "systems": [
+                "x86_64-darwin",
+                "aarch64-darwin"
+              ]
+            },
+            "ollama-cuda": {
+              "pkg-path": "flox/ollama-cuda",
+              "priority": 6,
+              "systems": [
+                "x86_64-linux",
+                "aarch64-linux"
+              ]
+            },
+            "ollama-ui": {
+              "pkg-path": "nextjs-ollama-llm-ui"
+            }
+          },
+          "vars": {
+            "NEXT_PUBLIC_OLLAMA_URL": "http://localhost:11434"
+          },
+          "profile": {
+            "common": "  if ollama list >/dev/null 2>&1; then\n    echo \"🤖 Ollama service running\"\n    echo \"🌐 Web interface running on port 3000\"\n  else\n    echo \"⛔️ Ollama service not available\"\n  fi\n"
+          },
+          "options": {
+            "systems": [
+              "aarch64-darwin",
+              "aarch64-linux",
+              "x86_64-linux",
+              "x86_64-darwin"
+            ]
+          },
+          "services": {
+            "ollama": {
+              "command": "ollama serve"
+            },
+            "ollama-ui": {
+              "command": "# wait for ollama to be ready\nuntil ollama list; do sleep 1; done\n\nexport NEXT_CACHE_DIR=\"$FLOX_ENV_CACHE/next\"\nmkdir -p $NEXT_CACHE_DIR\nnextjs-ollama-llm-ui\n"
+            }
+          }
+        },
+        "name": "ollama",
+        "descriptor": {
+          "remote": "flox/ollama"
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "warning": {
+          "Overriding": [
+            "install",
+            "ollama-cuda"
+          ]
+        },
+        "higher_priority_name": "Current manifest"
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+version = 1
+
+[install]
+backlog-md.pkg-path = "flox/backlog-md"
+
+[vars]
+BACKLOG_PORT = "6420"
+BACKLOG_AUTO_OPEN = "true"
+
+[hook]
+on-activate = '''
+backlog completion install --shell bash >/dev/null 2>&1 || true
+backlog completion install --shell zsh >/dev/null 2>&1 || true
+cd "$FLOX_ENV_PROJECT"
+'''
+
+[profile]
+bash = '''
+[ -f "$HOME/.local/share/bash-completion/completions/backlog" ] && \
+  source "$HOME/.local/share/bash-completion/completions/backlog"
+
+alias bb="backlog board"
+alias bt="backlog task"
+alias bw="backlog browser"
+alias bl="backlog task list"
+'''
+
+zsh = '''
+[ -f "$HOME/.local/share/zsh/site-functions/_backlog" ] && \
+  fpath=("$HOME/.local/share/zsh/site-functions" $fpath) && \
+  autoload -Uz compinit && compinit
+
+alias bb="backlog board"
+alias bt="backlog task"
+alias bw="backlog browser"
+alias bl="backlog task list"
+'''
+
+[services]
+[services.backlog-mcp]
+command = '''
+mkdir -p "$FLOX_ENV_CACHE/logs"
+backlog mcp start 2>&1 | tee -a "$FLOX_ENV_CACHE/logs/backlog-mcp.log" &
+wait
+'''
+is-daemon = true
+shutdown = { command = "pkill -f 'backlog mcp start'" }
+
+[options]
+systems = ["x86_64-linux"]

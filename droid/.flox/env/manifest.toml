@@ -1,0 +1,110 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+droid.pkg-path = "flox/droid"
+droid.systems = ["x86_64-linux", "aarch64-darwin"]
+droid.pkg-group = "droid"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🤖 Droid - AI Software Development Agent from Factory"
+echo ""
+echo "Automate refactors, incident response, and migrations across your workflow."
+echo ""
+echo "First-time setup:"
+echo "  droid                       # Launch interactive session"
+echo "                              # Authenticate on first run"
+echo ""
+echo "Usage:"
+echo "  droid                       # Interactive mode (IDE/terminal)"
+echo "  droid exec \"task\"          # Headless mode (CI/CD, scripts)"
+echo "  droid --help                # Show all options"
+echo ""
+echo "Features:"
+echo "  • Complete development tasks autonomously"
+echo "  • Works with existing tools (VS Code, JetBrains, Vim)"
+echo "  • Headless mode for CI/CD and automation"
+echo "  • Multi-interface (CLI, Web, Slack, Teams, Linear, Jira)"
+echo "  • Model-agnostic (works with any provider)"
+echo ""
+echo "Requires: Factory.ai account"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+# No helper functions needed - droid is self-contained
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Build and publish your own packages ------------------------------
+##  $ flox build
+##  $ flox publish
+## ------------------------------------------------------------------
+[build]
+# [build.myproject]
+# description = "The coolest project ever"
+# version = "0.0.1"
+# command = """
+#   mkdir -p $out/bin
+#   cargo build --release
+#   cp target/release/myproject $out/bin/myproject
+# """
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

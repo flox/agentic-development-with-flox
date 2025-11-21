@@ -1,0 +1,21 @@
+version = 1
+
+[install]
+codex-acp.pkg-path = "flox/codex-acp"
+
+[hook]
+on-activate = '''
+mkdir -p "$FLOX_ENV_CACHE/logs"
+cd "$FLOX_ENV_PROJECT"
+'''
+
+[services]
+[services.codex-acp]
+command = '''
+exec codex-acp 2>&1 | tee -a "$FLOX_ENV_CACHE/logs/codex-acp.log"
+'''
+is-daemon = true
+shutdown = { command = "pkill -f codex-acp" }
+
+[options]
+systems = ["x86_64-linux"]

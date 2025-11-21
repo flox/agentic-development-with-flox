@@ -1,0 +1,253 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "gemini-cli": {
+        "pkg-path": "gemini-cli"
+      },
+      "gemini-cli-vscode-ide-companion": {
+        "pkg-path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 Gemini CLI - AI Agent in Your Terminal\"\necho \"\"\necho \"An open-source AI agent from Google bringing Gemini to your terminal.\"\necho \"\"\necho \"First-time setup:\"\necho \"  gemini                      # Launch interactive session\"\necho \"                              # Authenticate on first run (OAuth, API key, or Vertex AI)\"\necho \"\"\necho \"Usage:\"\necho \"  gemini                      # Interactive mode\"\necho \"  gemini -p \\\"prompt\\\"          # Non-interactive mode\"\necho \"  gemini --output-format json # JSON output for scripting\"\necho \"  gemini -m gemini-2.5-flash  # Specify model\"\necho \"\"\necho \"Optional enhancements:\"\necho \"  GEMINI.md                   # Project context file (see README)\"\necho \"  ~/.gemini/settings.json     # MCP server configuration\"\necho \"\"\necho \"VS Code extension installed and ready to use!\"\necho \"\"\necho \"Open Source • Apache-2.0 License\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "gemini-cli",
+      "broken": false,
+      "derivation": "/nix/store/jnns1wyxkzclwa4fy90j5kc7ajh6z14i-gemini-cli-0.11.3.drv",
+      "description": "AI agent that brings the power of Gemini directly into your terminal",
+      "install_id": "gemini-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gemini-cli-0.11.3",
+      "pname": "gemini-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:19.070416Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/127yg7h9j1q6fnc4s7j8ahvfzj05802a-gemini-cli-0.11.3"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gemini-cli",
+      "broken": false,
+      "derivation": "/nix/store/mx4dhh9wjc2sw6hf4hvfxj5nlgsnhszp-gemini-cli-0.11.3.drv",
+      "description": "AI agent that brings the power of Gemini directly into your terminal",
+      "install_id": "gemini-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gemini-cli-0.11.3",
+      "pname": "gemini-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:58.741367Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/xya7dn3vngayy4xq788wi1yikpgspmb1-gemini-cli-0.11.3"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gemini-cli",
+      "broken": false,
+      "derivation": "/nix/store/k10kx2658p3z9b7zsvqs353pvi4rb1xr-gemini-cli-0.11.3.drv",
+      "description": "AI agent that brings the power of Gemini directly into your terminal",
+      "install_id": "gemini-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gemini-cli-0.11.3",
+      "pname": "gemini-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:58.099333Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/f3bhj9cpzxj2khky308z0j9b3kfcmcs4-gemini-cli-0.11.3"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gemini-cli",
+      "broken": false,
+      "derivation": "/nix/store/3dd31wsqjfgjlyg7zlwnbmk3qyiyfpjj-gemini-cli-0.11.3.drv",
+      "description": "AI agent that brings the power of Gemini directly into your terminal",
+      "install_id": "gemini-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gemini-cli-0.11.3",
+      "pname": "gemini-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:48.169990Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/jpcyv57a3j0s2ca1i9fwswpd6j94dpjh-gemini-cli-0.11.3"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
+      "broken": false,
+      "derivation": "/nix/store/1k9gfkbas0mfgqisg7vbif96fc7af874-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "description": "Enable Gemini CLI with direct access to your IDE workspace",
+      "install_id": "gemini-cli-vscode-ide-companion",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "pname": "gemini-cli-vscode-ide-companion",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:37:48.486609Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/l96d1xi4pkb1ic2j00rp83gm1894kcc9-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
+      "broken": false,
+      "derivation": "/nix/store/m5jn2rrv903hzjws2slgps49zi2l7blx-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "description": "Enable Gemini CLI with direct access to your IDE workspace",
+      "install_id": "gemini-cli-vscode-ide-companion",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "pname": "gemini-cli-vscode-ide-companion",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:32:17.421768Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/84vdjszzl3n2rf78389qm004fcx34l5j-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
+      "broken": false,
+      "derivation": "/nix/store/6chx6rdyspmz0apwqm8ykq2c9hk3vfhf-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "description": "Enable Gemini CLI with direct access to your IDE workspace",
+      "install_id": "gemini-cli-vscode-ide-companion",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "pname": "gemini-cli-vscode-ide-companion",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:57:20.422548Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vqr2qq9kbgamlp4kq291wicwjx696vad-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
+      "broken": false,
+      "derivation": "/nix/store/z568gp273w3azv131n7gwbm1fkl0rr87-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "description": "Enable Gemini CLI with direct access to your IDE workspace",
+      "install_id": "gemini-cli-vscode-ide-companion",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "pname": "gemini-cli-vscode-ide-companion",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:24:26.668910Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.3",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ym6ff3sfgn8zkd6i51h3hbbl16gag6kh-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

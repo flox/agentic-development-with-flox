@@ -1,0 +1,55 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "code": {
+        "pkg-path": "flox/code"
+      }
+    },
+    "vars": {
+      "CODE_HOME": "$FLOX_ENV_CACHE/code"
+    },
+    "hook": {
+      "on-activate": "mkdir -p \"$CODE_HOME\"\ncd \"$FLOX_ENV_PROJECT\"\n"
+    },
+    "options": {
+      "systems": [
+        "x86_64-linux"
+      ]
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "code",
+      "broken": false,
+      "derivation": "/nix/store/ycx3x3wfdhflhzm7f2p11jhsl8i3nwkx-code-0.4.16.drv",
+      "description": "Fork of codex. Orchestrate agents from OpenAI, Claude, Gemini or any provider.",
+      "install_id": "code",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "code-0.4.16",
+      "pname": "code",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T03:21:41.646815373Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.4.16",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/v7q4s264hz25j208q212r0wwg47camgg-code-0.4.16"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

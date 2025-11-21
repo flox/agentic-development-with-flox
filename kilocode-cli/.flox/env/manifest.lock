@@ -1,0 +1,117 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "kilocode-cli": {
+        "pkg-path": "flox/kilocode-cli",
+        "pkg-group": "kilocode-cli",
+        "systems": [
+          "x86_64-linux",
+          "aarch64-darwin",
+          "x86_64-darwin"
+        ]
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🚀 Kilo Code - Open-Source AI Coding Agent\"\necho \"\"\necho \"A multi-modal AI agent for autonomous coding, architecting, and debugging.\"\necho \"\"\necho \"First-time setup:\"\necho \"  kilocode                    # Launch interactive session\"\necho \"  /config                     # Configure API keys and providers\"\necho \"                              # Or: kilocode config\"\necho \"\"\necho \"Usage:\"\necho \"  kilocode                    # Start interactive chat\"\necho \"  kilocode --auto \\\"prompt\\\"    # Autonomous mode\"\necho \"  kilocode -c                 # Resume last conversation\"\necho \"\"\necho \"Slash commands (in session):\"\necho \"  /help                       # Show all commands\"\necho \"  /mode                       # Switch agent modes (architect, code, debug)\"\necho \"  /model                      # Switch models\"\necho \"  /config                     # Configure providers\"\necho \"  /new                        # Start fresh task\"\necho \"\"\necho \"From Kilo • Open Source\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "kilocode-cli",
+      "broken": false,
+      "derivation": "/nix/store/mr7cx3mqnf7a0n417nf2876hz4vvxj02-kilocode-cli-0.4.2.drv",
+      "description": "The open-source AI coding agent. Now available in your terminal.",
+      "install_id": "kilocode-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "kilocode-cli-0.4.2",
+      "pname": "kilocode-cli",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-21T05:59:03.345792119Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.4.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/09dm9yx7wn6r1826gb9ns2icn1mcm9ha-kilocode-cli-0.4.2"
+      },
+      "system": "aarch64-darwin",
+      "group": "kilocode-cli",
+      "priority": 5
+    },
+    {
+      "attr_path": "kilocode-cli",
+      "broken": false,
+      "derivation": "/nix/store/yr64fqz7s3ywqn14hdywn1b4q5ipjlcs-kilocode-cli-0.4.2.drv",
+      "description": "The open-source AI coding agent. Now available in your terminal.",
+      "install_id": "kilocode-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "name": "kilocode-cli-0.4.2",
+      "pname": "kilocode-cli",
+      "rev": "cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "rev_count": 12,
+      "rev_date": "2025-11-20T14:43:17Z",
+      "scrape_date": "2025-11-21T05:59:03.345798726Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.4.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/y0qd75y6lzv7af70g7qbk5375di65qr4-kilocode-cli-0.4.2"
+      },
+      "system": "x86_64-darwin",
+      "group": "kilocode-cli",
+      "priority": 5
+    },
+    {
+      "attr_path": "kilocode-cli",
+      "broken": false,
+      "derivation": "/nix/store/5la1rd4qfdh87vmdxncdqj34k4zd686r-kilocode-cli-0.4.2.drv",
+      "description": "The open-source AI coding agent. Now available in your terminal.",
+      "install_id": "kilocode-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "kilocode-cli-0.4.2",
+      "pname": "kilocode-cli",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-21T05:59:03.345800270Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.4.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/n62pai9jdpiff8dy1hsf24y658096w1c-kilocode-cli-0.4.2"
+      },
+      "system": "x86_64-linux",
+      "group": "kilocode-cli",
+      "priority": 5
+    }
+  ]
+}

@@ -1,0 +1,809 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "claude-code": {
+        "pkg-path": "claude-code"
+      },
+      "claude-code-router": {
+        "pkg-path": "claude-code-router"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "gum": {
+        "pkg-path": "gum"
+      },
+      "jq": {
+        "pkg-path": "jq"
+      }
+    },
+    "vars": {
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY:-}",
+      "CCR_APIKEY": "${CCR_APIKEY:-}",
+      "CCR_API_TIMEOUT_MS": "${CCR_API_TIMEOUT_MS:-600000}",
+      "CCR_CONFIG_DIR": "$HOME/.claude-code-router",
+      "CCR_CONFIG_FILE": "$HOME/.claude-code-router/config.json",
+      "CCR_HOST": "${CCR_HOST:-127.0.0.1}",
+      "CCR_LOG_DIR": "$HOME/.claude-code-router/logs",
+      "CCR_LOG_ENABLED": "${CCR_LOG_ENABLED:-true}",
+      "CCR_LOG_LEVEL": "${CCR_LOG_LEVEL:-debug}",
+      "CCR_NON_INTERACTIVE": "${CCR_NON_INTERACTIVE:-false}",
+      "CCR_PORT": "${CCR_PORT:-3456}",
+      "CCR_PROXY_URL": "${CCR_PROXY_URL:-}",
+      "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY:-}",
+      "GEMINI_API_KEY": "${GEMINI_API_KEY:-}",
+      "OPENAI_API_KEY": "${OPENAI_API_KEY:-}",
+      "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY:-}"
+    },
+    "hook": {
+      "on-activate": "# Create required directories\nmkdir -p \"$CCR_CONFIG_DIR\"\nmkdir -p \"$CCR_LOG_DIR\"\nmkdir -p \"$CCR_CONFIG_DIR/plugins\"\n\n# Function to check if config exists\ncheck_ccr_config() {\n    [[ -f \"$CCR_CONFIG_FILE\" ]] || return 1\n    [[ -s \"$CCR_CONFIG_FILE\" ]] || return 1\n    return 0\n}\n\n# Display info\nshow_ccr_info() {\n    local config_status\n    if check_ccr_config; then\n        config_status=\"✓ Configured\"\n    else\n        config_status=\"⚠️  Not configured\"\n    fi\n\n    echo \"\"\n    echo \"✅ Claude Code Router environment ready (headless mode)\"\n    echo \"\"\n    echo \"Configuration:\"\n    echo \"  Config: $CCR_CONFIG_FILE ($config_status)\"\n    echo \"  Host: $CCR_HOST\"\n    echo \"  Port: $CCR_PORT\"\n    echo \"  Logs: $CCR_LOG_DIR\"\n    echo \"\"\n    echo \"Service Management:\"\n    echo \"  flox activate -s           Start router service\"\n    echo \"  flox services status       Check service status\"\n    echo \"  flox services logs ccr     View service logs\"\n    echo \"\"\n    echo \"Configuration:\"\n    echo \"  ccr-setup                  Interactive config wizard\"\n    echo \"  ccr-config-example         Generate example config\"\n    echo \"  ccr ui                     Open web UI for config\"\n    echo \"  ccr model                  Interactive model selector\"\n    echo \"\"\n    echo \"Runtime Customization (via env vars):\"\n    echo \"  CCR_HOST=0.0.0.0 CCR_APIKEY=secret flox activate -s\"\n    echo \"\"\n    echo \"Configure Claude Code:\"\n    echo \"  Set API base URL to: http://$CCR_HOST:$CCR_PORT\"\n    echo \"  ccr ui                     Open config UI in browser\"\n    echo \"\"\n}\n\n# Main initialization\nif ! check_ccr_config; then\n    echo \"ℹ️  No configuration found. Run 'ccr-setup' to create one.\"\nfi\n\nshow_ccr_info\n"
+    },
+    "profile": {
+      "bash": "# Helper: Generate example configuration\nccr-config-example() {\n    local config_file=\"${1:-$CCR_CONFIG_FILE}\"\n\n    cat > \"$config_file\" << 'EOF'\n{\n  \"LOG\": true,\n  \"LOG_LEVEL\": \"debug\",\n  \"API_TIMEOUT_MS\": 600000,\n  \"NON_INTERACTIVE_MODE\": false,\n  \"APIKEY\": \"\",\n  \"HOST\": \"127.0.0.1\",\n  \"PROXY_URL\": \"\",\n  \"Providers\": [\n    {\n      \"name\": \"openrouter\",\n      \"api_base_url\": \"https://openrouter.ai/api/v1/chat/completions\",\n      \"api_key\": \"$OPENROUTER_API_KEY\",\n      \"models\": [\n        \"anthropic/claude-sonnet-4\",\n        \"anthropic/claude-3.5-sonnet\",\n        \"google/gemini-2.5-pro-preview\"\n      ],\n      \"transformer\": {\n        \"use\": [\"openrouter\"]\n      }\n    },\n    {\n      \"name\": \"deepseek\",\n      \"api_base_url\": \"https://api.deepseek.com/chat/completions\",\n      \"api_key\": \"$DEEPSEEK_API_KEY\",\n      \"models\": [\"deepseek-chat\", \"deepseek-reasoner\"],\n      \"transformer\": {\n        \"use\": [\"deepseek\"],\n        \"deepseek-chat\": {\n          \"use\": [\"tooluse\"]\n        }\n      }\n    }\n  ],\n  \"Router\": {\n    \"default\": \"deepseek,deepseek-chat\",\n    \"background\": \"deepseek,deepseek-chat\",\n    \"think\": \"deepseek,deepseek-reasoner\",\n    \"longContext\": \"openrouter,google/gemini-2.5-pro-preview\",\n    \"longContextThreshold\": 60000\n  }\n}\nEOF\n\n    echo \"✓ Example configuration created: $config_file\"\n    echo \"\"\n    echo \"Edit with: ${EDITOR:-nano} $config_file\"\n    echo \"Or use:    ccr-setup (interactive wizard)\"\n}\n\n# Helper: Interactive configuration wizard\nccr-setup() {\n    if ! command -v gum &> /dev/null; then\n        echo \"⚠️  gum not found. Using non-interactive mode.\"\n        ccr-config-example\n        return 0\n    fi\n\n    clear\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        \"$(gum style --foreground 27 --bold 'Claude Code Router Configuration')\n\n$(gum style --foreground 240 'Setup your AI model router')\"\n\n    echo \"\"\n\n    # Check if config exists\n    if [[ -f \"$CCR_CONFIG_FILE\" ]]; then\n        if ! gum confirm \"Configuration exists. Overwrite?\" --default=false; then\n            return 0\n        fi\n    fi\n\n    # Basic settings\n    echo \"$(gum style --foreground 141 --bold '1. Basic Settings')\"\n    echo \"\"\n\n    local host\n    host=$(gum input --placeholder \"127.0.0.1\" --value \"127.0.0.1\" --prompt \"Host: \")\n\n    local enable_apikey\n    enable_apikey=$(gum choose --header \"Enable API key authentication?\" \"No\" \"Yes\")\n\n    local apikey=\"\"\n    if [[ \"$enable_apikey\" == \"Yes\" ]]; then\n        apikey=$(gum input --prompt \"API Key: \" --password)\n    fi\n\n    # Proxy settings\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '2. Network Settings')\"\n    echo \"\"\n\n    local proxy=\"\"\n    if gum confirm \"Use HTTP proxy?\" --default=false; then\n        proxy=$(gum input --prompt \"Proxy URL: \" --placeholder \"http://127.0.0.1:7890\")\n    fi\n\n    # Provider selection\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '3. Provider Setup')\"\n    echo \"\"\n\n    local providers\n    providers=$(gum choose --no-limit --header \"Select providers to configure:\" \\\n        \"OpenRouter\" \\\n        \"DeepSeek\" \\\n        \"OpenAI\" \\\n        \"Gemini\" \\\n        \"Anthropic\")\n\n    # Build config\n    cat > \"$CCR_CONFIG_FILE\" << EOF\n{\n  \"LOG\": true,\n  \"LOG_LEVEL\": \"debug\",\n  \"API_TIMEOUT_MS\": 600000,\n  \"NON_INTERACTIVE_MODE\": false,\n  \"HOST\": \"$host\",\n  \"APIKEY\": \"$apikey\",\n  \"PROXY_URL\": \"$proxy\",\n  \"Providers\": [\nEOF\n\n    local first=true\n\n    # Add providers\n    if echo \"$providers\" | grep -q \"OpenRouter\"; then\n        [[ \"$first\" == \"false\" ]] && echo \",\" >> \"$CCR_CONFIG_FILE\"\n        cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n    {\n      \"name\": \"openrouter\",\n      \"api_base_url\": \"https://openrouter.ai/api/v1/chat/completions\",\n      \"api_key\": \"$OPENROUTER_API_KEY\",\n      \"models\": [\n        \"anthropic/claude-sonnet-4\",\n        \"anthropic/claude-3.5-sonnet\",\n        \"google/gemini-2.5-pro-preview\"\n      ],\n      \"transformer\": {\n        \"use\": [\"openrouter\"]\n      }\n    }\nEOF\n        first=false\n    fi\n\n    if echo \"$providers\" | grep -q \"DeepSeek\"; then\n        [[ \"$first\" == \"false\" ]] && echo \",\" >> \"$CCR_CONFIG_FILE\"\n        cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n    {\n      \"name\": \"deepseek\",\n      \"api_base_url\": \"https://api.deepseek.com/chat/completions\",\n      \"api_key\": \"$DEEPSEEK_API_KEY\",\n      \"models\": [\"deepseek-chat\", \"deepseek-reasoner\"],\n      \"transformer\": {\n        \"use\": [\"deepseek\"],\n        \"deepseek-chat\": {\n          \"use\": [\"tooluse\"]\n        }\n      }\n    }\nEOF\n        first=false\n    fi\n\n    if echo \"$providers\" | grep -q \"OpenAI\"; then\n        [[ \"$first\" == \"false\" ]] && echo \",\" >> \"$CCR_CONFIG_FILE\"\n        cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n    {\n      \"name\": \"openai\",\n      \"api_base_url\": \"https://api.openai.com/v1/chat/completions\",\n      \"api_key\": \"$OPENAI_API_KEY\",\n      \"models\": [\"gpt-5\", \"gpt-5-mini\"]\n    }\nEOF\n        first=false\n    fi\n\n    if echo \"$providers\" | grep -q \"Gemini\"; then\n        [[ \"$first\" == \"false\" ]] && echo \",\" >> \"$CCR_CONFIG_FILE\"\n        cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n    {\n      \"name\": \"gemini\",\n      \"api_base_url\": \"https://generativelanguage.googleapis.com/v1beta/models/\",\n      \"api_key\": \"$GEMINI_API_KEY\",\n      \"models\": [\"gemini-2.5-flash\", \"gemini-2.5-pro\"],\n      \"transformer\": {\n        \"use\": [\"gemini\"]\n      }\n    }\nEOF\n        first=false\n    fi\n\n    if echo \"$providers\" | grep -q \"Anthropic\"; then\n        [[ \"$first\" == \"false\" ]] && echo \",\" >> \"$CCR_CONFIG_FILE\"\n        cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n    {\n      \"name\": \"anthropic\",\n      \"api_base_url\": \"https://api.anthropic.com/v1/messages\",\n      \"api_key\": \"$ANTHROPIC_API_KEY\",\n      \"models\": [\"claude-sonnet-4-20250514\", \"claude-3-5-sonnet-20241022\"],\n      \"transformer\": {\n        \"use\": [\"anthropic\"]\n      }\n    }\nEOF\n        first=false\n    fi\n\n    # Close providers array and add router\n    cat >> \"$CCR_CONFIG_FILE\" << 'EOF'\n  ],\n  \"Router\": {\n    \"default\": \"deepseek,deepseek-chat\",\n    \"background\": \"deepseek,deepseek-chat\",\n    \"think\": \"deepseek,deepseek-reasoner\",\n    \"longContext\": \"openrouter,google/gemini-2.5-pro-preview\",\n    \"longContextThreshold\": 60000\n  }\n}\nEOF\n\n    echo \"\"\n    gum style --foreground 34 --bold \"✓ Configuration saved!\"\n    echo \"\"\n    echo \"Next steps:\"\n    echo \"  1. Set API keys as environment variables\"\n    echo \"  2. Run: flox activate -s\"\n    echo \"  3. Configure Claude Code API base URL to: http://$host:3456\"\n}\n\n# Helper: Show configuration status\nccr-status() {\n    echo \"Claude Code Router Status\"\n    echo \"\"\n    echo \"✓ ccr: $(which ccr)\"\n    echo \"\"\n\n    # Check config\n    if [[ -f \"$CCR_CONFIG_FILE\" ]]; then\n        echo \"✓ Config exists: $CCR_CONFIG_FILE\"\n\n        # Show providers\n        if command -v jq &> /dev/null; then\n            echo \"\"\n            echo \"Configured Providers:\"\n            jq -r '.Providers[]?.name // empty' \"$CCR_CONFIG_FILE\" | sed 's/^/  - /'\n\n            echo \"\"\n            echo \"Router Settings:\"\n            jq -r '.Router | to_entries[] | \"  \\(.key): \\(.value)\"' \"$CCR_CONFIG_FILE\"\n        fi\n    else\n        echo \"✗ No config found\"\n    fi\n\n    echo \"\"\n\n    # Check if service is running\n    if pgrep -f \"claude-code-router\" > /dev/null; then\n        echo \"✓ Service is running\"\n    else\n        echo \"⚠️  Service not running (start with: flox activate -s)\"\n    fi\n}\n\n# Helper: View logs\nccr-logs() {\n    if [[ -f \"$CCR_LOG_DIR/claude-code-router.log\" ]]; then\n        tail -f \"$CCR_LOG_DIR/claude-code-router.log\"\n    else\n        echo \"No logs found at $CCR_LOG_DIR/claude-code-router.log\"\n    fi\n}\n\n# Helper: Edit configuration\nccr-edit() {\n    local editor=\"${EDITOR:-nano}\"\n\n    if [[ ! -f \"$CCR_CONFIG_FILE\" ]]; then\n        echo \"No config found. Creating example...\"\n        ccr-config-example\n    fi\n\n    \"$editor\" \"$CCR_CONFIG_FILE\"\n\n    echo \"\"\n    echo \"Configuration updated. Restart service:\"\n    echo \"  flox services restart ccr\"\n}\n\n# Helper: Test connection\nccr-test() {\n    local endpoint=\"${1:-http://$CCR_HOST:$CCR_PORT}\"\n\n    echo \"Testing connection to $endpoint...\"\n\n    if curl -s \"$endpoint/health\" > /dev/null 2>&1; then\n        echo \"✓ Router is reachable\"\n        return 0\n    else\n        echo \"✗ Router is not reachable\"\n        echo \"\"\n        echo \"Make sure the service is running:\"\n        echo \"  flox activate -s\"\n        return 1\n    fi\n}\n\n# Export functions\nexport -f ccr-config-example ccr-setup ccr-status ccr-logs ccr-edit ccr-test\n",
+      "zsh": "# Helper: Generate example configuration\nccr-config-example() {\n    local config_file=\"${1:-$CCR_CONFIG_FILE}\"\n\n    cat > \"$config_file\" << 'EOF'\n{\n  \"LOG\": true,\n  \"LOG_LEVEL\": \"debug\",\n  \"API_TIMEOUT_MS\": 600000,\n  \"NON_INTERACTIVE_MODE\": false,\n  \"APIKEY\": \"\",\n  \"HOST\": \"127.0.0.1\",\n  \"PROXY_URL\": \"\",\n  \"Providers\": [\n    {\n      \"name\": \"openrouter\",\n      \"api_base_url\": \"https://openrouter.ai/api/v1/chat/completions\",\n      \"api_key\": \"$OPENROUTER_API_KEY\",\n      \"models\": [\n        \"anthropic/claude-sonnet-4\",\n        \"anthropic/claude-3.5-sonnet\",\n        \"google/gemini-2.5-pro-preview\"\n      ],\n      \"transformer\": {\n        \"use\": [\"openrouter\"]\n      }\n    },\n    {\n      \"name\": \"deepseek\",\n      \"api_base_url\": \"https://api.deepseek.com/chat/completions\",\n      \"api_key\": \"$DEEPSEEK_API_KEY\",\n      \"models\": [\"deepseek-chat\", \"deepseek-reasoner\"],\n      \"transformer\": {\n        \"use\": [\"deepseek\"],\n        \"deepseek-chat\": {\n          \"use\": [\"tooluse\"]\n        }\n      }\n    }\n  ],\n  \"Router\": {\n    \"default\": \"deepseek,deepseek-chat\",\n    \"background\": \"deepseek,deepseek-chat\",\n    \"think\": \"deepseek,deepseek-reasoner\",\n    \"longContext\": \"openrouter,google/gemini-2.5-pro-preview\",\n    \"longContextThreshold\": 60000\n  }\n}\nEOF\n\n    echo \"✓ Example configuration created: $config_file\"\n    echo \"\"\n    echo \"Edit with: ${EDITOR:-nano} $config_file\"\n    echo \"Or use:    ccr-setup (interactive wizard)\"\n}\n\n# Helper: Interactive configuration wizard\nccr-setup() {\n    if ! command -v gum &> /dev/null; then\n        echo \"⚠️  gum not found. Using non-interactive mode.\"\n        ccr-config-example\n        return 0\n    fi\n\n    clear\n\n    gum style \\\n        --border rounded \\\n        --border-foreground 240 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 70 \\\n        \"$(gum style --foreground 27 --bold 'Claude Code Router Configuration')\n\n$(gum style --foreground 240 'Setup your AI model router')\"\n\n    echo \"\"\n\n    # Check if config exists\n    if [[ -f \"$CCR_CONFIG_FILE\" ]]; then\n        if ! gum confirm \"Configuration exists. Overwrite?\" --default=false; then\n            return 0\n        fi\n    fi\n\n    # Basic settings\n    echo \"$(gum style --foreground 141 --bold '1. Basic Settings')\"\n    echo \"\"\n\n    local host\n    host=$(gum input --placeholder \"127.0.0.1\" --value \"127.0.0.1\" --prompt \"Host: \")\n\n    local enable_apikey\n    enable_apikey=$(gum choose --header \"Enable API key authentication?\" \"No\" \"Yes\")\n\n    local apikey=\"\"\n    if [[ \"$enable_apikey\" == \"Yes\" ]]; then\n        apikey=$(gum input --prompt \"API Key: \" --password)\n    fi\n\n    # Proxy settings\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '2. Network Settings')\"\n    echo \"\"\n\n    local proxy=\"\"\n    if gum confirm \"Use HTTP proxy?\" --default=false; then\n        proxy=$(gum input --prompt \"Proxy URL: \" --placeholder \"http://127.0.0.1:7890\")\n    fi\n\n    # Provider selection\n    echo \"\"\n    echo \"$(gum style --foreground 141 --bold '3. Provider Setup')\"\n    echo \"\"\n\n    local providers\n    providers=$(gum choose --no-limit --header \"Select providers to configure:\" \\\n        \"OpenRouter\" \\\n        \"DeepSeek\" \\\n        \"OpenAI\" \\\n        \"Gemini\" \\\n        \"Anthropic\")\n\n    # Build config (same as bash version)\n    # ... [similar implementation]\n\n    echo \"\"\n    gum style --foreground 34 --bold \"✓ Configuration saved!\"\n}\n\n# Helper: Show configuration status\nccr-status() {\n    echo \"Claude Code Router Status\"\n    echo \"\"\n    echo \"✓ ccr: $(which ccr)\"\n    echo \"\"\n\n    if [[ -f \"$CCR_CONFIG_FILE\" ]]; then\n        echo \"✓ Config exists: $CCR_CONFIG_FILE\"\n\n        if command -v jq &> /dev/null; then\n            echo \"\"\n            echo \"Configured Providers:\"\n            jq -r '.Providers[]?.name // empty' \"$CCR_CONFIG_FILE\" | sed 's/^/  - /'\n\n            echo \"\"\n            echo \"Router Settings:\"\n            jq -r '.Router | to_entries[] | \"  \\(.key): \\(.value)\"' \"$CCR_CONFIG_FILE\"\n        fi\n    else\n        echo \"✗ No config found\"\n    fi\n\n    echo \"\"\n\n    if pgrep -f \"claude-code-router\" > /dev/null; then\n        echo \"✓ Service is running\"\n    else\n        echo \"⚠️  Service not running (start with: flox activate -s)\"\n    fi\n}\n\n# Helper: View logs\nccr-logs() {\n    if [[ -f \"$CCR_LOG_DIR/claude-code-router.log\" ]]; then\n        tail -f \"$CCR_LOG_DIR/claude-code-router.log\"\n    else\n        echo \"No logs found at $CCR_LOG_DIR/claude-code-router.log\"\n    fi\n}\n\n# Helper: Edit configuration\nccr-edit() {\n    local editor=\"${EDITOR:-nano}\"\n\n    if [[ ! -f \"$CCR_CONFIG_FILE\" ]]; then\n        echo \"No config found. Creating example...\"\n        ccr-config-example\n    fi\n\n    \"$editor\" \"$CCR_CONFIG_FILE\"\n\n    echo \"\"\n    echo \"Configuration updated. Restart service:\"\n    echo \"  flox services restart ccr\"\n}\n\n# Helper: Test connection\nccr-test() {\n    local endpoint=\"${1:-http://$CCR_HOST:$CCR_PORT}\"\n\n    echo \"Testing connection to $endpoint...\"\n\n    if curl -s \"$endpoint/health\" > /dev/null 2>&1; then\n        echo \"✓ Router is reachable\"\n        return 0\n    else\n        echo \"✗ Router is not reachable\"\n        echo \"\"\n        echo \"Make sure the service is running:\"\n        echo \"  flox activate -s\"\n        return 1\n    fi\n}\n",
+      "fish": "# Helper: Generate example configuration\nfunction ccr-config-example\n    set config_file (test -n \"$argv[1]\"; and echo \"$argv[1]\"; or echo \"$CCR_CONFIG_FILE\")\n\n    cat > \"$config_file\" << 'EOF'\n{\n  \"LOG\": true,\n  \"LOG_LEVEL\": \"debug\",\n  \"API_TIMEOUT_MS\": 600000,\n  \"NON_INTERACTIVE_MODE\": false,\n  \"APIKEY\": \"\",\n  \"HOST\": \"127.0.0.1\",\n  \"PROXY_URL\": \"\",\n  \"Providers\": [\n    {\n      \"name\": \"openrouter\",\n      \"api_base_url\": \"https://openrouter.ai/api/v1/chat/completions\",\n      \"api_key\": \"$OPENROUTER_API_KEY\",\n      \"models\": [\n        \"anthropic/claude-sonnet-4\",\n        \"anthropic/claude-3.5-sonnet\",\n        \"google/gemini-2.5-pro-preview\"\n      ],\n      \"transformer\": {\n        \"use\": [\"openrouter\"]\n      }\n    },\n    {\n      \"name\": \"deepseek\",\n      \"api_base_url\": \"https://api.deepseek.com/chat/completions\",\n      \"api_key\": \"$DEEPSEEK_API_KEY\",\n      \"models\": [\"deepseek-chat\", \"deepseek-reasoner\"],\n      \"transformer\": {\n        \"use\": [\"deepseek\"],\n        \"deepseek-chat\": {\n          \"use\": [\"tooluse\"]\n        }\n      }\n    }\n  ],\n  \"Router\": {\n    \"default\": \"deepseek,deepseek-chat\",\n    \"background\": \"deepseek,deepseek-chat\",\n    \"think\": \"deepseek,deepseek-reasoner\",\n    \"longContext\": \"openrouter,google/gemini-2.5-pro-preview\",\n    \"longContextThreshold\": 60000\n  }\n}\nEOF\n\n    echo \"✓ Example configuration created: $config_file\"\n    echo \"\"\n    echo \"Edit with: \"(set -q EDITOR; and echo $EDITOR; or echo \"nano\")\" $config_file\"\n    echo \"Or use:    ccr-setup (interactive wizard)\"\nend\n\n# Helper: Show configuration status\nfunction ccr-status\n    echo \"Claude Code Router Status\"\n    echo \"\"\n    echo \"✓ ccr: \"(which ccr)\n    echo \"\"\n\n    if test -f \"$CCR_CONFIG_FILE\"\n        echo \"✓ Config exists: $CCR_CONFIG_FILE\"\n\n        if command -v jq &> /dev/null\n            echo \"\"\n            echo \"Configured Providers:\"\n            jq -r '.Providers[]?.name // empty' \"$CCR_CONFIG_FILE\" | sed 's/^/  - /'\n\n            echo \"\"\n            echo \"Router Settings:\"\n            jq -r '.Router | to_entries[] | \"  \\(.key): \\(.value)\"' \"$CCR_CONFIG_FILE\"\n        end\n    else\n        echo \"✗ No config found\"\n    end\n\n    echo \"\"\n\n    if pgrep -f \"claude-code-router\" > /dev/null\n        echo \"✓ Service is running\"\n    else\n        echo \"⚠️  Service not running (start with: flox activate -s)\"\n    end\nend\n\n# Helper: View logs\nfunction ccr-logs\n    if test -f \"$CCR_LOG_DIR/claude-code-router.log\"\n        tail -f \"$CCR_LOG_DIR/claude-code-router.log\"\n    else\n        echo \"No logs found at $CCR_LOG_DIR/claude-code-router.log\"\n    end\nend\n\n# Helper: Edit configuration\nfunction ccr-edit\n    set editor (set -q EDITOR; and echo $EDITOR; or echo \"nano\")\n\n    if not test -f \"$CCR_CONFIG_FILE\"\n        echo \"No config found. Creating example...\"\n        ccr-config-example\n    end\n\n    eval $editor \"$CCR_CONFIG_FILE\"\n\n    echo \"\"\n    echo \"Configuration updated. Restart service:\"\n    echo \"  flox services restart ccr\"\nend\n\n# Helper: Test connection\nfunction ccr-test\n    set endpoint (test -n \"$argv[1]\"; and echo \"$argv[1]\"; or echo \"http://$CCR_HOST:$CCR_PORT\")\n\n    echo \"Testing connection to $endpoint...\"\n\n    if curl -s \"$endpoint/health\" > /dev/null 2>&1\n        echo \"✓ Router is reachable\"\n        return 0\n    else\n        echo \"✗ Router is not reachable\"\n        echo \"\"\n        echo \"Make sure the service is running:\"\n        echo \"  flox activate -s\"\n        return 1\n    end\nend\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    },
+    "services": {
+      "ccr": {
+        "command": "# Load environment variables\nexport CCR_HOST=\"${CCR_HOST}\"\nexport CCR_PORT=\"${CCR_PORT}\"\nexport CCR_APIKEY=\"${CCR_APIKEY}\"\nexport CCR_PROXY_URL=\"${CCR_PROXY_URL}\"\nexport CCR_LOG_ENABLED=\"${CCR_LOG_ENABLED}\"\nexport CCR_LOG_LEVEL=\"${CCR_LOG_LEVEL}\"\nexport CCR_API_TIMEOUT_MS=\"${CCR_API_TIMEOUT_MS}\"\nexport CCR_NON_INTERACTIVE=\"${CCR_NON_INTERACTIVE}\"\n\n# Export API keys\nexport OPENAI_API_KEY=\"${OPENAI_API_KEY}\"\nexport DEEPSEEK_API_KEY=\"${DEEPSEEK_API_KEY}\"\nexport OPENROUTER_API_KEY=\"${OPENROUTER_API_KEY}\"\nexport GEMINI_API_KEY=\"${GEMINI_API_KEY}\"\nexport ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY}\"\n\n# Check if config exists\nif [[ ! -f \"$CCR_CONFIG_FILE\" ]]; then\n    echo \"ERROR: Configuration not found at $CCR_CONFIG_FILE\"\n    echo \"Run 'ccr-setup' to create configuration\"\n    exit 1\nfi\n\n# Start the router\nexec ccr start\n",
+        "is-daemon": true,
+        "shutdown": {
+          "command": "ccr stop"
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/srvg9lydbqzfrd7wks0kbcd24681whv9-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.119212Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/m1s1wqd7nswi7jnlg146g0m3rsvsg9a7-bat-0.26.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/qyad5lwriw7xi08g13wb05fmxi5n2dp0-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.331574Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/0am602vqa4zyl5m75na8gl47dk66zzid-bat-0.26.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/w66rdmpxy0kyrwxwakf5xxcr9sqlarva-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.153535Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/7f6piwxyq7g8lw0d61bzy9nvmq1lsxv7-bat-0.26.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/xnaki7m9rslvjfxabad5jqibsjjhqpgw-bat-0.26.0.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "bat-0.26.0",
+      "pname": "bat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.605748Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vsih714glpw1gdr86yrif87pf0cvj9ha-bat-0.26.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/wm3898aygscqcryq92qaxqwzlldwdg1s-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.367967Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/hzqj7n02j0rdgjxmhdnpxn94910dszlg-claude-code-2.0.30"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/iyqnvbygw7qnmhy3q0a3xah0x2172xrs-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.669127Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/103scqn5wpjx1qrqqlbpl4xv1ja58q5j-claude-code-2.0.30"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/6arwb3n3gcq2nwmqz0a723v3gy3shh05-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.409416Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1g6a26grxq4awpc6z6w08fivzvcnqizv-claude-code-2.0.30"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/kiwizv3bh2xrs15qaxnb6ialq08dla2v-claude-code-2.0.30.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-2.0.30",
+      "pname": "claude-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.975714Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.30",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/6is1i3m8viihhhlxjlvmjlq359x3rdrn-claude-code-2.0.30"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code-router",
+      "broken": false,
+      "derivation": "/nix/store/9hzf2f2d4s5jncbjx196mrv5zxgbwryk-claude-code-router-1.0.64.drv",
+      "description": "Tool to route Claude Code requests to different models and customize any request",
+      "install_id": "claude-code-router",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-router-1.0.64",
+      "pname": "claude-code-router",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.368134Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.0.64",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/jkq1nh9b1xbsl8k31nmlqzm88l9cg46i-claude-code-router-1.0.64"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code-router",
+      "broken": false,
+      "derivation": "/nix/store/1j26xh2nv0w1sy5n2mqdqm5q35zyywyn-claude-code-router-1.0.64.drv",
+      "description": "Tool to route Claude Code requests to different models and customize any request",
+      "install_id": "claude-code-router",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-router-1.0.64",
+      "pname": "claude-code-router",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.669315Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.0.64",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/k8lk49gkky4sgj4z6j8s1z840ca30kpd-claude-code-router-1.0.64"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code-router",
+      "broken": false,
+      "derivation": "/nix/store/42267fq3s2i059xypyph7ihdpr52yhib-claude-code-router-1.0.64.drv",
+      "description": "Tool to route Claude Code requests to different models and customize any request",
+      "install_id": "claude-code-router",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-router-1.0.64",
+      "pname": "claude-code-router",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.409605Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.0.64",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/06bbn9g3g421g7piqfmsh50lmr6qpp91-claude-code-router-1.0.64"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code-router",
+      "broken": false,
+      "derivation": "/nix/store/f9lycazsqhpx0xrj6incvksnik2fms9k-claude-code-router-1.0.64.drv",
+      "description": "Tool to route Claude Code requests to different models and customize any request",
+      "install_id": "claude-code-router",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "claude-code-router-1.0.64",
+      "pname": "claude-code-router",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.975915Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.0.64",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/lkdlphbyp0ahskjzfzrmskznpgwnqzb2-claude-code-router-1.0.64"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/cfq3y8vdnkw626yx70f8dd92gxmkbzzb-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.499679Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/982cq6ga80yn9nghx479fbqqwf7kf8n1-curl-8.16.0-bin",
+        "dev": "/nix/store/qxzi15y4apihsg2infxn66b6hz5lws3h-curl-8.16.0-dev",
+        "devdoc": "/nix/store/bz1ap1ahksz62gz79h8anfhsyz1ir0jw-curl-8.16.0-devdoc",
+        "man": "/nix/store/rsdippinyvz3myz505vi6sgx8vmh30px-curl-8.16.0-man",
+        "out": "/nix/store/8fgfydjv40m1pw8bpwm30kxw24284fvg-curl-8.16.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/lf1pb40nkl3lx7ww85r1pbc8gg89yihb-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.869212Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/qnakzidljavpz27az7gjkyydb7ckjg6r-curl-8.16.0-bin",
+        "debug": "/nix/store/zxlv6n85qw1lzmx4xblgc0lz1vv0hg1f-curl-8.16.0-debug",
+        "dev": "/nix/store/aypq6najvfyhzx4k80a1vy329qmqj9zb-curl-8.16.0-dev",
+        "devdoc": "/nix/store/b7w1516fx1mywmkl9dqsm1rnjmpvz7a3-curl-8.16.0-devdoc",
+        "man": "/nix/store/dfgh660rbbj8s3l3xvy8klmkks4pkg3w-curl-8.16.0-man",
+        "out": "/nix/store/pl917hpmpx64fisdisv2zjmk09grvm4g-curl-8.16.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/djn6c12nnlc62i4akzdrg0i2gylndr4a-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.545728Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/irf7vpckgi9128jh7by1438ns3qgvfqz-curl-8.16.0-bin",
+        "dev": "/nix/store/sv8p7spya9zf0163xb454wvl7jbmws57-curl-8.16.0-dev",
+        "devdoc": "/nix/store/85fm556955nskhdr8q66ny2fk4fggzh1-curl-8.16.0-devdoc",
+        "man": "/nix/store/a6znnvphjwyzhxjq8vbkr35ng6xglbfb-curl-8.16.0-man",
+        "out": "/nix/store/sfr307vn71cyfnfmgckhwggq251rnrfr-curl-8.16.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/cgjg8cb7pdgsqswv5p5n9pr1sm920d8d-curl-8.16.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "curl-8.16.0",
+      "pname": "curl",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:47.204008Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.16.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/xvh4bi0cc2cw18lpn6ax9m4zwnn1s9lj-curl-8.16.0-bin",
+        "debug": "/nix/store/33lwk5v78214pmlnhphbijpvbh8gjbbq-curl-8.16.0-debug",
+        "dev": "/nix/store/b65dj8iryqd1bss2qlg5ipxqndngcl9n-curl-8.16.0-dev",
+        "devdoc": "/nix/store/bz67f9xwj2i7zanwkrxb6dy9bbm2283d-curl-8.16.0-devdoc",
+        "man": "/nix/store/q4jbdyq7f0zks4i9xhfyx2pj6x92g9dj-curl-8.16.0-man",
+        "out": "/nix/store/8np9zvwqmwsnbkbrwm8x7jq4ygdkjz5g-curl-8.16.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/zf2mm2aknwbcii372xhmj22as1x96lhc-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:19.433597Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g384sncfvkxfpiswcg01hk6r3z0681ix-gum-0.17.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/4gqwdw004xlqd75z6kgzwf2q5b2d6hdc-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:59.655446Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vkh7n5a7nhxlv4zzxs1anaqcbpsaakdw-gum-0.17.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/i42jn47b2y9alzsyr5lmssqpdiypcycw-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:58.493483Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/j459dmmrrfzia8zgpykkr4fsv0ydrsvg-gum-0.17.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/pf1hq4v0aqx3agymcgzhxvbcz9g8ww13-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:49.171908Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/bqaqgkwjxdq6vxq210v9893ibmag515f-gum-0.17.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/a50a7kjf83i6i4n2d1bhmkjf3gvx5kg6-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:33.201623Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/vh3xibzhaz3nl5m97ka2i5sxivv59sgn-jq-1.8.1-bin",
+        "dev": "/nix/store/ni42jbsfngy5l81p2lz9v5wcl4kwl9nf-jq-1.8.1-dev",
+        "doc": "/nix/store/hy9hxygqscjkz0faz5xlxwkj7sn6v74i-jq-1.8.1-doc",
+        "man": "/nix/store/k9swya8a42jsa59jd2xcw0pvacj0xxyn-jq-1.8.1-man",
+        "out": "/nix/store/qabxprfzl0lygph7yg3kq6b8si410syd-jq-1.8.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/f2yda9q3f7miq3md0r47d25cbbwqwacw-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:29:18.638953Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/pqr9gww8fksrllfr38k9jvl7k5q5awf7-jq-1.8.1-bin",
+        "dev": "/nix/store/qqcccyr96a1p4j7ywgzhqi06n5y47mk0-jq-1.8.1-dev",
+        "doc": "/nix/store/ankng0jgm40wkgwiz3n8rj6hanmgdsx7-jq-1.8.1-doc",
+        "man": "/nix/store/n0y7a3f5hmglwifndimclg99mpn554bl-jq-1.8.1-man",
+        "out": "/nix/store/6h1mv44dhnq2jb94373cab59yaq5y8wz-jq-1.8.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/i9y8592ghv69f3djcq8fki41ml5b4a6x-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:55:13.062148Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/r52fkpag200agnznp2var2p0f0d0i4ch-jq-1.8.1-bin",
+        "dev": "/nix/store/ijwpwk35g7l8amallvhqymwnnspmxgcy-jq-1.8.1-dev",
+        "doc": "/nix/store/zci6xwc00v98flb0jqhdaac0231pmgvb-jq-1.8.1-doc",
+        "man": "/nix/store/xbvg59a0kdin1fibnqrw4l445a5dh9bc-jq-1.8.1-man",
+        "out": "/nix/store/50fm8yn7mpxfks0cvrjifi58r90q5c6h-jq-1.8.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/qk16np2i3ls20ih6n8lc38l6f3y6s7i3-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:21:09.216301Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/frzsv47z1mcyrp941zab08mx6kardizi-jq-1.8.1-bin",
+        "dev": "/nix/store/caq8n6m9m5zyhf0by83ksbimqmpggkwr-jq-1.8.1-dev",
+        "doc": "/nix/store/n3wl5jkmnzfg0a1vjxxx8w2n7js1b5sr-jq-1.8.1-doc",
+        "man": "/nix/store/rs84gk428azdd7ca46ki3w60yqp54ksk-jq-1.8.1-man",
+        "out": "/nix/store/zsw99s8nv2qffdg47jf8x8pyml9b0x2r-jq-1.8.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

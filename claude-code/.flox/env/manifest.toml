@@ -1,0 +1,414 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##               https://flox.dev/docs/concepts/manifest
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+claude-code.pkg-path = "claude-code"
+gum.pkg-path = "gum"
+openssl.pkg-path = "openssl"
+flac.pkg-path = "flac"
+libvorbis.pkg-path = "libvorbis"
+libogg.pkg-path = "libogg"
+libopus.pkg-path = "libopus"
+lame.pkg-path = "lame"
+opusfile.pkg-path = "opusfile"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# INTRO_MESSAGE = "It's gettin' Flox in here"
+
+
+## Activation Hook ---------------------------------------------------
+##  ... run by _bash_ shell when you run 'flox activate'.
+## -------------------------------------------------------------------
+[hook]
+on-activate = '''
+  # Anthropic API Access Setup for Claude Code
+  CONFIG_DIR="$HOME/.config/claude-code"
+  CONFIG_FILE="$CONFIG_DIR/config"
+  ENCRYPTED_KEY_FILE="$CONFIG_DIR/api_key.enc"
+  USER_CHOICE_FILE="$CONFIG_DIR/user_choice"
+
+  mkdir -p "$CONFIG_DIR"
+
+  # detects os
+  detect_os() {
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+          echo "macos"
+      elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          echo "linux"
+      else
+          echo "unsupported"
+      fi
+  }
+
+  # generates encrypted pass
+  derive_password() {
+      local user_info="$USER"
+      local host_info=$(hostname)
+      local machine_id=""
+
+      if [[ -f "/etc/machine-id" ]]; then
+          machine_id=$(cat /etc/machine-id)
+      elif [[ -f "/var/lib/dbus/machine-id" ]]; then
+          machine_id=$(cat /var/lib/dbus/machine-id)
+      elif [[ "$(detect_os)" == "macos" ]]; then
+          machine_id=$(ioreg -rd1 -c IOPlatformExpertDevice | grep -E '(UUID)' | awk '{print $3}' | tr -d \")
+      fi
+
+      echo -n "${user_info}${host_info}${machine_id}anthropic-api-key" | openssl dgst -sha256 | awk '{print $2}'
+  }
+
+  # stores key in system keyring if available
+  store_api_key_keyring() {
+      local api_key="$1"
+      local os=$(detect_os)
+
+      if [[ "$os" == "macos" ]]; then
+          if security add-generic-password -s "anthropic-api" -a "$USER" -w "$api_key" -U; then
+              mkdir -p "$(dirname "$CONFIG_FILE")"
+              echo "API_KEY_STORED=true" > "$CONFIG_FILE"
+              echo "STORAGE_METHOD=keyring" >> "$CONFIG_FILE"
+              return 0
+          else
+              return 1
+          fi
+      elif [[ "$os" == "linux" ]]; then
+          if command -v secret-tool >/dev/null 2>&1; then
+              if echo -n "$api_key" | secret-tool store --label="Anthropic API Key" service anthropic-api user "$USER"; then
+                  mkdir -p "$(dirname "$CONFIG_FILE")"
+                  echo "API_KEY_STORED=true" > "$CONFIG_FILE"
+                  echo "STORAGE_METHOD=keyring" >> "$CONFIG_FILE"
+                  return 0
+              else
+                  return 1
+              fi
+          else
+              return 1
+          fi
+      else
+          echo "Error: Unsupported operating system."
+          return 1
+      fi
+  }
+
+  # stores key in encrypted file as fallback
+  store_api_key_encrypted() {
+      local api_key="$1"
+      local password=$(derive_password)
+
+      mkdir -p "$(dirname "$ENCRYPTED_KEY_FILE")"
+      echo -n "$api_key" | openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:"$password" -out "$ENCRYPTED_KEY_FILE"
+
+      mkdir -p "$(dirname "$CONFIG_FILE")"
+      echo "API_KEY_STORED=true" > "$CONFIG_FILE"
+      echo "STORAGE_METHOD=encrypted_file" >> "$CONFIG_FILE"
+  }
+
+  # retrieves key from system keyring
+  retrieve_api_key_keyring() {
+      local os=$(detect_os)
+
+      if [[ "$os" == "macos" ]]; then
+          security find-generic-password -s "anthropic-api" -a "$USER" -w 2>/dev/null
+      elif [[ "$os" == "linux" ]]; then
+          secret-tool lookup service anthropic-api user "$USER" 2>/dev/null
+      fi
+  }
+
+  # retrieves key from encrypted file
+  retrieve_api_key_encrypted() {
+      local password=$(derive_password)
+
+      if [[ -f "$ENCRYPTED_KEY_FILE" ]]; then
+          openssl enc -aes-256-cbc -d -salt -pbkdf2 -pass pass:"$password" -in "$ENCRYPTED_KEY_FILE" 2>/dev/null
+          return $?
+      fi
+      return 1
+  }
+
+  # retrieves api key from storage
+  retrieve_api_key() {
+      if [[ -f "$CONFIG_FILE" ]]; then
+          source "$CONFIG_FILE"
+          if [[ "$STORAGE_METHOD" == "keyring" ]]; then
+              retrieve_api_key_keyring
+          elif [[ "$STORAGE_METHOD" == "encrypted_file" ]]; then
+              retrieve_api_key_encrypted
+          fi
+      fi
+  }
+
+  # checks if user made a choice
+  user_made_choice() {
+      [[ -f "$USER_CHOICE_FILE" ]]
+  }
+
+  # gets user's choice
+  get_user_choice() {
+      if [[ -f "$USER_CHOICE_FILE" ]]; then
+          cat "$USER_CHOICE_FILE"
+      else
+          echo "not_set"
+      fi
+  }
+
+  # sets user's choice
+  set_user_choice() {
+      echo "$1" > "$USER_CHOICE_FILE"
+  }
+
+  # checks if key exists
+  key_exists() {
+      if [[ -n "$ANTHROPIC_API_KEY" ]]; then
+          return 0
+      elif [[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE" && [[ "$API_KEY_STORED" == "true" ]]; then
+          local api_key=$(retrieve_api_key)
+          [[ -n "$api_key" ]]
+      else
+          return 1
+      fi
+  }
+
+  # validates api key format
+  validate_api_key() {
+      [[ "$1" =~ ^sk-ant- ]]
+  }
+
+  # displays welcome message with options
+  show_welcome_message() {
+      gum style \
+          --border rounded \
+          --border-foreground 240 \
+          --padding "1 2" \
+          --margin "1 0" \
+          --width 80 \
+          "$(gum style --foreground 141 --bold 'Anthropic API Access Setup')
+
+  👉  Welcome to the Claude Code setup wizard. There are two ways to use Claude:
+
+      $(gum style --foreground 212 --bold '1. API Key Access (Pay-as-you-go)')
+      • Requires an Anthropic API key that starts with 'sk-ant-'
+      • Pay only for what you use with API credits
+      • Requires payment info in Anthropic console
+
+      $(gum style --foreground 212 --bold '2. Claude Max Subscription')
+      • Monthly subscription with set pricing
+      • No API key needed - authentication happens via web browser
+      • Claude Code will prompt you to authenticate when needed"
+
+      echo ""
+  }
+
+  # shows instructions for getting an api key
+  show_api_key_instructions() {
+      gum style \
+          --border rounded \
+          --border-foreground 240 \
+          --padding "1 2" \
+          --margin "1 0" \
+          --width 80 \
+          "$(gum style --foreground 141 --bold 'Getting an Anthropic API Key')
+
+  👉  To obtain an Anthropic API key:
+
+      1. Go to $(gum style --foreground 212 --underline 'https://console.anthropic.com/settings/keys')
+      2. Sign in to your Anthropic account
+      3. Click 'Create Key'
+      4. Name your key (e.g., 'Claude Code CLI')
+      5. Copy the generated key (starts with 'sk-ant-')"
+
+      echo ""
+  }
+
+  # explains claude max subscription
+  show_claude_max_info() {
+      gum style \
+          --border rounded \
+          --border-foreground 240 \
+          --padding "1 2" \
+          --margin "1 0" \
+          --width 80 \
+          "$(gum style --foreground 141 --bold 'Using Claude Max Subscription')
+
+  👉  Since you're using a Claude Max subscription:
+
+      • You $(gum style --foreground 212 --bold 'do not need to set up an API key')
+      • When you run Claude Code, it will prompt you to authenticate
+      • Follow the browser authentication flow when prompted
+      
+      Your preference has been saved."
+
+      echo ""
+  }
+
+  # shows completion message
+  show_completion_message() {
+      gum style \
+          --border rounded \
+          --border-foreground 240 \
+          --padding "1 2" \
+          --margin "1 0" \
+          --width 80 \
+          "$(gum style --foreground 141 --bold 'Anthropic API Key Setup Complete!')
+
+  👉  Your Anthropic API key has been securely stored using: 
+      $(gum style --foreground 212 "$1")
+
+  👉  To update your key in the future, run:
+      $(gum style --foreground 212 'RESET=true flox activate')"
+
+      echo ""
+  }
+
+  # run the setup wizard
+  run_setup_wizard() {
+      clear
+      show_welcome_message
+      
+      if ! command -v gum >/dev/null 2>&1; then
+          echo "Error: 'gum' command not found. Please install charm.sh's gum tool."
+          return 1
+      fi
+      
+      local auth_method=$(gum choose --header "How would you like to use Claude?" "API Key (Pay-as-you-go)" "Claude Max Subscription")
+      
+      if [[ "$auth_method" == "Claude Max Subscription" ]]; then
+          set_user_choice "subscription"
+          show_claude_max_info
+          return 0
+      fi
+      
+      set_user_choice "api_key"
+      show_api_key_instructions
+      
+      local api_key=""
+      while true; do
+          api_key=$(gum input --prompt "Enter your Anthropic API key: " --password --width 60 --placeholder "sk-ant-...")
+          
+          if [[ "$api_key" == "exit" || "$api_key" == "quit" ]]; then
+              echo "Setup cancelled."
+              return 1
+          fi
+          
+          if [[ -z "$api_key" ]]; then
+              echo "API key cannot be empty. Please try again or type 'exit' to quit."
+              continue
+          fi
+          
+          if validate_api_key "$api_key"; then
+              echo "API key format looks valid!"
+              break
+          else
+              if gum confirm "API key format looks invalid. Use it anyway?" --default=false; then
+                  break
+              fi
+          fi
+      done
+      
+      echo "Storing API key..."
+      if store_api_key_keyring "$api_key"; then
+          show_completion_message "system keyring"
+          export ANTHROPIC_API_KEY="$api_key"
+      else
+          echo "Unable to use system keyring/keychain."
+          
+          if gum confirm "Store your API key in an encrypted local file?" --default=true; then
+              store_api_key_encrypted "$api_key"
+              show_completion_message "encrypted file"
+              export ANTHROPIC_API_KEY="$api_key"
+          else
+              echo "No storage method selected. API key setup cancelled."
+              return 1
+          fi
+      fi
+      
+      return 0
+  }
+
+  # main logic
+  if [[ "$RESET" == "true" ]]; then
+      echo "Reset flag detected. Rerunning API setup..."
+      rm -f "$USER_CHOICE_FILE" "$CONFIG_FILE" "$ENCRYPTED_KEY_FILE" 2>/dev/null
+      run_setup_wizard
+  elif ! user_made_choice; then
+      # First time running - need to set up
+      run_setup_wizard
+  else
+      choice=$(get_user_choice)
+      if [[ "$choice" == "subscription" ]]; then
+          echo "Using Claude Max subscription."
+      elif [[ "$choice" == "api_key" ]] && key_exists; then
+          echo "Anthropic API key configured."
+          export ANTHROPIC_API_KEY=$(retrieve_api_key)
+      else
+          # Configuration exists but is invalid/incomplete
+          echo "Incomplete or invalid configuration detected. Running setup..."
+          run_setup_wizard
+      fi
+  fi
+'''
+
+## Profile script ----------------------------------------------------
+## ... sourced by _your shell_ when you run 'flox activate'.
+## -------------------------------------------------------------------
+[profile]
+# common = '''
+#   gum style \
+#   --foreground 212 --border-foreground 212 --border double \
+#   --align center --width 50 --margin "1 2" --padding "2 4" \
+#     $INTRO_MESSAGE
+# '''
+## Shell specific profiles go here:
+# bash = ...
+# zsh  = ...
+# fish = ...
+
+
+## Services ----------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## -------------------------------------------------------------------
+[services]
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

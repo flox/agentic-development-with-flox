@@ -1,0 +1,132 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "crush": {
+        "pkg-path": "crush"
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/58byhpgdv6m6znlxkc4x9sr7jh1hhp9a-crush-0.13.5.drv",
+      "description": "Glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "FSL-1.1-MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "crush-0.13.5",
+      "pname": "crush",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:18.478400Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.13.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/18bnnsvabgm7wz1a8hbjgyj16zy5rrl9-crush-0.13.5"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/pc56090qad9v3g2sa0c3nx3n30n8xw2l-crush-0.13.5.drv",
+      "description": "Glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "FSL-1.1-MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "crush-0.13.5",
+      "pname": "crush",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.830399Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.13.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/h5p3vaq0466kpkkph3gqmqfpvg7hxp5p-crush-0.13.5"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/kxj81dchcg7rgg5mqbzvws9pm49bps8z-crush-0.13.5.drv",
+      "description": "Glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "FSL-1.1-MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "crush-0.13.5",
+      "pname": "crush",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.527140Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.13.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/pxn8c1radhqk2n7gpzczqsrgjh1y9d62-crush-0.13.5"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/m4p09qp0d1k53q2fy3rjnn5qjljnkfhp-crush-0.13.5.drv",
+      "description": "Glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "FSL-1.1-MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "crush-0.13.5",
+      "pname": "crush",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:47.153987Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.13.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g58srzm2jrm9vwvz5s4sj9z2vpxxgxkg-crush-0.13.5"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "droid": {
+        "pkg-path": "flox/droid",
+        "pkg-group": "droid",
+        "systems": [
+          "x86_64-linux",
+          "aarch64-darwin"
+        ]
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 Droid - AI Software Development Agent from Factory\"\necho \"\"\necho \"Automate refactors, incident response, and migrations across your workflow.\"\necho \"\"\necho \"First-time setup:\"\necho \"  droid                       # Launch interactive session\"\necho \"                              # Authenticate on first run\"\necho \"\"\necho \"Usage:\"\necho \"  droid                       # Interactive mode (IDE/terminal)\"\necho \"  droid exec \\\"task\\\"          # Headless mode (CI/CD, scripts)\"\necho \"  droid --help                # Show all options\"\necho \"\"\necho \"Features:\"\necho \"  • Complete development tasks autonomously\"\necho \"  • Works with existing tools (VS Code, JetBrains, Vim)\"\necho \"  • Headless mode for CI/CD and automation\"\necho \"  • Multi-interface (CLI, Web, Slack, Teams, Linear, Jira)\"\necho \"  • Model-agnostic (works with any provider)\"\necho \"\"\necho \"Requires: Factory.ai account\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "droid",
+      "broken": false,
+      "derivation": "/nix/store/qwqj3gwghixw127vqxy4zgyyppfyinc0-droid-0.26.2.drv",
+      "description": "Factory AI's Droid - AI-powered development agent for your terminal",
+      "install_id": "droid",
+      "license": "Unfree",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "droid-0.26.2",
+      "pname": "droid",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-20T05:45:28.708685074Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.26.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ys46d2fvih9zpyl5c3rja4n0izswlviy-droid-0.26.2"
+      },
+      "system": "aarch64-darwin",
+      "group": "droid",
+      "priority": 5
+    },
+    {
+      "attr_path": "droid",
+      "broken": false,
+      "derivation": "/nix/store/f9h918ndd0vnmb87k0p05s2k56zk2n8q-droid-0.26.2.drv",
+      "description": "Factory AI's Droid - AI-powered development agent for your terminal",
+      "install_id": "droid",
+      "license": "Unfree",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "droid-0.26.2",
+      "pname": "droid",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-20T05:45:28.708691691Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.26.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/sd1m38rj7hzmlpnj880mhk6q4lvkz9jn-droid-0.26.2"
+      },
+      "system": "x86_64-linux",
+      "group": "droid",
+      "priority": 5
+    }
+  ]
+}

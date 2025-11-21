@@ -1,0 +1,1203 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "claude-code": {
+        "pkg-path": "claude-code"
+      },
+      "flac": {
+        "pkg-path": "flac"
+      },
+      "gum": {
+        "pkg-path": "gum"
+      },
+      "lame": {
+        "pkg-path": "lame"
+      },
+      "libogg": {
+        "pkg-path": "libogg"
+      },
+      "libopus": {
+        "pkg-path": "libopus"
+      },
+      "libvorbis": {
+        "pkg-path": "libvorbis"
+      },
+      "openssl": {
+        "pkg-path": "openssl"
+      },
+      "opusfile": {
+        "pkg-path": "opusfile"
+      }
+    },
+    "hook": {
+      "on-activate": "  # Anthropic API Access Setup for Claude Code\n  CONFIG_DIR=\"$HOME/.config/claude-code\"\n  CONFIG_FILE=\"$CONFIG_DIR/config\"\n  ENCRYPTED_KEY_FILE=\"$CONFIG_DIR/api_key.enc\"\n  USER_CHOICE_FILE=\"$CONFIG_DIR/user_choice\"\n\n  mkdir -p \"$CONFIG_DIR\"\n\n  # detects os\n  detect_os() {\n      if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n          echo \"macos\"\n      elif [[ \"$OSTYPE\" == \"linux-gnu\"* ]]; then\n          echo \"linux\"\n      else\n          echo \"unsupported\"\n      fi\n  }\n\n  # generates encrypted pass\n  derive_password() {\n      local user_info=\"$USER\"\n      local host_info=$(hostname)\n      local machine_id=\"\"\n\n      if [[ -f \"/etc/machine-id\" ]]; then\n          machine_id=$(cat /etc/machine-id)\n      elif [[ -f \"/var/lib/dbus/machine-id\" ]]; then\n          machine_id=$(cat /var/lib/dbus/machine-id)\n      elif [[ \"$(detect_os)\" == \"macos\" ]]; then\n          machine_id=$(ioreg -rd1 -c IOPlatformExpertDevice | grep -E '(UUID)' | awk '{print $3}' | tr -d \\\")\n      fi\n\n      echo -n \"${user_info}${host_info}${machine_id}anthropic-api-key\" | openssl dgst -sha256 | awk '{print $2}'\n  }\n\n  # stores key in system keyring if available\n  store_api_key_keyring() {\n      local api_key=\"$1\"\n      local os=$(detect_os)\n\n      if [[ \"$os\" == \"macos\" ]]; then\n          if security add-generic-password -s \"anthropic-api\" -a \"$USER\" -w \"$api_key\" -U; then\n              mkdir -p \"$(dirname \"$CONFIG_FILE\")\"\n              echo \"API_KEY_STORED=true\" > \"$CONFIG_FILE\"\n              echo \"STORAGE_METHOD=keyring\" >> \"$CONFIG_FILE\"\n              return 0\n          else\n              return 1\n          fi\n      elif [[ \"$os\" == \"linux\" ]]; then\n          if command -v secret-tool >/dev/null 2>&1; then\n              if echo -n \"$api_key\" | secret-tool store --label=\"Anthropic API Key\" service anthropic-api user \"$USER\"; then\n                  mkdir -p \"$(dirname \"$CONFIG_FILE\")\"\n                  echo \"API_KEY_STORED=true\" > \"$CONFIG_FILE\"\n                  echo \"STORAGE_METHOD=keyring\" >> \"$CONFIG_FILE\"\n                  return 0\n              else\n                  return 1\n              fi\n          else\n              return 1\n          fi\n      else\n          echo \"Error: Unsupported operating system.\"\n          return 1\n      fi\n  }\n\n  # stores key in encrypted file as fallback\n  store_api_key_encrypted() {\n      local api_key=\"$1\"\n      local password=$(derive_password)\n\n      mkdir -p \"$(dirname \"$ENCRYPTED_KEY_FILE\")\"\n      echo -n \"$api_key\" | openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:\"$password\" -out \"$ENCRYPTED_KEY_FILE\"\n\n      mkdir -p \"$(dirname \"$CONFIG_FILE\")\"\n      echo \"API_KEY_STORED=true\" > \"$CONFIG_FILE\"\n      echo \"STORAGE_METHOD=encrypted_file\" >> \"$CONFIG_FILE\"\n  }\n\n  # retrieves key from system keyring\n  retrieve_api_key_keyring() {\n      local os=$(detect_os)\n\n      if [[ \"$os\" == \"macos\" ]]; then\n          security find-generic-password -s \"anthropic-api\" -a \"$USER\" -w 2>/dev/null\n      elif [[ \"$os\" == \"linux\" ]]; then\n          secret-tool lookup service anthropic-api user \"$USER\" 2>/dev/null\n      fi\n  }\n\n  # retrieves key from encrypted file\n  retrieve_api_key_encrypted() {\n      local password=$(derive_password)\n\n      if [[ -f \"$ENCRYPTED_KEY_FILE\" ]]; then\n          openssl enc -aes-256-cbc -d -salt -pbkdf2 -pass pass:\"$password\" -in \"$ENCRYPTED_KEY_FILE\" 2>/dev/null\n          return $?\n      fi\n      return 1\n  }\n\n  # retrieves api key from storage\n  retrieve_api_key() {\n      if [[ -f \"$CONFIG_FILE\" ]]; then\n          source \"$CONFIG_FILE\"\n          if [[ \"$STORAGE_METHOD\" == \"keyring\" ]]; then\n              retrieve_api_key_keyring\n          elif [[ \"$STORAGE_METHOD\" == \"encrypted_file\" ]]; then\n              retrieve_api_key_encrypted\n          fi\n      fi\n  }\n\n  # checks if user made a choice\n  user_made_choice() {\n      [[ -f \"$USER_CHOICE_FILE\" ]]\n  }\n\n  # gets user's choice\n  get_user_choice() {\n      if [[ -f \"$USER_CHOICE_FILE\" ]]; then\n          cat \"$USER_CHOICE_FILE\"\n      else\n          echo \"not_set\"\n      fi\n  }\n\n  # sets user's choice\n  set_user_choice() {\n      echo \"$1\" > \"$USER_CHOICE_FILE\"\n  }\n\n  # checks if key exists\n  key_exists() {\n      if [[ -n \"$ANTHROPIC_API_KEY\" ]]; then\n          return 0\n      elif [[ -f \"$CONFIG_FILE\" ]] && source \"$CONFIG_FILE\" && [[ \"$API_KEY_STORED\" == \"true\" ]]; then\n          local api_key=$(retrieve_api_key)\n          [[ -n \"$api_key\" ]]\n      else\n          return 1\n      fi\n  }\n\n  # validates api key format\n  validate_api_key() {\n      [[ \"$1\" =~ ^sk-ant- ]]\n  }\n\n  # displays welcome message with options\n  show_welcome_message() {\n      gum style \\\n          --border rounded \\\n          --border-foreground 240 \\\n          --padding \"1 2\" \\\n          --margin \"1 0\" \\\n          --width 80 \\\n          \"$(gum style --foreground 141 --bold 'Anthropic API Access Setup')\n\n  👉  Welcome to the Claude Code setup wizard. There are two ways to use Claude:\n\n      $(gum style --foreground 212 --bold '1. API Key Access (Pay-as-you-go)')\n      • Requires an Anthropic API key that starts with 'sk-ant-'\n      • Pay only for what you use with API credits\n      • Requires payment info in Anthropic console\n\n      $(gum style --foreground 212 --bold '2. Claude Max Subscription')\n      • Monthly subscription with set pricing\n      • No API key needed - authentication happens via web browser\n      • Claude Code will prompt you to authenticate when needed\"\n\n      echo \"\"\n  }\n\n  # shows instructions for getting an api key\n  show_api_key_instructions() {\n      gum style \\\n          --border rounded \\\n          --border-foreground 240 \\\n          --padding \"1 2\" \\\n          --margin \"1 0\" \\\n          --width 80 \\\n          \"$(gum style --foreground 141 --bold 'Getting an Anthropic API Key')\n\n  👉  To obtain an Anthropic API key:\n\n      1. Go to $(gum style --foreground 212 --underline 'https://console.anthropic.com/settings/keys')\n      2. Sign in to your Anthropic account\n      3. Click 'Create Key'\n      4. Name your key (e.g., 'Claude Code CLI')\n      5. Copy the generated key (starts with 'sk-ant-')\"\n\n      echo \"\"\n  }\n\n  # explains claude max subscription\n  show_claude_max_info() {\n      gum style \\\n          --border rounded \\\n          --border-foreground 240 \\\n          --padding \"1 2\" \\\n          --margin \"1 0\" \\\n          --width 80 \\\n          \"$(gum style --foreground 141 --bold 'Using Claude Max Subscription')\n\n  👉  Since you're using a Claude Max subscription:\n\n      • You $(gum style --foreground 212 --bold 'do not need to set up an API key')\n      • When you run Claude Code, it will prompt you to authenticate\n      • Follow the browser authentication flow when prompted\n      \n      Your preference has been saved.\"\n\n      echo \"\"\n  }\n\n  # shows completion message\n  show_completion_message() {\n      gum style \\\n          --border rounded \\\n          --border-foreground 240 \\\n          --padding \"1 2\" \\\n          --margin \"1 0\" \\\n          --width 80 \\\n          \"$(gum style --foreground 141 --bold 'Anthropic API Key Setup Complete!')\n\n  👉  Your Anthropic API key has been securely stored using: \n      $(gum style --foreground 212 \"$1\")\n\n  👉  To update your key in the future, run:\n      $(gum style --foreground 212 'RESET=true flox activate')\"\n\n      echo \"\"\n  }\n\n  # run the setup wizard\n  run_setup_wizard() {\n      clear\n      show_welcome_message\n      \n      if ! command -v gum >/dev/null 2>&1; then\n          echo \"Error: 'gum' command not found. Please install charm.sh's gum tool.\"\n          return 1\n      fi\n      \n      local auth_method=$(gum choose --header \"How would you like to use Claude?\" \"API Key (Pay-as-you-go)\" \"Claude Max Subscription\")\n      \n      if [[ \"$auth_method\" == \"Claude Max Subscription\" ]]; then\n          set_user_choice \"subscription\"\n          show_claude_max_info\n          return 0\n      fi\n      \n      set_user_choice \"api_key\"\n      show_api_key_instructions\n      \n      local api_key=\"\"\n      while true; do\n          api_key=$(gum input --prompt \"Enter your Anthropic API key: \" --password --width 60 --placeholder \"sk-ant-...\")\n          \n          if [[ \"$api_key\" == \"exit\" || \"$api_key\" == \"quit\" ]]; then\n              echo \"Setup cancelled.\"\n              return 1\n          fi\n          \n          if [[ -z \"$api_key\" ]]; then\n              echo \"API key cannot be empty. Please try again or type 'exit' to quit.\"\n              continue\n          fi\n          \n          if validate_api_key \"$api_key\"; then\n              echo \"API key format looks valid!\"\n              break\n          else\n              if gum confirm \"API key format looks invalid. Use it anyway?\" --default=false; then\n                  break\n              fi\n          fi\n      done\n      \n      echo \"Storing API key...\"\n      if store_api_key_keyring \"$api_key\"; then\n          show_completion_message \"system keyring\"\n          export ANTHROPIC_API_KEY=\"$api_key\"\n      else\n          echo \"Unable to use system keyring/keychain.\"\n          \n          if gum confirm \"Store your API key in an encrypted local file?\" --default=true; then\n              store_api_key_encrypted \"$api_key\"\n              show_completion_message \"encrypted file\"\n              export ANTHROPIC_API_KEY=\"$api_key\"\n          else\n              echo \"No storage method selected. API key setup cancelled.\"\n              return 1\n          fi\n      fi\n      \n      return 0\n  }\n\n  # main logic\n  if [[ \"$RESET\" == \"true\" ]]; then\n      echo \"Reset flag detected. Rerunning API setup...\"\n      rm -f \"$USER_CHOICE_FILE\" \"$CONFIG_FILE\" \"$ENCRYPTED_KEY_FILE\" 2>/dev/null\n      run_setup_wizard\n  elif ! user_made_choice; then\n      # First time running - need to set up\n      run_setup_wizard\n  else\n      choice=$(get_user_choice)\n      if [[ \"$choice\" == \"subscription\" ]]; then\n          echo \"Using Claude Max subscription.\"\n      elif [[ \"$choice\" == \"api_key\" ]] && key_exists; then\n          echo \"Anthropic API key configured.\"\n          export ANTHROPIC_API_KEY=$(retrieve_api_key)\n      else\n          # Configuration exists but is invalid/incomplete\n          echo \"Incomplete or invalid configuration detected. Running setup...\"\n          run_setup_wizard\n      fi\n  fi\n"
+    },
+    "profile": {},
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/sz58zlpxjdjc592dbxjinpri2kniy29c-claude-code-2.0.37.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "claude-code-2.0.37",
+      "pname": "claude-code",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:15.731806Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.37",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ax3qwwal726crahj7y8a9prk2szc1pw1-claude-code-2.0.37"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/88fhg5v0zxmyqvwkg1r266c0rfdyd407-claude-code-2.0.37.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "claude-code-2.0.37",
+      "pname": "claude-code",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:25.745127Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.37",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/wnz6ck9z5jgbd9nlyrdw7pwcf842kil4-claude-code-2.0.37"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/lsc2cn3mmk9vzk21fk4g0rrn156ida51-claude-code-2.0.37.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "claude-code-2.0.37",
+      "pname": "claude-code",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:16.953152Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.37",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/px034m72kd6r9rgkljpc1w4slvwmsc4r-claude-code-2.0.37"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/idbn5c3psrl720ij1l7hqc80ra8yjgx3-claude-code-2.0.37.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "claude-code-2.0.37",
+      "pname": "claude-code",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:31:37.063852Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.0.37",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/naj3abmnkp0dzznz8namssf0hk53db9w-claude-code-2.0.37"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flac",
+      "broken": false,
+      "derivation": "/nix/store/kriwk8ra7bqv6mf6hpsvzvys9wc7r475-flac-1.5.0.drv",
+      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
+      "install_id": "flac",
+      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "flac-1.5.0",
+      "pname": "flac",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:16.413139Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/kqyjpzyvcca8n9qfvrr16flnw0cf4ga8-flac-1.5.0-bin",
+        "dev": "/nix/store/d8nm9n188ydivl232kzy6858pmyczjyf-flac-1.5.0-dev",
+        "doc": "/nix/store/pxfm0yac75n1gxlzgjanzkkvq05jnw75-flac-1.5.0-doc",
+        "man": "/nix/store/bw1lvyncw13ik0whp6r1sakxiszlwaqi-flac-1.5.0-man",
+        "out": "/nix/store/3f1pds8kqb38w16j1aqfr9rxhjkg3a70-flac-1.5.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flac",
+      "broken": false,
+      "derivation": "/nix/store/i00bzg58z7mamv9ab2izmp924cvwbhxz-flac-1.5.0.drv",
+      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
+      "install_id": "flac",
+      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "flac-1.5.0",
+      "pname": "flac",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:26.665068Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/bkxv5bk0d8z0qj9n1s1vwqbnn1z67a83-flac-1.5.0-bin",
+        "dev": "/nix/store/vlgi7sc22bf4lfi53ggyzn69ypw7ad1v-flac-1.5.0-dev",
+        "doc": "/nix/store/h3ilzhqi9gccjr0l3l3hcjh0gj3rsg0w-flac-1.5.0-doc",
+        "man": "/nix/store/l92ip2kgaxsrxrf6cmdh7q35bfam9g3z-flac-1.5.0-man",
+        "out": "/nix/store/7sy6qzglwnckkb0w7ybj8pqvjc5qb1n3-flac-1.5.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flac",
+      "broken": false,
+      "derivation": "/nix/store/dnjd4m7bz3718zf1w8df95zqsg4b3aj3-flac-1.5.0.drv",
+      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
+      "install_id": "flac",
+      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "flac-1.5.0",
+      "pname": "flac",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:17.515955Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/s9nx6mnjgaahhhlqxh124ci2ln3wh87k-flac-1.5.0-bin",
+        "dev": "/nix/store/w13946vsz8rbnlkh9ammh0hxj9kb1gha-flac-1.5.0-dev",
+        "doc": "/nix/store/9fbaj083izys1kl2lcqd5ndnzkhkdil9-flac-1.5.0-doc",
+        "man": "/nix/store/kjyd758a8ijcks7w4n1k6g8p4k5dmj19-flac-1.5.0-man",
+        "out": "/nix/store/6c1cvvqdf5jgg0p5fikq655m5j76pp44-flac-1.5.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flac",
+      "broken": false,
+      "derivation": "/nix/store/4xy3br7fk7cb2rvcfiyvjbjd3ah08ayd-flac-1.5.0.drv",
+      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
+      "install_id": "flac",
+      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "flac-1.5.0",
+      "pname": "flac",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:31:38.013547Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/0rv0k1szw6c5j0l9xz0lqlq5dgibg5v7-flac-1.5.0-bin",
+        "dev": "/nix/store/wlw2jplr6n3kbsbidmz8ngzvc37fkadq-flac-1.5.0-dev",
+        "doc": "/nix/store/mbjjmmwfkyxjwccl6724pm0304k3c2yq-flac-1.5.0-doc",
+        "man": "/nix/store/gb7b1zykscq91hl64nfba791yak7ciqg-flac-1.5.0-man",
+        "out": "/nix/store/2gk4mdgi0aq0sq12vf2lwik4nrgf9p5l-flac-1.5.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/9hhpxpgp9i03qvv6x6x5mi51ab0sz769-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:16.952706Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/q0f3nq025k4c7mzlzih7yfdjfps5rgqv-gum-0.17.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/09v9jp6nzfjrxdq7bml2yrflynvfg45x-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:27.878430Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/r52bpy73kr30614qsy4iqa2l5wb6p4jp-gum-0.17.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/6nw2y39n2a0qddbgd4w32zcnyp6m97z0-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:18.066423Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/v4lfp34zwjmii96spyks5g4hd58yvp9b-gum-0.17.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/cm4djplml5q3jhfah2rrpw5k6p2cwfz0-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:31:39.284080Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dpjcwmn7gzic1b4g39w87mh87zqhn3ac-gum-0.17.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "lame",
+      "broken": false,
+      "derivation": "/nix/store/bbirk160kwhpy5lrgnjc8j8xih3a8s2d-lame-3.100.drv",
+      "description": "High quality MPEG Audio Layer III (MP3) encoder",
+      "install_id": "lame",
+      "license": "LGPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "lame-3.100",
+      "pname": "lame",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:32.284856Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.100",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/07svcy8zcwrnmzs2fm7v4fhcabn8h2x9-lame-3.100-doc",
+        "lib": "/nix/store/q7qzf6kw62d5mybyq8fgycxbq3lhvvqi-lame-3.100-lib",
+        "out": "/nix/store/mpv246jnimdcnzf2cpgic9h0ffpzpx5x-lame-3.100"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "lame",
+      "broken": false,
+      "derivation": "/nix/store/1c4j9wa6vwfmdgvd001flcj6fr5rdmgl-lame-3.100.drv",
+      "description": "High quality MPEG Audio Layer III (MP3) encoder",
+      "install_id": "lame",
+      "license": "LGPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "lame-3.100",
+      "pname": "lame",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:48.737710Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.100",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/rhr677gxckxhpj512a3gmy08lrmq36bz-lame-3.100-doc",
+        "lib": "/nix/store/j97nm9hslk8cmpw0c9wr1zmakb4k17af-lame-3.100-lib",
+        "out": "/nix/store/mi7r3r0hh0ljh2ykik2rd6gvfbndcjfk-lame-3.100"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "lame",
+      "broken": false,
+      "derivation": "/nix/store/gyrw2m003wnh28favv2ry4il145kkxiw-lame-3.100.drv",
+      "description": "High quality MPEG Audio Layer III (MP3) encoder",
+      "install_id": "lame",
+      "license": "LGPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "lame-3.100",
+      "pname": "lame",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:32.848796Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.100",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/0k65rd7kdk1gzp2flrra5zsnr1a1csyn-lame-3.100-doc",
+        "lib": "/nix/store/rfvwrl6kv0wnmds42a9cayynpy5blykb-lame-3.100-lib",
+        "out": "/nix/store/2yqq3lhck3fhxzfy1wdhjjpc27sgbixp-lame-3.100"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "lame",
+      "broken": false,
+      "derivation": "/nix/store/751dcckc29w0094cqgzi1nvz9fxsrlhi-lame-3.100.drv",
+      "description": "High quality MPEG Audio Layer III (MP3) encoder",
+      "install_id": "lame",
+      "license": "LGPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "lame-3.100",
+      "pname": "lame",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:00.868643Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.100",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/6ckqr8n49kfzrl28j3ln4h6n50gppgh9-lame-3.100-doc",
+        "lib": "/nix/store/cg72ayvb7gas0vyq2hx4ndw1hpgfi2fj-lame-3.100-lib",
+        "out": "/nix/store/4ji633fps88sqfr7v7hixd9vfzxq6xa9-lame-3.100"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libogg",
+      "broken": false,
+      "derivation": "/nix/store/qm3r1hvv7mwwammllmdl7inskadn1bxs-libogg-1.3.6.drv",
+      "description": "Media container library to manipulate Ogg files",
+      "install_id": "libogg",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libogg-1.3.6",
+      "pname": "libogg",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:32.963759Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/ssm31r2ad22a1m4gdalrxnxl5rw7pb72-libogg-1.3.6-dev",
+        "doc": "/nix/store/bjc7278gd40h0j435qh6hdzbs837gx9c-libogg-1.3.6-doc",
+        "out": "/nix/store/b00cgw3lrm6lkbxm2b7m7jmbl9cryy0g-libogg-1.3.6"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libogg",
+      "broken": false,
+      "derivation": "/nix/store/jw3c5nyqkk45s4qc7lp346xxn77mbgcb-libogg-1.3.6.drv",
+      "description": "Media container library to manipulate Ogg files",
+      "install_id": "libogg",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libogg-1.3.6",
+      "pname": "libogg",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:49.842094Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/gzvmmx9q7ivv6lwv68dqqy7jsypcqm4v-libogg-1.3.6-dev",
+        "doc": "/nix/store/zjknv7rpwz5wnxf0hcq91iwvybjizgk0-libogg-1.3.6-doc",
+        "out": "/nix/store/mik045w06bvg3jx8d5lvp7cd2v8vk5sv-libogg-1.3.6"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libogg",
+      "broken": false,
+      "derivation": "/nix/store/27b7igwpg1cgjkpyb8qxqa8m4k8i0n64-libogg-1.3.6.drv",
+      "description": "Media container library to manipulate Ogg files",
+      "install_id": "libogg",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libogg-1.3.6",
+      "pname": "libogg",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:33.507687Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/z6k7f54yl80a89m2mqc5wndblywlxxjr-libogg-1.3.6-dev",
+        "doc": "/nix/store/d9wivwqj517spvr1bpcf94dk72z6ci3y-libogg-1.3.6-doc",
+        "out": "/nix/store/8zf1rjwv8z00rj9d7hy9gjjga701r39b-libogg-1.3.6"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libogg",
+      "broken": false,
+      "derivation": "/nix/store/gjn22i9375mqswa6cjbkhxychqhd41d9-libogg-1.3.6.drv",
+      "description": "Media container library to manipulate Ogg files",
+      "install_id": "libogg",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libogg-1.3.6",
+      "pname": "libogg",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:02.111110Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/2sjhip25bszvq1v7bmhy6fxgx562ycm4-libogg-1.3.6-dev",
+        "doc": "/nix/store/j00srrl2381z8szz862h7044sbh58h9s-libogg-1.3.6-doc",
+        "out": "/nix/store/823cn5pb08w0yii1v4fq4aisq9ipdxfh-libogg-1.3.6"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libopus",
+      "broken": false,
+      "derivation": "/nix/store/9kzf5cnx99jwc79gpv6bvg3zn324k9p5-libopus-1.5.2.drv",
+      "description": "Open, royalty-free, highly versatile audio codec",
+      "install_id": "libopus",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libopus-1.5.2",
+      "pname": "libopus",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:32.977189Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/34gd2da9pvrhd4jyb0v7pdzali31jb9d-libopus-1.5.2-dev",
+        "out": "/nix/store/gwv4p9rpy33i1xy7yy1896msm9vad1aa-libopus-1.5.2"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libopus",
+      "broken": false,
+      "derivation": "/nix/store/q5wfi14hnbc3brncr0irjhapnbpi6xv6-libopus-1.5.2.drv",
+      "description": "Open, royalty-free, highly versatile audio codec",
+      "install_id": "libopus",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libopus-1.5.2",
+      "pname": "libopus",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:49.863638Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/12m6q38p0xf87amiw5a1ri7gygx1f1rs-libopus-1.5.2-dev",
+        "out": "/nix/store/j577yn6549skgl7fbq3ff7h74wapd5ha-libopus-1.5.2"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libopus",
+      "broken": false,
+      "derivation": "/nix/store/0qp5ylmg8ig5yg2yh5sg0wlg3xh7pn78-libopus-1.5.2.drv",
+      "description": "Open, royalty-free, highly versatile audio codec",
+      "install_id": "libopus",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libopus-1.5.2",
+      "pname": "libopus",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:33.521972Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/5p5pdwj3k3c80gxqsgd1qd49w8cjhasq-libopus-1.5.2-dev",
+        "out": "/nix/store/2z1g586y8iflagscfdnzv5wzj7ja65bp-libopus-1.5.2"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libopus",
+      "broken": false,
+      "derivation": "/nix/store/i7sdmd2gz7jywn4h6kz9llz63qdrjc6f-libopus-1.5.2.drv",
+      "description": "Open, royalty-free, highly versatile audio codec",
+      "install_id": "libopus",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libopus-1.5.2",
+      "pname": "libopus",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:02.137254Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.5.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/h824fl8zw75vf12b2fna4211yrwgzp84-libopus-1.5.2-dev",
+        "out": "/nix/store/kbjiwaycc5zb40icl1apwx7zd490cr36-libopus-1.5.2"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libvorbis",
+      "broken": false,
+      "derivation": "/nix/store/01wsl68w6jk00qs97136hy10hmxga5ij-libvorbis-1.3.7.drv",
+      "description": "Vorbis audio compression reference implementation",
+      "install_id": "libvorbis",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libvorbis-1.3.7",
+      "pname": "libvorbis",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:33.572371Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/92if7lj3cgs0607brgnvdvfy36ck4ni4-libvorbis-1.3.7-dev",
+        "doc": "/nix/store/qkcchd5d569a14j02p1mycw6angz206v-libvorbis-1.3.7-doc",
+        "out": "/nix/store/rdcv7rq24xlhr56wx3r9hb8gn9gf1sxs-libvorbis-1.3.7"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libvorbis",
+      "broken": false,
+      "derivation": "/nix/store/yh7h2ra77qzx27igx7mb10p5jzxlbm97-libvorbis-1.3.7.drv",
+      "description": "Vorbis audio compression reference implementation",
+      "install_id": "libvorbis",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libvorbis-1.3.7",
+      "pname": "libvorbis",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:18:50.799620Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/why964k0dj4frmcl5x6shgv5z5xihk3l-libvorbis-1.3.7-dev",
+        "doc": "/nix/store/d3z4ilyx7k623wv16ck6h2djycw5a4yd-libvorbis-1.3.7-doc",
+        "out": "/nix/store/y55vlzgx452w5qhjb21z33qvlkfq0nwk-libvorbis-1.3.7"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libvorbis",
+      "broken": false,
+      "derivation": "/nix/store/swqsp8mrl5rh8nmg2rr6553km35mv4nw-libvorbis-1.3.7.drv",
+      "description": "Vorbis audio compression reference implementation",
+      "install_id": "libvorbis",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libvorbis-1.3.7",
+      "pname": "libvorbis",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:34.125956Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/j3lyqdb3fkk7wkfp8jchk2gpl2p2bzf9-libvorbis-1.3.7-dev",
+        "doc": "/nix/store/2x24cb5c02l7ghab0dhvgq5ffrwj2zhh-libvorbis-1.3.7-doc",
+        "out": "/nix/store/7malpzr3fzzw9bfqxrrbgfh5slxadx4n-libvorbis-1.3.7"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libvorbis",
+      "broken": false,
+      "derivation": "/nix/store/k9b5zysj22waj6wwlg917hf5h7mkpmwy-libvorbis-1.3.7.drv",
+      "description": "Vorbis audio compression reference implementation",
+      "install_id": "libvorbis",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "libvorbis-1.3.7",
+      "pname": "libvorbis",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:03.197127Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.3.7",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/2aq5pi6rcf6kfqwry0w28pmqddw6pypr-libvorbis-1.3.7-dev",
+        "doc": "/nix/store/57jyvbk2g5w01c3yrn5wq50jc6p3rapr-libvorbis-1.3.7-doc",
+        "out": "/nix/store/sbh5xgshrcnrjj69qvkj6iz4aq2lb3mh-libvorbis-1.3.7"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/vzagif626nv45zny85hz7n370yaygah1-openssl-3.6.0.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "openssl-3.6.0",
+      "pname": "openssl",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:41.447195Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/n5w398rxamd1vksaad70lwza4v066qbv-openssl-3.6.0-bin",
+        "dev": "/nix/store/jayj6gndpr5s2skpq33yiw6rxl63xsw8-openssl-3.6.0-dev",
+        "doc": "/nix/store/185xl7pdxdsw68gcjmvhxfw8zf4kbak8-openssl-3.6.0-doc",
+        "man": "/nix/store/sh5h5173bfdkdkcb5qyjhndlx2p4h0w9-openssl-3.6.0-man",
+        "out": "/nix/store/gspg5i1r9mxpjzvf49s8slnqf4dypiqg-openssl-3.6.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/pg3zwrh5qbq53kck700v4j015q5w29il-openssl-3.6.0.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "openssl-3.6.0",
+      "pname": "openssl",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:19:06.345696Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/536i3g8acvrx7r4l7rqprgz8qmwzywaz-openssl-3.6.0-bin",
+        "debug": "/nix/store/74hjp0gi9gyhixsn7a0isgsdjw6x9z1a-openssl-3.6.0-debug",
+        "dev": "/nix/store/gviyxp3yfb7q7dkg524ckic99mnpgs37-openssl-3.6.0-dev",
+        "doc": "/nix/store/d83s7dakz6ad4sz214j5nhwwgp34db9x-openssl-3.6.0-doc",
+        "man": "/nix/store/a0k62zrvwh1igk9a0f3kisjx5l3aqzr7-openssl-3.6.0-man",
+        "out": "/nix/store/x4fwdnj812p8f1whdl4f68cm1j3232wv-openssl-3.6.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/2j87mnzkx0q88kiwz9mlnrvi6fj5kr96-openssl-3.6.0.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "openssl-3.6.0",
+      "pname": "openssl",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:42.150769Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/pylhzsgvndn47f33k0m14f0jjka2w1dl-openssl-3.6.0-bin",
+        "dev": "/nix/store/mlqidfj0jc06z4pspzdf9agraikflkvk-openssl-3.6.0-dev",
+        "doc": "/nix/store/nl9yf8yclvqf0wbdrp2sdi4z403yf5aw-openssl-3.6.0-doc",
+        "man": "/nix/store/cdxgp3kbbawcfp70jgdhr0injqcx9iwx-openssl-3.6.0-man",
+        "out": "/nix/store/w50z4d7nj23q854qycw98vkzc6dd0dic-openssl-3.6.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/p6662jm6ad46r2qkffq9cklgvkl3if70-openssl-3.6.0.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "openssl-3.6.0",
+      "pname": "openssl",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:21.166314Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/7mkqy2m26f9c1fvrp1afzfqpvd62pv4p-openssl-3.6.0-bin",
+        "debug": "/nix/store/b0f9icbk6lz7mzpjk11cmj06r3srz27b-openssl-3.6.0-debug",
+        "dev": "/nix/store/7zffnxmddvvy3bvwbd33llc07s4nk9xc-openssl-3.6.0-dev",
+        "doc": "/nix/store/wm0fp5ih3xnzb04pgs9sw0i02gff49mb-openssl-3.6.0-doc",
+        "man": "/nix/store/1fgvag415saj2sd12gcnkm48rv020728-openssl-3.6.0-man",
+        "out": "/nix/store/lycdkibz6z2awbpapmzzl2lmiv4iyrc9-openssl-3.6.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "opusfile",
+      "broken": false,
+      "derivation": "/nix/store/qbpm91v6b4zy3z6sjspbx8xs0q42661s-opusfile-0.12.drv",
+      "description": "High-level API for decoding and seeking in .opus files",
+      "install_id": "opusfile",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "opusfile-0.12",
+      "pname": "opusfile",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T16:41:41.588196Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/mb0lg5ajxaiksd5dd9hl79qm1nn0s77f-opusfile-0.12-dev",
+        "out": "/nix/store/zc1sq2hdazijz26pvns2d6091997sgy0-opusfile-0.12"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "opusfile",
+      "broken": false,
+      "derivation": "/nix/store/l5dwrf4i2ll58m7fvq2wxjkgknkv7ran-opusfile-0.12.drv",
+      "description": "High-level API for decoding and seeking in .opus files",
+      "install_id": "opusfile",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "opusfile-0.12",
+      "pname": "opusfile",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:19:06.568654Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/8b4fprycdxm8d3gkkmc9cnkmvbr169jx-opusfile-0.12-dev",
+        "out": "/nix/store/ax81q6xg7lfwvca7qz9db7sg9ws09zma-opusfile-0.12"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "opusfile",
+      "broken": false,
+      "derivation": "/nix/store/bznn2r0b8jlrxmccczqh2nhh8fl4ibys-opusfile-0.12.drv",
+      "description": "High-level API for decoding and seeking in .opus files",
+      "install_id": "opusfile",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "opusfile-0.12",
+      "pname": "opusfile",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T17:52:42.292280Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/qfkhxkbrlyri4sjl91xnylis9dnnvmg2-opusfile-0.12-dev",
+        "out": "/nix/store/pnkqn0chc0p41jpsf4amw4vb513c1arg-opusfile-0.12"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "opusfile",
+      "broken": false,
+      "derivation": "/nix/store/ssmrd49q0786di6wa7blpklcym57g5g0-opusfile-0.12.drv",
+      "description": "High-level API for decoding and seeking in .opus files",
+      "install_id": "opusfile",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "name": "opusfile-0.12",
+      "pname": "opusfile",
+      "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
+      "rev_count": 895122,
+      "rev_date": "2025-11-12T20:02:36Z",
+      "scrape_date": "2025-11-14T18:32:21.401384Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.12",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/xiyf619mvqfdnzh8yj9z20h8dxg4c5wr-opusfile-0.12-dev",
+        "out": "/nix/store/35dsqj8bgwq32hwyhzwa2nf85ra6a861-opusfile-0.12"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
