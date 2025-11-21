@@ -1,0 +1,19 @@
+{
+  "model": "anthropic/claude-sonnet-4.5",
+  "rules": [
+    "AGENTS.md",
+    ".opencode/rules/flox.md"
+  ],
+  "commands": {
+    "flox-context": {
+      "description": "Fetch Flox context documentation",
+      "file": ".opencode/command/flox-context.md"
+    }
+  },
+  "modes": {
+    "flox": {
+      "agent": "build",
+      "prompt": "You are working in a Flox-managed environment. Always use Flox commands instead of system package managers."
+    }
+  }
+}

@@ -6,3 +6,4 @@
 **/.goose/config.yaml
 **/.gemini/settings.json
 **/.qwen/settings.json
+**/opencode.json
