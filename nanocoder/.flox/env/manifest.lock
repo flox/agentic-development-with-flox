@@ -1,0 +1,143 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "nanocoder": {
+        "pkg-path": "flox/nanocoder",
+        "pkg-group": "nanocoder"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🔬 Nanocoder - Local-First CLI Coding Agent\"\necho \"\"\necho \"A community-driven, privacy-focused coding agent for your terminal.\"\necho \"\"\necho \"First-time setup:\"\necho \"  nanocoder                   # Launch interactive session\"\necho \"  /setup-config               # Guided configuration wizard\"\necho \"\"\necho \"Usage:\"\necho \"  nanocoder                   # Start interactive coding session\"\necho \"  !command                    # Execute shell commands directly\"\necho \"\"\necho \"Slash commands (in session):\"\necho \"  /setup-config               # Configure providers and settings\"\necho \"  /provider                   # Show/switch AI providers\"\necho \"  /model                      # List/switch models\"\necho \"  /mcp                        # List MCP services\"\necho \"  /custom-commands            # Show custom commands\"\necho \"  /clear                      # Clear session history\"\necho \"  /export                     # Export conversation\"\necho \"\"\necho \"Built by the community, for the community ⚒\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "nanocoder",
+      "broken": false,
+      "derivation": "/nix/store/0hzjypp1z5fzis4pd0c61ry55cn0ghgp-nanocoder-1.16.4.drv",
+      "description": "A beautiful local-first coding agent running in your terminal - built by the community for the community ⚒",
+      "install_id": "nanocoder",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "nanocoder-1.16.4",
+      "pname": "nanocoder",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-21T06:37:11.527864411Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.16.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/57xhdzn2iz711si7zd535krlwb26k5zz-nanocoder-1.16.4"
+      },
+      "system": "aarch64-darwin",
+      "group": "nanocoder",
+      "priority": 5
+    },
+    {
+      "attr_path": "nanocoder",
+      "broken": false,
+      "derivation": "/nix/store/8nzx01kmlhbk76q13az6kk34hf081i28-nanocoder-1.16.4.drv",
+      "description": "A beautiful local-first coding agent running in your terminal - built by the community for the community ⚒",
+      "install_id": "nanocoder",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "name": "nanocoder-1.16.4",
+      "pname": "nanocoder",
+      "rev": "cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "rev_count": 12,
+      "rev_date": "2025-11-20T14:43:17Z",
+      "scrape_date": "2025-11-21T06:37:11.527869823Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.16.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/fqqm6l6mijzpm7nhyln7mkbp6ankvzxm-nanocoder-1.16.4"
+      },
+      "system": "aarch64-linux",
+      "group": "nanocoder",
+      "priority": 5
+    },
+    {
+      "attr_path": "nanocoder",
+      "broken": false,
+      "derivation": "/nix/store/y4ydi9dnmbcw5izg1irhggxpw922pawg-nanocoder-1.16.4.drv",
+      "description": "A beautiful local-first coding agent running in your terminal - built by the community for the community ⚒",
+      "install_id": "nanocoder",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "nanocoder-1.16.4",
+      "pname": "nanocoder",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-21T06:37:11.527871074Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.16.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/x3nych9cja7vad5zywwqyygn2wbh4xhp-nanocoder-1.16.4"
+      },
+      "system": "x86_64-darwin",
+      "group": "nanocoder",
+      "priority": 5
+    },
+    {
+      "attr_path": "nanocoder",
+      "broken": false,
+      "derivation": "/nix/store/ig5a2kbq8rlay8z5rm2zphaiiw5101v5-nanocoder-1.16.4.drv",
+      "description": "A beautiful local-first coding agent running in your terminal - built by the community for the community ⚒",
+      "install_id": "nanocoder",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "nanocoder-1.16.4",
+      "pname": "nanocoder",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-21T06:37:11.527872126Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.16.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c1kl0l6a5llrpgf3axs408hnsrg654r1-nanocoder-1.16.4"
+      },
+      "system": "x86_64-linux",
+      "group": "nanocoder",
+      "priority": 5
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "qwen-code": {
+        "pkg-path": "qwen-code"
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "qwen-code",
+      "broken": false,
+      "derivation": "/nix/store/48vi8a6zp2hn2wbjsdxyqnswbis25l0p-qwen-code-0.1.1.drv",
+      "description": "Coding agent that lives in digital world",
+      "install_id": "qwen-code",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "qwen-code-0.1.1",
+      "pname": "qwen-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:36:41.716250Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.1.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/i3871y8glmigfzw7kyi8kbw8nd3zd289-qwen-code-0.1.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "qwen-code",
+      "broken": false,
+      "derivation": "/nix/store/ra5h5dbxms76wla1m29af6ilwqkq955d-qwen-code-0.1.1.drv",
+      "description": "Coding agent that lives in digital world",
+      "install_id": "qwen-code",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "qwen-code-0.1.1",
+      "pname": "qwen-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:30:55.416384Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.1.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dvk3gdbwgg7q9ccs7q03r78j84mla2lk-qwen-code-0.1.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "qwen-code",
+      "broken": false,
+      "derivation": "/nix/store/4la3c568i84bl93684y94s6bg7nwjrsj-qwen-code-0.1.1.drv",
+      "description": "Coding agent that lives in digital world",
+      "install_id": "qwen-code",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "qwen-code-0.1.1",
+      "pname": "qwen-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:56:18.312240Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.1.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vqbzyk19q5yjpbfmknyh3rc2gfa14q37-qwen-code-0.1.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "qwen-code",
+      "broken": false,
+      "derivation": "/nix/store/69xv32f7nygzj2zz9npigikh72nk6kjg-qwen-code-0.1.1.drv",
+      "description": "Coding agent that lives in digital world",
+      "install_id": "qwen-code",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "qwen-code-0.1.1",
+      "pname": "qwen-code",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:22:55.771406Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.1.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/xn86yhisfyw9ma3bnnxymcdpxx4lmddr-qwen-code-0.1.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

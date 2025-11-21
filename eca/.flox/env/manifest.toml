@@ -27,12 +27,16 @@ eca.pkg-group = "eca"
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-# INTRO_MESSAGE = "It's gettin' Flox in here"
+FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Copy templates to cache
+mkdir -p "$FLOX_ENV_CACHE/templates"
+cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
+
 echo ""
 echo "🤖 ECA - Editor Code Assistant"
 echo ""
@@ -58,6 +62,9 @@ echo "  • Multi-editor support (Emacs, VS Code, Vim, IntelliJ)"
 echo "  • Model-agnostic (OpenAI, Anthropic, Copilot, Ollama)"
 echo "  • Agentic capabilities with native tools and MCPs"
 echo "  • Layer Ollama: flox activate -r flox/ollama"
+echo ""
+echo "Flox-aware templates:"
+echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "Open Source • Apache-2.0 License"
 echo ""

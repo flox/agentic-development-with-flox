@@ -25,12 +25,16 @@ goose-cli.pkg-path = "flox/goose-cli"
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-# INTRO_MESSAGE = "It's gettin' Flox in here"
+FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Copy templates to cache
+mkdir -p "$FLOX_ENV_CACHE/templates"
+cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
+
 echo ""
 echo "🪿 Goose - Local AI Agent for Engineering Tasks"
 echo ""
@@ -51,6 +55,9 @@ echo "  • Autonomous task execution (build, debug, test)"
 echo "  • Multi-model support (optimize for cost and performance)"
 echo "  • MCP server integration (extend with custom tools)"
 echo "  • Extensions system (add capabilities)"
+echo ""
+echo "Flox-aware templates:"
+echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "From Block • Open Source"
 echo ""

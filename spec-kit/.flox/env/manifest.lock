@@ -1,0 +1,147 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "spec-kit": {
+        "pkg-path": "flox/spec-kit",
+        "pkg-group": "spec-kit"
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"💫 GitHub Spec Kit - Spec-Driven Development Framework\"\necho \"\"\necho \"NOTE: Spec-Kit is a framework for use WITH AI coding agents.\"\necho \"      It is NOT a standalone agent.\"\necho \"\"\necho \"Activate an AI agent, then add spec-kit on top:\"\necho \"  flox activate -r flox/gemini-cli    # or kilocode-cli, copilot-cli, etc.\"\necho \"  flox activate -r flox/spec-kit\"\necho \"\"\necho \"Then initialize a project:\"\necho \"  specify init <project> --ai gemini\"\necho \"\"\necho \"Available commands:\"\necho \"  specify init       # Initialize project with spec-driven workflow\"\necho \"  specify check      # Check installed AI agents\"\necho \"  specify version    # Display version info\"\necho \"\"\necho \"From GitHub • Open Source\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "spec-kit",
+      "broken": false,
+      "derivation": "/nix/store/7dx139ljbl1c4r0sbxi8f3lln3ra3bmq-spec-kit-0.0.85.drv",
+      "description": "Specify CLI, part of GitHub Spec Kit. A tool to bootstrap your projects for Spec-Driven Development (SDD)",
+      "install_id": "spec-kit",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "spec-kit-0.0.85",
+      "pname": "spec-kit",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-21T15:10:32.128392726Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.85",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/l3cy7rkhrnxr1asfvajc42m9987z7bal-spec-kit-0.0.85-dist",
+        "out": "/nix/store/pqqsclavhhzrinzvz5rxwgmr2crdbjdy-spec-kit-0.0.85"
+      },
+      "system": "aarch64-darwin",
+      "group": "spec-kit",
+      "priority": 5
+    },
+    {
+      "attr_path": "spec-kit",
+      "broken": false,
+      "derivation": "/nix/store/bn1czb3k3c8l9ymmmky1lwqw7xcnkbwb-spec-kit-0.0.85.drv",
+      "description": "Specify CLI, part of GitHub Spec Kit. A tool to bootstrap your projects for Spec-Driven Development (SDD)",
+      "install_id": "spec-kit",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "name": "spec-kit-0.0.85",
+      "pname": "spec-kit",
+      "rev": "cb11683228546432a53fd3cbbc0a869f9d9b2a26",
+      "rev_count": 12,
+      "rev_date": "2025-11-20T14:43:17Z",
+      "scrape_date": "2025-11-21T15:10:32.128402240Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.85",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/0bzqggvzsq1acvardg03qfliz110h62w-spec-kit-0.0.85-dist",
+        "out": "/nix/store/5wqkrhd9awlkgrvpbxm60ckf4ivv12k1-spec-kit-0.0.85"
+      },
+      "system": "aarch64-linux",
+      "group": "spec-kit",
+      "priority": 5
+    },
+    {
+      "attr_path": "spec-kit",
+      "broken": false,
+      "derivation": "/nix/store/zg3lny0s5bjrh14lhwq1v86g981vbpj8-spec-kit-0.0.85.drv",
+      "description": "Specify CLI, part of GitHub Spec Kit. A tool to bootstrap your projects for Spec-Driven Development (SDD)",
+      "install_id": "spec-kit",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "name": "spec-kit-0.0.85",
+      "pname": "spec-kit",
+      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
+      "rev_count": 8,
+      "rev_date": "2025-11-19T02:25:47Z",
+      "scrape_date": "2025-11-21T15:10:32.128404660Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.85",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/c1r3r21a1yjspgff3fcswbw18xfzs3xy-spec-kit-0.0.85-dist",
+        "out": "/nix/store/93wimsj51s5jnry1jk6jcyc1c38cgsni-spec-kit-0.0.85"
+      },
+      "system": "x86_64-darwin",
+      "group": "spec-kit",
+      "priority": 5
+    },
+    {
+      "attr_path": "spec-kit",
+      "broken": false,
+      "derivation": "/nix/store/nbf7r5nqinb1cfrnhj5qsnafsfkrrpxd-spec-kit-0.0.85.drv",
+      "description": "Specify CLI, part of GitHub Spec Kit. A tool to bootstrap your projects for Spec-Driven Development (SDD)",
+      "install_id": "spec-kit",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
+      "name": "spec-kit-0.0.85",
+      "pname": "spec-kit",
+      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
+      "rev_count": 10,
+      "rev_date": "2025-11-19T15:23:13Z",
+      "scrape_date": "2025-11-21T15:10:32.128406656Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.85",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/b86q4pmfivnv40cxq3yv5qr29w1wb56a-spec-kit-0.0.85-dist",
+        "out": "/nix/store/ba7ip0bqywmfv83iplhyj12wlsyssz6f-spec-kit-0.0.85"
+      },
+      "system": "x86_64-linux",
+      "group": "spec-kit",
+      "priority": 5
+    }
+  ]
+}

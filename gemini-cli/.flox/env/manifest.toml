@@ -26,12 +26,16 @@ gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-# INTRO_MESSAGE = "It's gettin' Flox in here"
+FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Copy templates to cache
+mkdir -p "$FLOX_ENV_CACHE/templates"
+cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
+
 echo ""
 echo "🤖 Gemini CLI - AI Agent in Your Terminal"
 echo ""
@@ -50,6 +54,9 @@ echo ""
 echo "Optional enhancements:"
 echo "  GEMINI.md                   # Project context file (see README)"
 echo "  ~/.gemini/settings.json     # MCP server configuration"
+echo ""
+echo "Flox-aware templates:"
+echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "VS Code extension installed and ready to use!"
 echo ""
