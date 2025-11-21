@@ -1,0 +1,7 @@
+# Agent config files with secrets (should live in $HOME)
+**/agents.config.json
+**/.nanocoder/config.json
+**/.kilocode/cli/config.json
+**/.eca/config.json
+**/.goose/config.yaml
+**/.gemini/settings.json
