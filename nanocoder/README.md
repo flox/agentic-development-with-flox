@@ -178,12 +178,21 @@ nanocoder
 
 ### Configuration Location
 
-Nanocoder uses `agents.config.json` for configuration:
+Nanocoder uses `agents.config.json` for configuration.
 
-**Project-level** (recommended):
+**⚠️ IMPORTANT - Flox Security Convention:**
+Config files containing API keys or secrets MUST be in `$HOME` (`~/.nanocoder/`), never in project directories.
+
+**User-level** (RECOMMENDED for configs with secrets):
+```
+~/.nanocoder/
+└── agents.config.json     # Global configuration with API keys
+```
+
+**Project-level** (ONLY for non-secret settings):
 ```
 your-project/
-├── agents.config.json     # Project-specific configuration
+├── agents.config.json     # Project settings WITHOUT secrets
 ├── .nanocoder/
 │   └── commands/          # Custom commands for this project
 │       ├── review.md
@@ -191,11 +200,7 @@ your-project/
 └── ...
 ```
 
-**User-level** (fallback):
-```
-~/.nanocoder/
-└── agents.config.json     # Global configuration
-```
+**Note:** If using project-level config, use environment variables for API keys (e.g., `ANTHROPIC_API_KEY`) instead of storing them in `agents.config.json`.
 
 ### Setup Wizard
 
@@ -214,7 +219,7 @@ nanocoder
 
 ### Manual Configuration
 
-Create `agents.config.json` in your project root:
+Create `agents.config.json` in `~/.nanocoder/` (recommended) or use environment variables:
 
 ```json
 {
@@ -655,8 +660,8 @@ This environment works on:
 
 ## 🔒 Security Considerations
 
-- **API credentials**: Stored in `agents.config.json` or via environment variables
-- **Configuration location**: Project root or `~/.nanocoder/`
+- **API credentials**: Stored in `~/.nanocoder/agents.config.json` or via environment variables
+- **Configuration location**: `~/.nanocoder/` in your home directory (**NEVER in project root**)
 - **Code access**: Nanocoder can read and modify files in your project
 - **Shell execution**: Can run commands with `!command` syntax
 - **Network access**: Communicates with configured providers
@@ -664,9 +669,10 @@ This environment works on:
 - **Local-first design**: Privacy-focused architecture
 
 **Best Practices:**
-- **Recommended**: Use environment variables for API keys
+- **Recommended**: Use environment variables for API keys (e.g., `ANTHROPIC_API_KEY`)
+- **CRITICAL**: Config files with secrets MUST be in `$HOME` (e.g., `~/.nanocoder/`), never in project directories
 - Never commit API keys to version control
-- Use `.gitignore` to exclude `agents.config.json` if it contains secrets
+- Per Flox conventions, all secrets live in `$HOME`, not in repos or `$FLOX_ENV_CACHE`
 - Review tool permissions in configuration
 - Be cautious with shell command execution
 - Use version control for easy rollback
