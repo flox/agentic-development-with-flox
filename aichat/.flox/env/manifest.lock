@@ -1,0 +1,132 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "aichat": {
+        "pkg-path": "aichat"
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "aichat",
+      "broken": false,
+      "derivation": "/nix/store/87d1izasq0hgwyi7pa3vjkgzwdvpmvkq-aichat-0.30.0.drv",
+      "description": "Use GPT-4(V), Gemini, LocalAI, Ollama and other LLMs in the terminal",
+      "install_id": "aichat",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "aichat-0.30.0",
+      "pname": "aichat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:17.884982Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.30.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/lj4b2amqx4y18j4czp141y285mjdyhzb-aichat-0.30.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "aichat",
+      "broken": false,
+      "derivation": "/nix/store/qszyr54b10gb3l8qafmf2zfr252z8wkb-aichat-0.30.0.drv",
+      "description": "Use GPT-4(V), Gemini, LocalAI, Ollama and other LLMs in the terminal",
+      "install_id": "aichat",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "aichat-0.30.0",
+      "pname": "aichat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.151812Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.30.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ksr2z6ap9gdfhgfcc4rhqw50szqwrxsk-aichat-0.30.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "aichat",
+      "broken": false,
+      "derivation": "/nix/store/k2gxfx0j9wm8xqf58f3yg5hcrnbn7h46-aichat-0.30.0.drv",
+      "description": "Use GPT-4(V), Gemini, LocalAI, Ollama and other LLMs in the terminal",
+      "install_id": "aichat",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "aichat-0.30.0",
+      "pname": "aichat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:56.993832Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.30.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/nnzdydy6945h0aql1wcia0sf9n30bkda-aichat-0.30.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "aichat",
+      "broken": false,
+      "derivation": "/nix/store/nwa6n6ahgf7smsmk6ar330kw1ymn6b7i-aichat-0.30.0.drv",
+      "description": "Use GPT-4(V), Gemini, LocalAI, Ollama and other LLMs in the terminal",
+      "install_id": "aichat",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "aichat-0.30.0",
+      "pname": "aichat",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.399035Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.30.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c2h7sal9kr82ccwr96308ylmj8g97am0-aichat-0.30.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

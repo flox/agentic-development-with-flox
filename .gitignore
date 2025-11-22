@@ -9,3 +9,5 @@
 **/opencode.json
 **/.amazonq/mcp.json
 **/.amazonq/agents/*.json
+**/.aichat/config.yaml
+**/.aichat/roles.yaml
