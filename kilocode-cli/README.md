@@ -358,63 +358,6 @@ You: Implement it
 Kilo: [switches to code mode, refactors]
 ```
 
-## 🎯 Flox-Aware Project Setup
-
-This environment includes **Flox-aware templates** that make Kilo Code automatically use Flox for environment management in your projects.
-
-### Using the Templates
-
-**Copy template files to your project:**
-
-```bash
-# Copy Kilocode-specific templates
-mkdir -p ~/projects/my-app/.kilocode/rules
-cp $FLOX_ENV_TEMPLATES/.kilocode/rules/flox-environment.md ~/projects/my-app/.kilocode/rules/
-
-# Or copy the general instructions file
-cp $FLOX_ENV_TEMPLATES/KILOCODE.md ~/projects/my-app/
-
-# Copy fetch script
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ~/projects/my-app/
-chmod +x ~/projects/my-app/fetch-flox.sh
-```
-
-**What the templates provide:**
-
-The templates instruct Kilo Code to:
-
-1. **Detect Flox projects** by checking for `.flox/` directory
-2. **Fetch context-specific documentation** before working on tasks:
-   - Packaging: `./fetch-flox.sh packaging`
-   - Kubernetes: `./fetch-flox.sh k8s`
-   - Containers: `./fetch-flox.sh containers`
-   - CUDA/GPU: `./fetch-flox.sh cuda`
-   - CI/CD: `./fetch-flox.sh cicd`
-   - Local dev: `./fetch-flox.sh local-dev`
-   - Operations: `./fetch-flox.sh ops`
-3. **Apply Flox best practices** from the fetched documentation
-4. **Use Flox commands** instead of system package managers
-5. **Auto-load rules** based on project structure (`.kilocode/rules/` globs)
-
-**Example workflow:**
-
-```bash
-cd ~/projects/my-app
-kilocode
-
-You: I need to set up a CI/CD pipeline for this project
-
-Kilo: [Detects CI/CD task]
-Kilo: [Runs: ./fetch-flox.sh cicd]
-Kilo: [Reads FLOX.md for CI/CD guidance]
-Kilo: [Applies Flox CI/CD patterns]
-Kilo: Let me help you set up CI/CD using Flox...
-```
-
-**Customization:**
-
-Add your project-specific instructions to `KILOCODE.md` or create additional rules in `.kilocode/rules/`.
-
 ## 🔧 Configuration
 
 ### Configuration Location

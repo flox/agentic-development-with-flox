@@ -27,16 +27,11 @@ kilocode-cli.pkg-group = "kilocode-cli"
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Copy templates to cache
-mkdir -p "$FLOX_ENV_CACHE/templates"
-cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
-
 echo ""
 echo "🚀 Kilo Code - Open-Source AI Coding Agent"
 echo ""
@@ -58,9 +53,6 @@ echo "  /mode                       # Switch agent modes (architect, code, debug
 echo "  /model                      # Switch models"
 echo "  /config                     # Configure providers"
 echo "  /new                        # Start fresh task"
-echo ""
-echo "Flox-aware templates:"
-echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "From Kilo • Open Source"
 echo ""

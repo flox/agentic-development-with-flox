@@ -283,59 +283,6 @@ You: Generate the same algorithm
 # Compare outputs and choose preferred approach
 ```
 
-## 🎯 Flox-Aware Project Setup
-
-This environment includes **Flox-aware templates** that make GitHub Copilot CLI automatically use Flox for environment management in your projects.
-
-### Using the Template
-
-**Copy template files to your project:**
-
-```bash
-# Copy Copilot instructions template
-mkdir -p ~/projects/my-app/.github
-cp $FLOX_ENV_TEMPLATES/.github/copilot-instructions.md ~/projects/my-app/.github/
-
-# Copy fetch script
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ~/projects/my-app/
-chmod +x ~/projects/my-app/fetch-flox.sh
-```
-
-**What the template provides:**
-
-The template instructs Copilot to:
-
-1. **Detect Flox projects** by checking for `.flox/` directory
-2. **Fetch context-specific documentation** before working on tasks:
-   - Packaging: `./fetch-flox.sh packaging`
-   - Kubernetes: `./fetch-flox.sh k8s`
-   - Containers: `./fetch-flox.sh containers`
-   - CUDA/GPU: `./fetch-flox.sh cuda`
-   - CI/CD: `./fetch-flox.sh cicd`
-   - Local dev: `./fetch-flox.sh local-dev`
-   - Operations: `./fetch-flox.sh ops`
-3. **Apply Flox best practices** from the fetched documentation
-4. **Use Flox commands** instead of system package managers
-
-**Example workflow:**
-
-```bash
-cd ~/projects/my-app
-copilot
-
-You: I need to containerize this Python application
-
-Copilot: [Detects containerization task]
-Copilot: [Runs: ./fetch-flox.sh containers]
-Copilot: [Reads FLOX.md for container guidance]
-Copilot: [Applies Flox container patterns]
-Copilot: Let me help you containerize this using Flox...
-```
-
-**Customization:**
-
-Add your project-specific instructions to the template after the Flox section in `.github/copilot-instructions.md`.
-
 ## 🔧 Troubleshooting
 
 ### Authentication Issues

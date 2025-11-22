@@ -25,16 +25,11 @@ github-copilot-cli.pkg-path = "github-copilot-cli"
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Copy templates to cache
-mkdir -p "$FLOX_ENV_CACHE/templates"
-cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
-
 echo ""
 echo "🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal"
 echo ""
@@ -59,9 +54,6 @@ echo "  • Build, debug, and understand code"
 echo "  • GitHub context awareness (repos, issues, PRs)"
 echo "  • Preview-before-execution safety"
 echo "  • MCP extensibility"
-echo ""
-echo "Flox-aware templates:"
-echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)"
 echo ""

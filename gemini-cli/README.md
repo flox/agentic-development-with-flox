@@ -169,51 +169,6 @@ nano GEMINI.md
 
 Now when you run `gemini` in that directory, it will use this context automatically.
 
-### Flox-Aware Project Template
-
-This environment includes a **Flox-aware GEMINI.md template** that makes Gemini automatically use Flox for environment management.
-
-**Copy the template to your project:**
-
-```bash
-# Copy Flox-aware template
-cp $FLOX_ENV_TEMPLATES/GEMINI.md ~/projects/my-app/
-
-# Copy fetch script
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ~/projects/my-app/
-chmod +x ~/projects/my-app/fetch-flox.sh
-```
-
-The template instructs Gemini to:
-1. **Detect Flox projects** by checking for `.flox/` directory
-2. **Fetch context-specific documentation** before working on tasks:
-   - Packaging: `./fetch-flox.sh packaging`
-   - Kubernetes: `./fetch-flox.sh k8s`
-   - Containers: `./fetch-flox.sh containers`
-   - CUDA/GPU: `./fetch-flox.sh cuda`
-   - CI/CD: `./fetch-flox.sh cicd`
-   - Local dev: `./fetch-flox.sh local-dev`
-   - Operations: `./fetch-flox.sh ops`
-3. **Apply Flox best practices** from the fetched documentation
-4. **Use Flox commands** instead of system package managers
-
-**Example workflow with Flox-aware template:**
-
-```bash
-cd ~/projects/my-app
-gemini
-
-You: I need to package this Python application for distribution
-
-Gemini: [Detects packaging task]
-Gemini: [Runs: ./fetch-flox.sh packaging]
-Gemini: [Reads FLOX.md for packaging guidance]
-Gemini: [Applies Flox packaging patterns]
-Gemini: Let me help you package this using Flox...
-```
-
-**Customize the template** by adding your project-specific instructions after the Flox section in `GEMINI.md`.
-
 ### MCP Server Configuration
 
 Extend Gemini CLI with custom tools via Model Context Protocol:
