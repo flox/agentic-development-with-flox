@@ -482,68 +482,6 @@ You: Implement that fix
 Nanocoder: [updates code, adds validation]
 ```
 
-## 🎯 Flox-Aware Project Setup
-
-This environment includes **Flox-aware templates** that make Nanocoder automatically use Flox for environment management in your projects.
-
-### Using the Templates
-
-**Copy template files to your project:**
-
-```bash
-# Copy Nanocoder custom commands
-mkdir -p ~/projects/my-app/.nanocoder/commands
-cp $FLOX_ENV_TEMPLATES/.nanocoder/commands/flox-context.md ~/projects/my-app/.nanocoder/commands/
-
-# Or copy the general instructions file
-cp $FLOX_ENV_TEMPLATES/NANOCODER.md ~/projects/my-app/
-
-# Copy fetch script
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ~/projects/my-app/
-chmod +x ~/projects/my-app/fetch-flox.sh
-```
-
-**What the templates provide:**
-
-The templates instruct Nanocoder to:
-
-1. **Detect Flox projects** by checking for `.flox/` directory
-2. **Fetch context-specific documentation** before working on tasks:
-   - Packaging: `./fetch-flox.sh packaging`
-   - Kubernetes: `./fetch-flox.sh k8s`
-   - Containers: `./fetch-flox.sh containers`
-   - CUDA/GPU: `./fetch-flox.sh cuda`
-   - CI/CD: `./fetch-flox.sh cicd`
-   - Local dev: `./fetch-flox.sh local-dev`
-   - Operations: `./fetch-flox.sh ops`
-3. **Apply Flox best practices** from the fetched documentation
-4. **Use Flox commands** instead of system package managers
-5. **Custom `/flox-context` command** for easy context fetching
-
-**Example workflow:**
-
-```bash
-cd ~/projects/my-app
-nanocoder
-
-You: I need to deploy this application to Kubernetes
-
-Nanocoder: [Detects Kubernetes task]
-Nanocoder: [Runs: ./fetch-flox.sh k8s]
-Nanocoder: [Reads FLOX.md for K8s guidance]
-Nanocoder: [Applies Flox K8s patterns]
-Nanocoder: Let me help you deploy to Kubernetes using Flox...
-
-# Or use the custom command
-You: /flox-context
-
-Nanocoder: [Shows context options and fetches as needed]
-```
-
-**Customization:**
-
-Add your project-specific instructions to `NANOCODER.md` or create additional custom commands in `.nanocoder/commands/`.
-
 ## 🔧 Troubleshooting
 
 ### Command Not Found
