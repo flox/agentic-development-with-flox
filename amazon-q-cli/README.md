@@ -434,62 +434,6 @@ Q: [analyzes codebase]
    [generates complete documentation]
 ```
 
-## 🎯 Flox-Aware Project Setup
-
-This environment includes **Flox-aware templates** that make Amazon Q automatically use Flox for environment management in your projects.
-
-### Using the Templates
-
-**Copy template files to your project:**
-
-```bash
-# Copy Amazon Q custom agent
-mkdir -p ~/projects/my-app/.amazonq/agents
-cp $FLOX_ENV_TEMPLATES/.amazonq/agents/flox-aware.json ~/projects/my-app/.amazonq/agents/
-
-# Copy fetch script
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ~/projects/my-app/
-chmod +x ~/projects/my-app/fetch-flox.sh
-```
-
-**What the templates provide:**
-
-The templates instruct Amazon Q to:
-
-1. **Detect Flox projects** by checking for `.flox/` directory
-2. **Fetch context-specific documentation** before working on tasks:
-   - Packaging: `./fetch-flox.sh packaging`
-   - Kubernetes: `./fetch-flox.sh k8s`
-   - Containers: `./fetch-flox.sh containers`
-   - CUDA/GPU: `./fetch-flox.sh cuda`
-   - CI/CD: `./fetch-flox.sh cicd`
-   - Local dev: `./fetch-flox.sh local-dev`
-   - Operations: `./fetch-flox.sh ops`
-3. **Apply Flox best practices** from the fetched documentation
-4. **Use Flox commands** instead of system package managers
-
-**Example workflow:**
-
-```bash
-cd ~/projects/my-app
-
-# Copy Flox-aware agent
-mkdir -p .amazonq/agents
-cp $FLOX_ENV_TEMPLATES/.amazonq/agents/flox-aware.json .amazonq/agents/
-cp $FLOX_ENV_TEMPLATES/fetch-flox.sh ./
-chmod +x fetch-flox.sh
-
-# Start Amazon Q with Flox-aware agent
-q chat --agent flox-aware
-
-You: I need to set up GPU acceleration with CUDA
-
-Q: [Detects Flox project]
-Q: [Runs: ./fetch-flox.sh cuda]
-Q: [Applies Flox CUDA patterns]
-Q: I'll help you set up CUDA using Flox...
-```
-
 ## 🔧 Troubleshooting
 
 ### Authentication Issues

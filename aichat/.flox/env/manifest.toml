@@ -25,7 +25,6 @@ aichat.pkg-path = "aichat"
 ##      as well as [hook], [profile] scripts and [services] below.
 ## -------------------------------------------------------------------
 [vars]
-FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 
 
 ## Activation Hook ---------------------------------------------------
@@ -33,10 +32,6 @@ FLOX_ENV_TEMPLATES = "$FLOX_ENV_CACHE/templates"
 ## -------------------------------------------------------------------
 [hook]
 on-activate = '''
-# Copy templates to cache
-mkdir -p "$FLOX_ENV_CACHE/templates"
-cp -r "$FLOX_ENV_PROJECT/templates/"* "$FLOX_ENV_CACHE/templates/" 2>/dev/null || true
-
 echo ""
 echo "💬 AIChat - All-in-One LLM CLI Tool"
 echo ""
@@ -61,9 +56,6 @@ echo ""
 echo "Configuration:"
 echo "  ~/.config/aichat/            # Config directory (secrets go here)"
 echo "  config.yaml, roles.yaml      # Main config files"
-echo ""
-echo "Flox-aware templates:"
-echo "  \$FLOX_ENV_TEMPLATES         # Copy templates to your projects"
 echo ""
 echo "Documentation: https://github.com/sigoden/aichat/wiki"
 echo ""
