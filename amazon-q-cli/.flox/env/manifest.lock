@@ -1,0 +1,132 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "amazon-q-cli": {
+        "pkg-path": "amazon-q-cli"
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "amazon-q-cli",
+      "broken": false,
+      "derivation": "/nix/store/dw8knv5yk2ap5azkrcmwy8bxmy2p1xgl-amazon-q-cli-1.18.1.drv",
+      "description": "Amazon Q Developer AI coding agent CLI",
+      "install_id": "amazon-q-cli",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amazon-q-cli-1.18.1",
+      "pname": "amazon-q-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:17.894140Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.18.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/kz1f01s3g64ibc1ya1nhw80dvlvdmhbw-amazon-q-cli-1.18.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amazon-q-cli",
+      "broken": false,
+      "derivation": "/nix/store/a6clja8cs1mm4y68c04c7pdgcxwfwgad-amazon-q-cli-1.18.1.drv",
+      "description": "Amazon Q Developer AI coding agent CLI",
+      "install_id": "amazon-q-cli",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amazon-q-cli-1.18.1",
+      "pname": "amazon-q-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:28:57.164007Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.18.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/9l5j9qy85bza8vn7p6qkdjr3imxk8lky-amazon-q-cli-1.18.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amazon-q-cli",
+      "broken": false,
+      "derivation": "/nix/store/71p3n7y2pkgvsrx69a4q0asszkp8l0zb-amazon-q-cli-1.18.1.drv",
+      "description": "Amazon Q Developer AI coding agent CLI",
+      "install_id": "amazon-q-cli",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amazon-q-cli-1.18.1",
+      "pname": "amazon-q-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:54:57.003342Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.18.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/05g7jlak3kmx5gl4xmmnv6n2mg94mxf6-amazon-q-cli-1.18.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amazon-q-cli",
+      "broken": false,
+      "derivation": "/nix/store/ncbrgs72a13a2p30ss9gkv4d81h8vx27-amazon-q-cli-1.18.1.drv",
+      "description": "Amazon Q Developer AI coding agent CLI",
+      "install_id": "amazon-q-cli",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "amazon-q-cli-1.18.1",
+      "pname": "amazon-q-cli",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:20:46.412070Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.18.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/30wgq10rn49hwi59jaah5j9nlsl5i00f-amazon-q-cli-1.18.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

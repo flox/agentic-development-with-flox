@@ -7,3 +7,5 @@
 **/.gemini/settings.json
 **/.qwen/settings.json
 **/opencode.json
+**/.amazonq/mcp.json
+**/.amazonq/agents/*.json
