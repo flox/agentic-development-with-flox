@@ -434,6 +434,64 @@ Q: [analyzes codebase]
    [generates complete documentation]
 ```
 
+## 🧪 Local Development & Testing
+
+### Layering LocalStack for Local AWS Testing
+
+For local development and testing without connecting to real AWS services, you can layer the `flox/localstack` environment underneath Amazon Q CLI. This is useful for:
+
+- Testing AWS integrations locally
+- Developing without AWS account costs
+- Faster iteration cycles
+- Offline development
+
+**Layer LocalStack:**
+
+```bash
+# Activate with LocalStack layered underneath
+flox activate -r flox/localstack
+
+# LocalStack services will be available at localhost:4566
+# Amazon Q can now query and interact with local AWS services
+```
+
+**Example workflow:**
+
+```bash
+# Start with LocalStack layered
+flox activate -r flox/localstack
+
+# LocalStack starts automatically in the background
+# All AWS services are now available locally
+
+# Use Amazon Q to interact with local AWS
+q chat
+
+You> Create an S3 bucket and list all buckets
+
+Q: [Detects AWS context, uses local endpoint]
+Q: I'll create an S3 bucket using the AWS CLI locally:
+
+    aws --endpoint-url=http://localhost:4566 s3 mb s3://my-test-bucket
+    aws --endpoint-url=http://localhost:4566 s3 ls
+
+You> Set up a Lambda function
+
+Q: [Provides LocalStack-compatible Lambda deployment commands]
+```
+
+**Benefits:**
+
+- **No AWS charges**: All services run locally
+- **Fast feedback**: No network latency to AWS regions
+- **Reproducible**: Consistent local environment
+- **Offline capable**: Work without internet
+- **Safe testing**: Experiment without affecting production
+
+**Available LocalStack services:**
+
+LocalStack emulates major AWS services including S3, DynamoDB, Lambda, SQS, SNS, API Gateway, CloudFormation, and more. See the [LocalStack documentation](https://docs.localstack.cloud/) for a full list.
+
 ## 🔧 Troubleshooting
 
 ### Authentication Issues
