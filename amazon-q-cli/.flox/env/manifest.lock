@@ -7,8 +7,14 @@
         "pkg-path": "amazon-q-cli"
       }
     },
-    "hook": {},
-    "profile": {},
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 Amazon Q Developer CLI - AI-Powered Terminal Assistant\"\necho \"\"\necho \"Quick start:\"\necho \"  q login                      # Authenticate with AWS Builder ID or IAM\"\necho \"  q chat                       # Start interactive AI chat\"\necho \"  q translate \\\"<text>\\\"         # Convert natural language to commands\"\necho \"  q doctor                     # Run diagnostics\"\necho \"\"\necho \"Advanced:\"\necho \"  q chat --agent <name>        # Use custom agent\"\necho \"  q chat --resume              # Resume previous conversation\"\necho \"  q settings list              # View all settings\"\necho \"  q upgrade                    # Update to latest version\"\necho \"\"\necho \"Configuration:\"\necho \"  ~/.aws/amazonq/              # Config directory (secrets go here)\"\necho \"  .amazonq/                    # Project config (NO secrets!)\"\necho \"\"\necho \"Documentation: https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Alias 'q' to 'amazon-q' for convenience\nalias q='amazon-q'\n",
+      "zsh": "# Alias 'q' to 'amazon-q' for convenience\nalias q='amazon-q'\n",
+      "fish": "# Wrapper function for 'q' command\nfunction q\n    amazon-q $argv\nend\n"
+    },
     "options": {}
   },
   "packages": [
