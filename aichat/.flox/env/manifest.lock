@@ -7,7 +7,9 @@
         "pkg-path": "aichat"
       }
     },
-    "hook": {},
+    "hook": {
+      "on-activate": "echo \"\"\necho \"💬 AIChat - All-in-One LLM CLI Tool\"\necho \"\"\n\n# First-time setup check\nif [ ! -f \"$HOME/.config/aichat/config.yaml\" ]; then\n  echo \"⚡ First time? Run 'aichat' and follow the interactive setup.\"\n  echo \"\"\nfi\n\necho \"Quick start:\"\necho \"  aichat                       # Enter interactive REPL\"\necho \"  aichat -e \\\"<task>\\\"           # Execute shell command\"\necho \"  aichat -c \\\"<description>\\\"    # Generate code\"\necho \"  aichat --info                # Show config/roles paths\"\necho \"\"\necho \"Advanced:\"\necho \"  aichat -r <role>             # Use custom role\"\necho \"  aichat -s <session>          # Start/join session\"\necho \"  aichat -f <file>             # Include file/directory\"\necho \"\"\necho \"REPL commands:\"\necho \"  .role <name>                 # Create/switch role\"\necho \"  .session <name>              # Create/switch session\"\necho \"  .file <path>                 # Add file to context\"\necho \"  .rag <path>                  # Enable RAG with documents\"\necho \"  .info                        # Show current context\"\necho \"\"\necho \"Configuration:\"\necho \"  ~/.config/aichat/            # Config directory (secrets go here)\"\necho \"  config.yaml, roles.yaml      # Main config files\"\necho \"\"\necho \"Documentation: https://github.com/sigoden/aichat/wiki\"\necho \"\"\n"
+    },
     "profile": {},
     "options": {}
   },
