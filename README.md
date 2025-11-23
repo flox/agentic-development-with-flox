@@ -32,6 +32,7 @@ Each environment:
 - [**eca**](./eca) - Emerge Cognitive Architecture
 - [**groq-code-cli**](./groq-code-cli) - Groq-powered coding CLI
 - [**forge**](./forge) - Forge development tool
+- [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
 - [**coderabbit-cli**](./coderabbit-cli) - CodeRabbit code review tool
 
 ### Supporting Tools
