@@ -71,7 +71,7 @@ Supporting tools and utilities for agentic development workflows:
 1. Install [Flox](https://flox.dev/get)
 2. Clone this repo
    ```bash
-   git clone https://github.com/yourusername/agentic-development-with-flox
+   git clone https://github.com/barstoolbluz/agentic-development-with-flox
    cd agentic-development-with-flox
    ```
 
