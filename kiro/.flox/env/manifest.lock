@@ -1,0 +1,115 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "kiro": {
+        "pkg-path": "kiro",
+        "systems": [
+          "aarch64-darwin",
+          "x86_64-darwin"
+        ]
+      },
+      "kiro-fhs": {
+        "pkg-path": "kiro-fhs",
+        "systems": [
+          "x86_64-linux"
+        ]
+      }
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"Kiro - Agentic AI Development Platform\"\necho \"\"\n\n# First-time setup check\nif [ ! -f \"$HOME/.config/kiro/settings.json\" ] && [ ! -f \"$HOME/.kiro/settings.json\" ]; then\n  echo \"⚡ First time? Run 'kiro-cli login' to authenticate.\"\n  echo \"\"\nfi\n\necho \"CLI commands:\"\necho \"  kiro-cli login               # Authenticate with GitHub/Google/AWS\"\necho \"  kiro-cli chat                # Start AI chat session\"\necho \"  kiro-cli translate \\\"<text>\\\"  # Natural language to shell commands\"\necho \"  kiro-cli agent               # Use custom agents\"\necho \"\"\necho \"Configuration:\"\necho \"  ~/.config/kiro/              # Config directory (credentials stored here)\"\necho \"  kiro-cli settings list       # View/manage settings\"\necho \"\"\necho \"Documentation: https://kiro.dev/docs/cli\"\necho \"\"\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "kiro",
+      "broken": false,
+      "derivation": "/nix/store/fg6qj96srgycwvncfmp8bcsikmrll123-kiro-0.4.0.drv",
+      "description": "IDE for Agentic AI workflows based on VS Code",
+      "install_id": "kiro",
+      "license": "Amazon Software License",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "kiro-0.4.0",
+      "pname": "kiro",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-04T00:35:33.641390Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/zv2ab0mcnj8fvk9xqsynraalx93c6ack-kiro-0.4.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "kiro",
+      "broken": false,
+      "derivation": "/nix/store/knmaglaggam76hdy9xinjx2bl7qx8l1a-kiro-0.4.0.drv",
+      "description": "IDE for Agentic AI workflows based on VS Code",
+      "install_id": "kiro",
+      "license": "Amazon Software License",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "kiro-0.4.0",
+      "pname": "kiro",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T16:55:13.505471Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/d8ps90cm5afsyhgqk3h9plkl1nllpa87-kiro-0.4.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "kiro-fhs",
+      "broken": false,
+      "derivation": "/nix/store/gwf9h40r269if1jbwbi94lyrmbik5y76-kiro-0.4.0.drv",
+      "description": "Wrapped variant of kiro which launches in a FHS compatible environment, should allow for easy usage of extensions without nix-specific modifications",
+      "install_id": "kiro-fhs",
+      "license": "Amazon Software License",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "name": "kiro-0.4.0",
+      "pname": "kiro-fhs",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
+      "rev_count": 888552,
+      "rev_date": "2025-11-02T19:18:41Z",
+      "scrape_date": "2025-11-05T17:21:10.653728Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.4.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/0w1sxi4hc4f9g5m082kkfyn7wnhmpy1j-kiro-0.4.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
