@@ -35,6 +35,13 @@ on-activate = '''
 echo ""
 echo "💬 AIChat - All-in-One LLM CLI Tool"
 echo ""
+
+# First-time setup check
+if [ ! -f "$HOME/.config/aichat/config.yaml" ]; then
+  echo "⚡ First time? Run 'aichat' and follow the interactive setup."
+  echo ""
+fi
+
 echo "Quick start:"
 echo "  aichat                       # Enter interactive REPL"
 echo "  aichat -e \"<task>\"           # Execute shell command"
