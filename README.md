@@ -37,6 +37,7 @@ Each environment:
 
 ### Supporting Tools
 
+- [**flox-mcp-server**](./flox-mcp-server) - MCP server enabling AI assistants to manage Flox environments
 - [**claude-code**](./claude-code) - Claude Code environment
 - [**claude-code-router**](./claude-code-router) - Claude Code router
 - [**claude-code-acp**](./claude-code-acp) - Claude Code with ACP
