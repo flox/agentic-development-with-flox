@@ -12,6 +12,20 @@ Each environment:
 - Provides activation messages with usage instructions
 - Follows Flox conventions for configuration (secrets in `$HOME`)
 
+## Working with Flox Environments
+
+This repository includes [FLOX.md](./floxenvs/FLOX.md) - a reference guide for AI agents and developers working with Flox environments. Similar to CLAUDE.md or other agent-specific instruction files, FLOX.md provides structured guidance for:
+
+- Creating and modifying manifest files
+- Installing packages and resolving conflicts
+- Configuring services and background processes
+- Building and publishing packages
+- Composing and layering environments
+- Language-specific development patterns (Python, C/C++, Node.js, CUDA)
+- Platform-specific considerations and troubleshooting
+
+AI agents should consult FLOX.md when performing environment management tasks.
+
 ## Available Environments
 
 ### LLM CLI Interfaces
@@ -111,6 +125,129 @@ The `manifest.toml` file defines:
 - Environment variables (non-secret)
 - Activation hooks (setup checks, usage messages)
 - Shell profile customizations
+
+## Composable Development Environments
+
+AI coding tools frequently generate code requiring backend infrastructure. The following environments from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) can be composed with AI coding environments to provide local development infrastructure.
+
+### Available via `floxrox/<environment-name>`
+
+**Databases (headless)**
+- `postgres-headless`, `mysql-headless`, `mariadb-headless` - Relational databases
+- `redis-headless` - In-memory data store
+- `neo4j-headless` - Graph database
+
+**AI/ML Infrastructure**
+- `ollama-headless` - Local LLM inference with CUDA support
+- `jupyterlab-headless` - Notebook environment for data analysis
+- `open-webui` - Web interface for Ollama (includes ollama-headless)
+
+**Container and Orchestration**
+- `kind-headless` - Kubernetes in Docker for local cluster testing
+- `colima-headless` - Docker-compatible container runtime
+
+**Workflow Orchestration**
+- `airflow-local-dev`, `airflow-k8s-executor`, `airflow-stack` - Apache Airflow
+- `dagster-headless` - Dagster orchestration platform
+- `prefect-headless` - Prefect workflow automation
+- `temporal-headless`, `temporal-ui` - Temporal workflow engine
+- `n8n-headless` - n8n workflow automation
+
+**Python Development**
+- `python310`, `python311`, `python312`, `python313` - Python versions with venv management
+
+**CLI Tools**
+- `xplatform-cli-tools` - AWS CLI, GitHub CLI, Git with 1Password integration
+
+### Composition Methods
+
+**Via manifest includes:**
+```toml
+[include]
+environments = [
+  { owner = "floxrox", name = "postgres-headless" },
+  { owner = "floxrox", name = "redis-headless" }
+]
+```
+
+**Via runtime configuration:**
+```bash
+# Headless environments accept environment variable overrides
+PGPORT=5432 PGUSER=admin REDIS_PORT=6379 flox activate -s
+```
+
+**Transitive composition example (airflow-stack):**
+```toml
+# airflow-stack includes airflow-local-dev and airflow-k8s-executor
+# which transitively include postgres-headless, redis-headless, kind-headless
+[include]
+environments = [
+  { remote = "barstoolbluz/airflow-local-dev" },
+  { remote = "barstoolbluz/airflow-k8s-executor" }
+]
+
+[hook]
+on-activate = '''
+# Override inherited environment variables for production tuning
+export POSTGRES_MAX_CONNECTIONS="200"
+export REDIS_MAXMEMORY="1gb"
+export AIRFLOW_CELERY_WORKERS="4"
+'''
+```
+
+### Configuration Pattern
+
+All headless environments follow a consistent pattern:
+- Runtime configuration via environment variables with defaults (`${VAR:-default}`)
+- Service-based execution (`flox activate -s`)
+- Non-standard ports to avoid conflicts (PostgreSQL: 15432, Redis: 16379)
+- Configuration inspection via `<service>-info` shell functions
+
+This pattern enables programmatic configuration by AI agents and composition without manual intervention.
+
+### Layering vs Composition
+
+Flox supports two distinct environment combination patterns:
+
+**Layering (Runtime)**
+- Activation-time stacking: `flox activate -r floxrox/postgres-headless`
+- Sequential execution - later layers override earlier layers
+- Preserves subshell boundaries between environments
+- Conflicts surface at runtime
+- Use case: Ad-hoc development tools, debugging overlays
+
+**Composition (Build-time)**
+- Declarative merging via `[include]` in manifest
+- Deterministic - environments merge into single namespace
+- Conflicts surface at manifest evaluation
+- Transitive - includes are recursive
+- Use case: Repeatable, shareable infrastructure stacks
+
+**Example - Layering for ad-hoc debugging:**
+```bash
+# Stack debugging tools on top of AI coding environment
+cd aichat
+flox activate -r floxrox/postgres-headless
+# PostgreSQL available for testing AI-generated database code
+```
+
+**Example - Composition for repeatable stack:**
+```toml
+# AI coding environment with persistent database backend
+[include]
+environments = [
+  { owner = "floxrox", name = "postgres-headless" }
+]
+
+[hook]
+on-activate = '''
+# Customize inherited PostgreSQL configuration
+export PGDATABASE="ai_generated_app"
+export POSTGRES_MAX_CONNECTIONS="50"
+'''
+```
+
+Both patterns support environment variable overrides. Composition allows modification of inherited variables via hooks, while layering relies on the order of activation.
 
 ## Security Conventions
 
