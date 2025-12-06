@@ -18,6 +18,7 @@ A Flox environment for [Crush](https://github.com/charmbracelet/crush), a glamor
 The environment includes:
 
 - `crush` - AI coding agent for the terminal
+- `flox-mcp` - Flox MCP Server for managing Flox environments via Model Context Protocol
 
 ## 🏁 Getting Started
 
@@ -199,6 +200,48 @@ crush --version           # Display version information
 - API documentation access
 - Team-specific knowledge bases
 - External tool integrations
+
+### 🔧 Flox MCP Server Integration
+
+This environment includes the **Flox MCP Server** (`flox-mcp`), which enables Crush to manage Flox environments directly. When configured as an MCP server, Crush gains the ability to:
+
+- **Initialize environments**: Create new Flox environments in any directory
+- **Search packages**: Query the Flox catalog of 150,000+ packages
+- **Install packages**: Add packages to environments declaratively
+- **Run commands**: Execute commands within Flox environments
+- **Query system info**: Get environment and system information
+
+**Configuring Crush to use Flox MCP Server:**
+
+Add to your Crush configuration (`~/.local/share/crush/crush.json` on Unix, `%LOCALAPPDATA%\crush\crush.json` on Windows):
+
+```json
+{
+  "mcp": {
+    "flox": {
+      "type": "stdio",
+      "command": "flox-mcp"
+    }
+  }
+}
+```
+
+**Example usage in Crush:**
+
+```
+You: Create a new Flox environment for a Python data science project
+
+Crush: [uses flox-mcp to initialize environment and install packages]
+# Creates .flox/env/manifest.toml with python, pandas, numpy, jupyter, etc.
+
+You: Add scikit-learn to the environment
+
+Crush: [uses flox-mcp to search and install scikit-learn]
+```
+
+**Accessing MCP tools in Crush:** Press `Ctrl+P` to open the command prompt, then press `Tab` to switch to the "MCP" tab.
+
+**Note:** The Flox MCP Server is available on aarch64-darwin, aarch64-linux, and x86_64-linux platforms.
 
 ### 🎯 Multi-Model Architecture
 

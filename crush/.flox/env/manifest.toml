@@ -10,97 +10,639 @@ version = 1
 
 
 ## Install Packages --------------------------------------------------
-##  $ flox install gum  <- puts a package in [install] section below
-##  $ flox search gum   <- search for a package
-##  $ flox show gum     <- show all versions of a package
-## -------------------------------------------------------------------
 [install]
-crush.pkg-path = "crush"
-# gum.pkg-path = "gum"
-# gum.version = "^0.14.5"
+crush.pkg-path = "flox/crush"
+crush.pkg-group = "crush"
+gum.pkg-path = "gum"
+jq.pkg-path = "jq"
+openssl.pkg-path = "openssl"
+curl.pkg-path = "curl"
+
+# Flox MCP Server - enables Crush to manage Flox environments
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 
 
 ## Environment Variables ---------------------------------------------
-##  ... available for use in the activated environment
-##      as well as [hook], [profile] scripts and [services] below.
-## -------------------------------------------------------------------
 [vars]
-# INTRO_MESSAGE = "It's gettin' Flox in here"
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-echo ""
-echo "✨ Crush - AI Coding Agent for the Terminal"
-echo ""
-echo "Your glamorous AI coding bestie from Charm."
-echo ""
-echo "First-time setup:"
-echo "  crush                       # Launch interactive session"
-echo "                              # Configure API keys on first run"
-echo ""
-echo "Usage:"
-echo "  crush                       # Start conversational coding agent"
-echo "  crush --help                # Show all options"
-echo ""
-echo "Features:"
-echo "  • Multi-model LLM support (OpenAI, Anthropic, custom APIs)"
-echo "  • Session-based organization per project"
-echo "  • LSP integration for code understanding"
-echo "  • MCP server extensibility"
-echo "  • Switch models mid-session without losing context"
-echo "  • Permission-based tool execution"
-echo ""
+# =============================================================================
+# Crush Setup Wizard - Comprehensive Configuration with Encrypted Secrets
+# =============================================================================
+
+# Configuration paths
+CONFIG_DIR="$HOME/.local/share/crush"
+CONFIG_FILE="$CONFIG_DIR/crush.json"
+CONFIG_BACKUP="$CONFIG_DIR/crush.json.backup"
+SECRETS_DIR="$HOME/.config/crush/secrets"
+SECRETS_CONFIG="$SECRETS_DIR/config"
+SETUP_MARKER="$HOME/.config/crush/.flox_setup_done"
+WIZARD_IN_PROGRESS="$HOME/.config/crush/.wizard_in_progress"
+
+mkdir -p "$CONFIG_DIR" "$SECRETS_DIR" "$(dirname "$SETUP_MARKER")"
+chmod 700 "$SECRETS_DIR"
+
+# =============================================================================
+# OS Detection
+# =============================================================================
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        echo "linux"
+    else
+        echo "unsupported"
+    fi
+}
+
+# =============================================================================
+# Encryption Functions
+# =============================================================================
+get_machine_id() {
+    if [[ -f "/etc/machine-id" ]]; then
+        cat /etc/machine-id
+    elif [[ -f "/var/lib/dbus/machine-id" ]]; then
+        cat /var/lib/dbus/machine-id
+    elif [[ "$(detect_os)" == "macos" ]]; then
+        ioreg -rd1 -c IOPlatformExpertDevice | grep -E '(UUID)' | awk '{print $3}' | tr -d '"'
+    else
+        echo "fallback-$(hostname)"
+    fi
+}
+
+derive_password() {
+    local salt="$1"
+    local machine_id=$(get_machine_id)
+    echo -n "${USER}$(hostname)${machine_id}${salt}" | openssl dgst -sha256 | awk '{print $2}'
+}
+
+# Store API key - tries keyring first, falls back to encrypted file
+store_api_key() {
+    local provider="$1"
+    local api_key="$2"
+    local os=$(detect_os)
+    local service_name="crush-${provider}"
+
+    # Try system keyring first
+    if [[ "$os" == "macos" ]]; then
+        if security add-generic-password -s "$service_name" -a "$USER" -w "$api_key" -U 2>/dev/null; then
+            echo "${provider}=keyring" >> "$SECRETS_CONFIG"
+            return 0
+        fi
+    elif [[ "$os" == "linux" ]] && command -v secret-tool >/dev/null 2>&1; then
+        if echo -n "$api_key" | secret-tool store --label="Crush ${provider} API Key" service "$service_name" user "$USER" 2>/dev/null; then
+            echo "${provider}=keyring" >> "$SECRETS_CONFIG"
+            return 0
+        fi
+    fi
+
+    # Fallback to encrypted file
+    local password=$(derive_password "${provider}-api-key")
+    local enc_file="$SECRETS_DIR/${provider}.enc"
+    echo -n "$api_key" | openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:"$password" -out "$enc_file" 2>/dev/null
+    chmod 600 "$enc_file"
+    echo "${provider}=encrypted_file" >> "$SECRETS_CONFIG"
+    return 0
+}
+
+# Retrieve API key from storage
+retrieve_api_key() {
+    local provider="$1"
+    local os=$(detect_os)
+    local service_name="crush-${provider}"
+    local method=""
+
+    [[ -f "$SECRETS_CONFIG" ]] && method=$(grep "^${provider}=" "$SECRETS_CONFIG" | cut -d= -f2)
+
+    if [[ "$method" == "keyring" ]]; then
+        if [[ "$os" == "macos" ]]; then
+            security find-generic-password -s "$service_name" -a "$USER" -w 2>/dev/null
+        elif [[ "$os" == "linux" ]]; then
+            secret-tool lookup service "$service_name" user "$USER" 2>/dev/null
+        fi
+    elif [[ "$method" == "encrypted_file" ]]; then
+        local password=$(derive_password "${provider}-api-key")
+        local enc_file="$SECRETS_DIR/${provider}.enc"
+        [[ -f "$enc_file" ]] && openssl enc -aes-256-cbc -d -salt -pbkdf2 -pass pass:"$password" -in "$enc_file" 2>/dev/null
+    fi
+}
+
+# Check if provider key exists
+has_api_key() {
+    local provider="$1"
+    [[ -f "$SECRETS_CONFIG" ]] && grep -q "^${provider}=" "$SECRETS_CONFIG"
+}
+
+# =============================================================================
+# UI Functions
+# =============================================================================
+show_box() {
+    local title="$1"
+    local content="$2"
+    gum style \
+        --border rounded \
+        --border-foreground 212 \
+        --padding "1 2" \
+        --margin "1 0" \
+        --width 80 \
+        "$(gum style --foreground 141 --bold "$title")
+
+$content"
+}
+
+show_welcome() {
+    show_box "✨ Crush Setup Wizard" "Welcome to the Crush setup wizard!
+
+Crush is a glamorous AI coding agent for the terminal from Charm.
+
+This wizard will help you configure:
+  $(gum style --foreground 212 '•') LLM provider(s) with encrypted API key storage
+  $(gum style --foreground 212 '•') Local Ollama models (optional)
+  $(gum style --foreground 212 '•') Flox MCP Server integration (optional)
+
+$(gum style --foreground 240 'Configuration:') $CONFIG_FILE
+$(gum style --foreground 240 'Encrypted secrets:') $SECRETS_DIR"
+}
+
+# =============================================================================
+# Config Backup/Rollback
+# =============================================================================
+backup_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        cp "$CONFIG_FILE" "$CONFIG_BACKUP"
+    fi
+}
+
+rollback_config() {
+    if [[ -f "$CONFIG_BACKUP" ]]; then
+        cp "$CONFIG_BACKUP" "$CONFIG_FILE"
+        rm -f "$WIZARD_IN_PROGRESS"
+        echo "Configuration rolled back successfully."
+        return 0
+    fi
+    echo "No backup found."
+    return 1
+}
+
+# =============================================================================
+# Provider Configuration Functions
+# =============================================================================
+collect_api_key() {
+    local provider="$1"
+    local prefix="$2"
+    local placeholder="$3"
+
+    while true; do
+        local api_key=$(gum input \
+            --prompt "Enter your $provider API key: " \
+            --password \
+            --width 70 \
+            --placeholder "$placeholder")
+
+        if [[ -z "$api_key" ]]; then
+            if gum confirm "Skip $provider configuration?" --default=false; then
+                return 1
+            fi
+            continue
+        fi
+
+        if [[ -n "$prefix" ]] && [[ ! "$api_key" =~ ^$prefix ]]; then
+            if ! gum confirm "Key does not start with '$prefix'. Use anyway?" --default=false; then
+                continue
+            fi
+        fi
+
+        store_api_key "$provider" "$api_key"
+        return 0
+    done
+}
+
+configure_anthropic() {
+    show_box "Anthropic (Claude)" "Get your API key from:
+  $(gum style --foreground 212 --underline 'https://console.anthropic.com/settings/keys')
+
+Anthropic provides Claude models - powerful AI for coding and analysis."
+    collect_api_key "anthropic" "sk-ant-" "sk-ant-..."
+}
+
+configure_openai() {
+    show_box "OpenAI (GPT)" "Get your API key from:
+  $(gum style --foreground 212 --underline 'https://platform.openai.com/api-keys')
+
+OpenAI provides GPT-4, GPT-4o, and other models."
+    collect_api_key "openai" "sk-" "sk-..."
+}
+
+configure_gemini() {
+    show_box "Google Gemini" "Get your API key from:
+  $(gum style --foreground 212 --underline 'https://aistudio.google.com/apikey')
+
+Google Gemini provides advanced multimodal AI capabilities."
+    collect_api_key "gemini" "" "AI..."
+}
+
+configure_groq() {
+    show_box "Groq" "Get your API key from:
+  $(gum style --foreground 212 --underline 'https://console.groq.com/keys')
+
+Groq provides ultra-fast inference for open models like Llama and Mixtral."
+    collect_api_key "groq" "gsk_" "gsk_..."
+}
+
+configure_deepseek() {
+    show_box "DeepSeek" "Get your API key from:
+  $(gum style --foreground 212 --underline 'https://platform.deepseek.com/api_keys')
+
+DeepSeek provides powerful and cost-effective AI models."
+    collect_api_key "deepseek" "sk-" "sk-..."
+}
+
+configure_ollama() {
+    show_box "Ollama (Local)" "Ollama runs AI models locally on your machine.
+
+  $(gum style --foreground 212 '•') No API key required
+  $(gum style --foreground 212 '•') Models run entirely on your hardware
+  $(gum style --foreground 212 '•') Default endpoint: http://localhost:11434"
+
+    local endpoint=$(gum input \
+        --prompt "Ollama endpoint URL: " \
+        --value "http://localhost:11434" \
+        --width 70)
+
+    [[ -z "$endpoint" ]] && endpoint="http://localhost:11434"
+
+    # Try to detect available models
+    local models=""
+    local detected_models=$(curl -s --connect-timeout 2 "${endpoint}/api/tags" 2>/dev/null | jq -r '.models[].name' 2>/dev/null)
+
+    if [[ -n "$detected_models" ]]; then
+        show_box "Detected Ollama Models" "Found running Ollama instance with these models:
+
+$(echo "$detected_models" | head -10 | sed 's/^/  • /')
+
+Select which models to configure for Crush."
+
+        local selected=$(echo "$detected_models" | gum choose --no-limit --header "Select models (space to toggle, enter to confirm)")
+        models="$selected"
+    else
+        echo "Could not connect to Ollama at $endpoint"
+        if gum confirm "Enter model name manually?" --default=true; then
+            models=$(gum input \
+                --prompt "Model name: " \
+                --value "qwen3" \
+                --placeholder "qwen3, llama3.2, etc.")
+        fi
+    fi
+
+    if [[ -n "$models" ]]; then
+        # Store Ollama config (endpoint + models as comma-separated)
+        local models_csv=$(echo "$models" | tr '\n' ',' | sed 's/,$//')
+        echo "ollama_endpoint=$endpoint" >> "$SECRETS_CONFIG"
+        echo "ollama_models=$models_csv" >> "$SECRETS_CONFIG"
+        return 0
+    fi
+    return 1
+}
+
+configure_flox_mcp() {
+    if ! command -v flox-mcp >/dev/null 2>&1; then
+        return 1
+    fi
+
+    show_box "Flox MCP Server Integration" "The Flox MCP Server enables Crush to manage Flox environments:
+
+  $(gum style --foreground 212 '•') Initialize and manage Flox environments
+  $(gum style --foreground 212 '•') Search and install packages from 150,000+ packages
+  $(gum style --foreground 212 '•') Run commands in isolated environments
+  $(gum style --foreground 212 '•') Query environment and system information"
+
+    gum confirm "Enable Flox MCP Server integration?" --default=true
+}
+
+# =============================================================================
+# Config Generation
+# =============================================================================
+generate_config() {
+    local enable_mcp="$1"
+    local config="{}"
+
+    # Load existing config to preserve other settings
+    if [[ -f "$CONFIG_FILE" ]]; then
+        config=$(cat "$CONFIG_FILE")
+    fi
+
+    # API keys are NOT stored in config - Crush reads from environment variables:
+    # ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY
+    # These are exported by export_provider_keys() on activation
+
+    # Add Anthropic provider if configured (no api_key - read from env)
+    if has_api_key "anthropic"; then
+        config=$(echo "$config" | jq '.providers.anthropic = {"type": "anthropic"}')
+    fi
+
+    # Add OpenAI provider if configured (no api_key - read from env)
+    if has_api_key "openai"; then
+        config=$(echo "$config" | jq '.providers.openai = {"type": "openai"}')
+    fi
+
+    # Add Gemini provider if configured (needs base_url for OpenAI-compat)
+    if has_api_key "gemini"; then
+        config=$(echo "$config" | jq '.providers.gemini = {
+            "type": "openai-compat",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/"
+        }')
+    fi
+
+    # Add Groq provider if configured (needs base_url for OpenAI-compat)
+    if has_api_key "groq"; then
+        config=$(echo "$config" | jq '.providers.groq = {
+            "type": "openai-compat",
+            "base_url": "https://api.groq.com/openai/v1"
+        }')
+    fi
+
+    # Add DeepSeek provider if configured (needs base_url for OpenAI-compat)
+    if has_api_key "deepseek"; then
+        config=$(echo "$config" | jq '.providers.deepseek = {
+            "type": "openai-compat",
+            "base_url": "https://api.deepseek.com/v1"
+        }')
+    fi
+
+    # Add Ollama provider if configured (local, no API key needed)
+    if grep -q "^ollama_endpoint=" "$SECRETS_CONFIG" 2>/dev/null; then
+        local ollama_endpoint=$(grep "^ollama_endpoint=" "$SECRETS_CONFIG" | cut -d= -f2)
+        local ollama_models=$(grep "^ollama_models=" "$SECRETS_CONFIG" | cut -d= -f2)
+
+        # Build models array (models are comma-separated)
+        local models_json="[]"
+        IFS=',' read -ra model_array <<< "$ollama_models"
+        for model in "${model_array[@]}"; do
+            [[ -z "$model" ]] && continue
+            models_json=$(echo "$models_json" | jq --arg m "$model" '. + [{"id": $m, "name": $m, "context_window": 32000}]')
+        done
+
+        config=$(echo "$config" | jq --arg url "${ollama_endpoint}/v1/" --argjson models "$models_json" \
+            '.providers.ollama = {"type": "openai-compat", "base_url": $url, "models": $models}')
+    fi
+
+    # Add MCP configuration if enabled
+    if [[ "$enable_mcp" == "true" ]]; then
+        config=$(echo "$config" | jq '.mcp.flox = {"type": "stdio", "command": "flox-mcp"}')
+    fi
+
+    # Write config
+    echo "$config" | jq '.' > "$CONFIG_FILE"
+    chmod 600 "$CONFIG_FILE"
+}
+
+# =============================================================================
+# Export Environment Variables (for Crush to use)
+# =============================================================================
+export_provider_keys() {
+    for provider in anthropic openai gemini groq deepseek; do
+        if has_api_key "$provider"; then
+            local key=$(retrieve_api_key "$provider")
+            if [[ -n "$key" ]]; then
+                local var_name=$(echo "${provider}_API_KEY" | tr "[:lower:]" "[:upper:]")
+                export "$var_name=$key"
+            fi
+        fi
+    done
+}
+
+# =============================================================================
+# Main Wizard
+# =============================================================================
+run_setup_wizard() {
+    clear
+
+    # Check for interrupted wizard
+    if [[ -f "$WIZARD_IN_PROGRESS" ]]; then
+        if gum confirm "Previous setup was interrupted. Rollback to previous config?" --default=true; then
+            rollback_config
+            rm -f "$WIZARD_IN_PROGRESS"
+        fi
+    fi
+
+    # Check for existing config
+    if [[ -f "$CONFIG_FILE" ]] && [[ -s "$CONFIG_FILE" ]]; then
+        if ! gum confirm "Existing configuration found. Overwrite?" --default=false; then
+            echo "Setup cancelled. Keeping existing configuration."
+            return 0
+        fi
+    fi
+
+    # Backup and mark in progress
+    backup_config
+    touch "$WIZARD_IN_PROGRESS"
+
+    # Clear previous secrets config
+    > "$SECRETS_CONFIG"
+
+    show_welcome
+
+    echo ""
+
+    # Multi-select providers
+    local providers=$(gum choose --no-limit \
+        --header "Select LLM providers to configure (space to toggle, enter to confirm)" \
+        "Anthropic (Claude)" \
+        "OpenAI (GPT)" \
+        "Google Gemini" \
+        "Groq" \
+        "DeepSeek" \
+        "Ollama (Local)")
+
+    local configured_providers=""
+
+    # Configure each selected provider (read line by line to handle spaces in names)
+    while IFS= read -r provider; do
+        [[ -z "$provider" ]] && continue
+        case "$provider" in
+            "Anthropic (Claude)")
+                if configure_anthropic; then
+                    configured_providers="${configured_providers:+$configured_providers, }Anthropic"
+                fi
+                ;;
+            "OpenAI (GPT)")
+                if configure_openai; then
+                    configured_providers="${configured_providers:+$configured_providers, }OpenAI"
+                fi
+                ;;
+            "Google Gemini")
+                if configure_gemini; then
+                    configured_providers="${configured_providers:+$configured_providers, }Gemini"
+                fi
+                ;;
+            "Groq")
+                if configure_groq; then
+                    configured_providers="${configured_providers:+$configured_providers, }Groq"
+                fi
+                ;;
+            "DeepSeek")
+                if configure_deepseek; then
+                    configured_providers="${configured_providers:+$configured_providers, }DeepSeek"
+                fi
+                ;;
+            "Ollama (Local)")
+                if configure_ollama; then
+                    configured_providers="${configured_providers:+$configured_providers, }Ollama"
+                fi
+                ;;
+        esac
+    done <<< "$providers"
+
+    # Flox MCP Server
+    local enable_mcp="false"
+    if configure_flox_mcp; then
+        enable_mcp="true"
+    fi
+
+    # Generate configuration
+    generate_config "$enable_mcp"
+
+    # Mark complete
+    rm -f "$WIZARD_IN_PROGRESS"
+    touch "$SETUP_MARKER"
+
+    # Show completion
+    local mcp_status="Disabled"
+    [[ "$enable_mcp" == "true" ]] && mcp_status="$(gum style --foreground 42 'Enabled')"
+
+    show_box "✨ Setup Complete!" "Crush has been configured successfully!
+
+$(gum style --foreground 212 'Providers:') ${configured_providers:-None configured}
+$(gum style --foreground 212 'Flox MCP:') $mcp_status
+$(gum style --foreground 212 'Config:') $CONFIG_FILE
+$(gum style --foreground 212 'Secrets:') Encrypted in $SECRETS_DIR
+
+$(gum style --foreground 240 'Helper commands:')
+  crush_rollback  - Restore previous configuration
+  crush_reset     - Re-run this setup wizard
+
+$(gum style --foreground 212 'Get started:') crush"
+}
+
+# =============================================================================
+# Status Display
+# =============================================================================
+show_status() {
+    local providers=""
+    for p in anthropic openai gemini groq deepseek; do
+        has_api_key "$p" && providers="${providers:+$providers, }$p"
+    done
+    grep -q "^ollama_endpoint=" "$SECRETS_CONFIG" 2>/dev/null && providers="${providers:+$providers, }ollama"
+
+    local mcp_status="disabled"
+    [[ -f "$CONFIG_FILE" ]] && jq -e '.mcp.flox' "$CONFIG_FILE" >/dev/null 2>&1 && mcp_status="enabled"
+
+    gum style --foreground 212 "✨ Crush ready"
+    echo "   providers=[${providers:-none}] mcp=$mcp_status"
+    echo ""
+    gum style --foreground 240 "   RESET=true flox activate to reconfigure"
+}
+
+# =============================================================================
+# Main Entry Point
+# =============================================================================
+
+# Export API keys as environment variables for Crush to use
+export_provider_keys
+
+# Check wizard state
+if [[ "$RESET" == "true" ]]; then
+    rm -f "$SETUP_MARKER" 2>/dev/null
+    run_setup_wizard
+elif [[ -f "$WIZARD_IN_PROGRESS" ]]; then
+    if gum confirm "Previous setup was interrupted. Resume wizard?" --default=true; then
+        run_setup_wizard
+    else
+        rollback_config
+        show_status
+    fi
+elif [[ ! -f "$SETUP_MARKER" ]] || [[ ! -f "$CONFIG_FILE" ]]; then
+    run_setup_wizard
+else
+    show_status
+fi
 '''
 
 
 ## Profile script ----------------------------------------------------
 [profile]
-# No helper functions needed - crush is self-contained
+bash = '''
+# Crush configuration helper functions
+
+crush_rollback() {
+    local backup="$HOME/.local/share/crush/crush.json.backup"
+    local config="$HOME/.local/share/crush/crush.json"
+    if [[ -f "$backup" ]]; then
+        cp "$backup" "$config"
+        echo "✓ Rolled back to previous configuration"
+        echo "  Restart Crush to use restored settings"
+    else
+        echo "✗ No backup found at $backup"
+        return 1
+    fi
+}
+
+crush_reset() {
+    echo "This will reset Crush configuration and re-run the setup wizard."
+    read -p "Continue? [y/N] " -r
+    [[ $REPLY =~ ^[Yy]$ ]] || return 1
+    rm -f "$HOME/.config/crush/.flox_setup_done"
+    echo "Run 'flox activate' to restart the setup wizard"
+}
+'''
+
+zsh = '''
+# Crush configuration helper functions
+
+crush_rollback() {
+    local backup="$HOME/.local/share/crush/crush.json.backup"
+    local config="$HOME/.local/share/crush/crush.json"
+    if [[ -f "$backup" ]]; then
+        cp "$backup" "$config"
+        echo "✓ Rolled back to previous configuration"
+        echo "  Restart Crush to use restored settings"
+    else
+        echo "✗ No backup found at $backup"
+        return 1
+    fi
+}
+
+crush_reset() {
+    echo "This will reset Crush configuration and re-run the setup wizard."
+    read -q "?Continue? [y/N] " || return 1
+    echo
+    rm -f "$HOME/.config/crush/.flox_setup_done"
+    echo "Run 'flox activate' to restart the setup wizard"
+}
+'''
 
 
-## Services ---------------------------------------------------------
-##  $ flox services start             <- Starts all services
-##  $ flox services status            <- Status of running services
-##  $ flox activate --start-services  <- Activates & starts all
-## ------------------------------------------------------------------
+## Services ----------------------------------------------------------
 [services]
-# myservice.command = "python3 -m http.server"
 
 
-## Include ----------------------------------------------------------
-## ... environments to create a composed environment
-## ------------------------------------------------------------------
+## Include -----------------------------------------------------------
 [include]
-# environments = [
-#     { dir = "../common" }
-# ]
 
 
-## Build and publish your own packages ------------------------------
-##  $ flox build
-##  $ flox publish
-## ------------------------------------------------------------------
+## Build -------------------------------------------------------------
 [build]
-# [build.myproject]
-# description = "The coolest project ever"
-# version = "0.0.1"
-# command = """
-#   mkdir -p $out/bin
-#   cargo build --release
-#   cp target/release/myproject $out/bin/myproject
-# """
 
 
-## Other Environment Options -----------------------------------------
+## Options -----------------------------------------------------------
 [options]
-# Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
-# Uncomment to disable CUDA detection.
-# cuda-detection = false
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]

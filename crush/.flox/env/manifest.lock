@@ -4,128 +4,787 @@
     "version": 1,
     "install": {
       "crush": {
-        "pkg-path": "crush"
+        "pkg-path": "flox/crush",
+        "pkg-group": "crush"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "flox-mcp-server": {
+        "pkg-path": "flox/flox-mcp-server",
+        "systems": [
+          "aarch64-darwin",
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
+      },
+      "gum": {
+        "pkg-path": "gum"
+      },
+      "jq": {
+        "pkg-path": "jq"
+      },
+      "openssl": {
+        "pkg-path": "openssl"
       }
     },
-    "hook": {},
-    "profile": {},
-    "options": {}
+    "hook": {
+      "on-activate": "# =============================================================================\n# Crush Setup Wizard - Comprehensive Configuration with Encrypted Secrets\n# =============================================================================\n\n# Configuration paths\nCONFIG_DIR=\"$HOME/.local/share/crush\"\nCONFIG_FILE=\"$CONFIG_DIR/crush.json\"\nCONFIG_BACKUP=\"$CONFIG_DIR/crush.json.backup\"\nSECRETS_DIR=\"$HOME/.config/crush/secrets\"\nSECRETS_CONFIG=\"$SECRETS_DIR/config\"\nSETUP_MARKER=\"$HOME/.config/crush/.flox_setup_done\"\nWIZARD_IN_PROGRESS=\"$HOME/.config/crush/.wizard_in_progress\"\n\nmkdir -p \"$CONFIG_DIR\" \"$SECRETS_DIR\" \"$(dirname \"$SETUP_MARKER\")\"\nchmod 700 \"$SECRETS_DIR\"\n\n# =============================================================================\n# OS Detection\n# =============================================================================\ndetect_os() {\n    if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n        echo \"macos\"\n    elif [[ \"$OSTYPE\" == \"linux-gnu\"* ]]; then\n        echo \"linux\"\n    else\n        echo \"unsupported\"\n    fi\n}\n\n# =============================================================================\n# Encryption Functions\n# =============================================================================\nget_machine_id() {\n    if [[ -f \"/etc/machine-id\" ]]; then\n        cat /etc/machine-id\n    elif [[ -f \"/var/lib/dbus/machine-id\" ]]; then\n        cat /var/lib/dbus/machine-id\n    elif [[ \"$(detect_os)\" == \"macos\" ]]; then\n        ioreg -rd1 -c IOPlatformExpertDevice | grep -E '(UUID)' | awk '{print $3}' | tr -d '\"'\n    else\n        echo \"fallback-$(hostname)\"\n    fi\n}\n\nderive_password() {\n    local salt=\"$1\"\n    local machine_id=$(get_machine_id)\n    echo -n \"${USER}$(hostname)${machine_id}${salt}\" | openssl dgst -sha256 | awk '{print $2}'\n}\n\n# Store API key - tries keyring first, falls back to encrypted file\nstore_api_key() {\n    local provider=\"$1\"\n    local api_key=\"$2\"\n    local os=$(detect_os)\n    local service_name=\"crush-${provider}\"\n\n    # Try system keyring first\n    if [[ \"$os\" == \"macos\" ]]; then\n        if security add-generic-password -s \"$service_name\" -a \"$USER\" -w \"$api_key\" -U 2>/dev/null; then\n            echo \"${provider}=keyring\" >> \"$SECRETS_CONFIG\"\n            return 0\n        fi\n    elif [[ \"$os\" == \"linux\" ]] && command -v secret-tool >/dev/null 2>&1; then\n        if echo -n \"$api_key\" | secret-tool store --label=\"Crush ${provider} API Key\" service \"$service_name\" user \"$USER\" 2>/dev/null; then\n            echo \"${provider}=keyring\" >> \"$SECRETS_CONFIG\"\n            return 0\n        fi\n    fi\n\n    # Fallback to encrypted file\n    local password=$(derive_password \"${provider}-api-key\")\n    local enc_file=\"$SECRETS_DIR/${provider}.enc\"\n    echo -n \"$api_key\" | openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:\"$password\" -out \"$enc_file\" 2>/dev/null\n    chmod 600 \"$enc_file\"\n    echo \"${provider}=encrypted_file\" >> \"$SECRETS_CONFIG\"\n    return 0\n}\n\n# Retrieve API key from storage\nretrieve_api_key() {\n    local provider=\"$1\"\n    local os=$(detect_os)\n    local service_name=\"crush-${provider}\"\n    local method=\"\"\n\n    [[ -f \"$SECRETS_CONFIG\" ]] && method=$(grep \"^${provider}=\" \"$SECRETS_CONFIG\" | cut -d= -f2)\n\n    if [[ \"$method\" == \"keyring\" ]]; then\n        if [[ \"$os\" == \"macos\" ]]; then\n            security find-generic-password -s \"$service_name\" -a \"$USER\" -w 2>/dev/null\n        elif [[ \"$os\" == \"linux\" ]]; then\n            secret-tool lookup service \"$service_name\" user \"$USER\" 2>/dev/null\n        fi\n    elif [[ \"$method\" == \"encrypted_file\" ]]; then\n        local password=$(derive_password \"${provider}-api-key\")\n        local enc_file=\"$SECRETS_DIR/${provider}.enc\"\n        [[ -f \"$enc_file\" ]] && openssl enc -aes-256-cbc -d -salt -pbkdf2 -pass pass:\"$password\" -in \"$enc_file\" 2>/dev/null\n    fi\n}\n\n# Check if provider key exists\nhas_api_key() {\n    local provider=\"$1\"\n    [[ -f \"$SECRETS_CONFIG\" ]] && grep -q \"^${provider}=\" \"$SECRETS_CONFIG\"\n}\n\n# =============================================================================\n# UI Functions\n# =============================================================================\nshow_box() {\n    local title=\"$1\"\n    local content=\"$2\"\n    gum style \\\n        --border rounded \\\n        --border-foreground 212 \\\n        --padding \"1 2\" \\\n        --margin \"1 0\" \\\n        --width 80 \\\n        \"$(gum style --foreground 141 --bold \"$title\")\n\n$content\"\n}\n\nshow_welcome() {\n    show_box \"✨ Crush Setup Wizard\" \"Welcome to the Crush setup wizard!\n\nCrush is a glamorous AI coding agent for the terminal from Charm.\n\nThis wizard will help you configure:\n  $(gum style --foreground 212 '•') LLM provider(s) with encrypted API key storage\n  $(gum style --foreground 212 '•') Local Ollama models (optional)\n  $(gum style --foreground 212 '•') Flox MCP Server integration (optional)\n\n$(gum style --foreground 240 'Configuration:') $CONFIG_FILE\n$(gum style --foreground 240 'Encrypted secrets:') $SECRETS_DIR\"\n}\n\n# =============================================================================\n# Config Backup/Rollback\n# =============================================================================\nbackup_config() {\n    if [[ -f \"$CONFIG_FILE\" ]]; then\n        cp \"$CONFIG_FILE\" \"$CONFIG_BACKUP\"\n    fi\n}\n\nrollback_config() {\n    if [[ -f \"$CONFIG_BACKUP\" ]]; then\n        cp \"$CONFIG_BACKUP\" \"$CONFIG_FILE\"\n        rm -f \"$WIZARD_IN_PROGRESS\"\n        echo \"Configuration rolled back successfully.\"\n        return 0\n    fi\n    echo \"No backup found.\"\n    return 1\n}\n\n# =============================================================================\n# Provider Configuration Functions\n# =============================================================================\ncollect_api_key() {\n    local provider=\"$1\"\n    local prefix=\"$2\"\n    local placeholder=\"$3\"\n\n    while true; do\n        local api_key=$(gum input \\\n            --prompt \"Enter your $provider API key: \" \\\n            --password \\\n            --width 70 \\\n            --placeholder \"$placeholder\")\n\n        if [[ -z \"$api_key\" ]]; then\n            if gum confirm \"Skip $provider configuration?\" --default=false; then\n                return 1\n            fi\n            continue\n        fi\n\n        if [[ -n \"$prefix\" ]] && [[ ! \"$api_key\" =~ ^$prefix ]]; then\n            if ! gum confirm \"Key does not start with '$prefix'. Use anyway?\" --default=false; then\n                continue\n            fi\n        fi\n\n        store_api_key \"$provider\" \"$api_key\"\n        return 0\n    done\n}\n\nconfigure_anthropic() {\n    show_box \"Anthropic (Claude)\" \"Get your API key from:\n  $(gum style --foreground 212 --underline 'https://console.anthropic.com/settings/keys')\n\nAnthropic provides Claude models - powerful AI for coding and analysis.\"\n    collect_api_key \"anthropic\" \"sk-ant-\" \"sk-ant-...\"\n}\n\nconfigure_openai() {\n    show_box \"OpenAI (GPT)\" \"Get your API key from:\n  $(gum style --foreground 212 --underline 'https://platform.openai.com/api-keys')\n\nOpenAI provides GPT-4, GPT-4o, and other models.\"\n    collect_api_key \"openai\" \"sk-\" \"sk-...\"\n}\n\nconfigure_gemini() {\n    show_box \"Google Gemini\" \"Get your API key from:\n  $(gum style --foreground 212 --underline 'https://aistudio.google.com/apikey')\n\nGoogle Gemini provides advanced multimodal AI capabilities.\"\n    collect_api_key \"gemini\" \"\" \"AI...\"\n}\n\nconfigure_groq() {\n    show_box \"Groq\" \"Get your API key from:\n  $(gum style --foreground 212 --underline 'https://console.groq.com/keys')\n\nGroq provides ultra-fast inference for open models like Llama and Mixtral.\"\n    collect_api_key \"groq\" \"gsk_\" \"gsk_...\"\n}\n\nconfigure_deepseek() {\n    show_box \"DeepSeek\" \"Get your API key from:\n  $(gum style --foreground 212 --underline 'https://platform.deepseek.com/api_keys')\n\nDeepSeek provides powerful and cost-effective AI models.\"\n    collect_api_key \"deepseek\" \"sk-\" \"sk-...\"\n}\n\nconfigure_ollama() {\n    show_box \"Ollama (Local)\" \"Ollama runs AI models locally on your machine.\n\n  $(gum style --foreground 212 '•') No API key required\n  $(gum style --foreground 212 '•') Models run entirely on your hardware\n  $(gum style --foreground 212 '•') Default endpoint: http://localhost:11434\"\n\n    local endpoint=$(gum input \\\n        --prompt \"Ollama endpoint URL: \" \\\n        --value \"http://localhost:11434\" \\\n        --width 70)\n\n    [[ -z \"$endpoint\" ]] && endpoint=\"http://localhost:11434\"\n\n    # Try to detect available models\n    local models=\"\"\n    local detected_models=$(curl -s --connect-timeout 2 \"${endpoint}/api/tags\" 2>/dev/null | jq -r '.models[].name' 2>/dev/null)\n\n    if [[ -n \"$detected_models\" ]]; then\n        show_box \"Detected Ollama Models\" \"Found running Ollama instance with these models:\n\n$(echo \"$detected_models\" | head -10 | sed 's/^/  • /')\n\nSelect which models to configure for Crush.\"\n\n        local selected=$(echo \"$detected_models\" | gum choose --no-limit --header \"Select models (space to toggle, enter to confirm)\")\n        models=\"$selected\"\n    else\n        echo \"Could not connect to Ollama at $endpoint\"\n        if gum confirm \"Enter model name manually?\" --default=true; then\n            models=$(gum input \\\n                --prompt \"Model name: \" \\\n                --value \"qwen3\" \\\n                --placeholder \"qwen3, llama3.2, etc.\")\n        fi\n    fi\n\n    if [[ -n \"$models\" ]]; then\n        # Store Ollama config (endpoint + models as comma-separated)\n        local models_csv=$(echo \"$models\" | tr '\\n' ',' | sed 's/,$//')\n        echo \"ollama_endpoint=$endpoint\" >> \"$SECRETS_CONFIG\"\n        echo \"ollama_models=$models_csv\" >> \"$SECRETS_CONFIG\"\n        return 0\n    fi\n    return 1\n}\n\nconfigure_flox_mcp() {\n    if ! command -v flox-mcp >/dev/null 2>&1; then\n        return 1\n    fi\n\n    show_box \"Flox MCP Server Integration\" \"The Flox MCP Server enables Crush to manage Flox environments:\n\n  $(gum style --foreground 212 '•') Initialize and manage Flox environments\n  $(gum style --foreground 212 '•') Search and install packages from 150,000+ packages\n  $(gum style --foreground 212 '•') Run commands in isolated environments\n  $(gum style --foreground 212 '•') Query environment and system information\"\n\n    gum confirm \"Enable Flox MCP Server integration?\" --default=true\n}\n\n# =============================================================================\n# Config Generation\n# =============================================================================\ngenerate_config() {\n    local enable_mcp=\"$1\"\n    local config=\"{}\"\n\n    # Load existing config to preserve other settings\n    if [[ -f \"$CONFIG_FILE\" ]]; then\n        config=$(cat \"$CONFIG_FILE\")\n    fi\n\n    # API keys are NOT stored in config - Crush reads from environment variables:\n    # ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY\n    # These are exported by export_provider_keys() on activation\n\n    # Add Anthropic provider if configured (no api_key - read from env)\n    if has_api_key \"anthropic\"; then\n        config=$(echo \"$config\" | jq '.providers.anthropic = {\"type\": \"anthropic\"}')\n    fi\n\n    # Add OpenAI provider if configured (no api_key - read from env)\n    if has_api_key \"openai\"; then\n        config=$(echo \"$config\" | jq '.providers.openai = {\"type\": \"openai\"}')\n    fi\n\n    # Add Gemini provider if configured (needs base_url for OpenAI-compat)\n    if has_api_key \"gemini\"; then\n        config=$(echo \"$config\" | jq '.providers.gemini = {\n            \"type\": \"openai-compat\",\n            \"base_url\": \"https://generativelanguage.googleapis.com/v1beta/openai/\"\n        }')\n    fi\n\n    # Add Groq provider if configured (needs base_url for OpenAI-compat)\n    if has_api_key \"groq\"; then\n        config=$(echo \"$config\" | jq '.providers.groq = {\n            \"type\": \"openai-compat\",\n            \"base_url\": \"https://api.groq.com/openai/v1\"\n        }')\n    fi\n\n    # Add DeepSeek provider if configured (needs base_url for OpenAI-compat)\n    if has_api_key \"deepseek\"; then\n        config=$(echo \"$config\" | jq '.providers.deepseek = {\n            \"type\": \"openai-compat\",\n            \"base_url\": \"https://api.deepseek.com/v1\"\n        }')\n    fi\n\n    # Add Ollama provider if configured (local, no API key needed)\n    if grep -q \"^ollama_endpoint=\" \"$SECRETS_CONFIG\" 2>/dev/null; then\n        local ollama_endpoint=$(grep \"^ollama_endpoint=\" \"$SECRETS_CONFIG\" | cut -d= -f2)\n        local ollama_models=$(grep \"^ollama_models=\" \"$SECRETS_CONFIG\" | cut -d= -f2)\n\n        # Build models array (models are comma-separated)\n        local models_json=\"[]\"\n        IFS=',' read -ra model_array <<< \"$ollama_models\"\n        for model in \"${model_array[@]}\"; do\n            [[ -z \"$model\" ]] && continue\n            models_json=$(echo \"$models_json\" | jq --arg m \"$model\" '. + [{\"id\": $m, \"name\": $m, \"context_window\": 32000}]')\n        done\n\n        config=$(echo \"$config\" | jq --arg url \"${ollama_endpoint}/v1/\" --argjson models \"$models_json\" \\\n            '.providers.ollama = {\"type\": \"openai-compat\", \"base_url\": $url, \"models\": $models}')\n    fi\n\n    # Add MCP configuration if enabled\n    if [[ \"$enable_mcp\" == \"true\" ]]; then\n        config=$(echo \"$config\" | jq '.mcp.flox = {\"type\": \"stdio\", \"command\": \"flox-mcp\"}')\n    fi\n\n    # Write config\n    echo \"$config\" | jq '.' > \"$CONFIG_FILE\"\n    chmod 600 \"$CONFIG_FILE\"\n}\n\n# =============================================================================\n# Export Environment Variables (for Crush to use)\n# =============================================================================\nexport_provider_keys() {\n    for provider in anthropic openai gemini groq deepseek; do\n        if has_api_key \"$provider\"; then\n            local key=$(retrieve_api_key \"$provider\")\n            if [[ -n \"$key\" ]]; then\n                local var_name=$(echo \"${provider}_API_KEY\" | tr \"[:lower:]\" \"[:upper:]\")\n                export \"$var_name=$key\"\n            fi\n        fi\n    done\n}\n\n# =============================================================================\n# Main Wizard\n# =============================================================================\nrun_setup_wizard() {\n    clear\n\n    # Check for interrupted wizard\n    if [[ -f \"$WIZARD_IN_PROGRESS\" ]]; then\n        if gum confirm \"Previous setup was interrupted. Rollback to previous config?\" --default=true; then\n            rollback_config\n            rm -f \"$WIZARD_IN_PROGRESS\"\n        fi\n    fi\n\n    # Check for existing config\n    if [[ -f \"$CONFIG_FILE\" ]] && [[ -s \"$CONFIG_FILE\" ]]; then\n        if ! gum confirm \"Existing configuration found. Overwrite?\" --default=false; then\n            echo \"Setup cancelled. Keeping existing configuration.\"\n            return 0\n        fi\n    fi\n\n    # Backup and mark in progress\n    backup_config\n    touch \"$WIZARD_IN_PROGRESS\"\n\n    # Clear previous secrets config\n    > \"$SECRETS_CONFIG\"\n\n    show_welcome\n\n    echo \"\"\n\n    # Multi-select providers\n    local providers=$(gum choose --no-limit \\\n        --header \"Select LLM providers to configure (space to toggle, enter to confirm)\" \\\n        \"Anthropic (Claude)\" \\\n        \"OpenAI (GPT)\" \\\n        \"Google Gemini\" \\\n        \"Groq\" \\\n        \"DeepSeek\" \\\n        \"Ollama (Local)\")\n\n    local configured_providers=\"\"\n\n    # Configure each selected provider (read line by line to handle spaces in names)\n    while IFS= read -r provider; do\n        [[ -z \"$provider\" ]] && continue\n        case \"$provider\" in\n            \"Anthropic (Claude)\")\n                if configure_anthropic; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }Anthropic\"\n                fi\n                ;;\n            \"OpenAI (GPT)\")\n                if configure_openai; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }OpenAI\"\n                fi\n                ;;\n            \"Google Gemini\")\n                if configure_gemini; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }Gemini\"\n                fi\n                ;;\n            \"Groq\")\n                if configure_groq; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }Groq\"\n                fi\n                ;;\n            \"DeepSeek\")\n                if configure_deepseek; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }DeepSeek\"\n                fi\n                ;;\n            \"Ollama (Local)\")\n                if configure_ollama; then\n                    configured_providers=\"${configured_providers:+$configured_providers, }Ollama\"\n                fi\n                ;;\n        esac\n    done <<< \"$providers\"\n\n    # Flox MCP Server\n    local enable_mcp=\"false\"\n    if configure_flox_mcp; then\n        enable_mcp=\"true\"\n    fi\n\n    # Generate configuration\n    generate_config \"$enable_mcp\"\n\n    # Mark complete\n    rm -f \"$WIZARD_IN_PROGRESS\"\n    touch \"$SETUP_MARKER\"\n\n    # Show completion\n    local mcp_status=\"Disabled\"\n    [[ \"$enable_mcp\" == \"true\" ]] && mcp_status=\"$(gum style --foreground 42 'Enabled')\"\n\n    show_box \"✨ Setup Complete!\" \"Crush has been configured successfully!\n\n$(gum style --foreground 212 'Providers:') ${configured_providers:-None configured}\n$(gum style --foreground 212 'Flox MCP:') $mcp_status\n$(gum style --foreground 212 'Config:') $CONFIG_FILE\n$(gum style --foreground 212 'Secrets:') Encrypted in $SECRETS_DIR\n\n$(gum style --foreground 240 'Helper commands:')\n  crush_rollback  - Restore previous configuration\n  crush_reset     - Re-run this setup wizard\n\n$(gum style --foreground 212 'Get started:') crush\"\n}\n\n# =============================================================================\n# Status Display\n# =============================================================================\nshow_status() {\n    local providers=\"\"\n    for p in anthropic openai gemini groq deepseek; do\n        has_api_key \"$p\" && providers=\"${providers:+$providers, }$p\"\n    done\n    grep -q \"^ollama_endpoint=\" \"$SECRETS_CONFIG\" 2>/dev/null && providers=\"${providers:+$providers, }ollama\"\n\n    local mcp_status=\"disabled\"\n    [[ -f \"$CONFIG_FILE\" ]] && jq -e '.mcp.flox' \"$CONFIG_FILE\" >/dev/null 2>&1 && mcp_status=\"enabled\"\n\n    gum style --foreground 212 \"✨ Crush ready\"\n    echo \"   providers=[${providers:-none}] mcp=$mcp_status\"\n    echo \"\"\n    gum style --foreground 240 \"   RESET=true flox activate to reconfigure\"\n}\n\n# =============================================================================\n# Main Entry Point\n# =============================================================================\n\n# Export API keys as environment variables for Crush to use\nexport_provider_keys\n\n# Check wizard state\nif [[ \"$RESET\" == \"true\" ]]; then\n    rm -f \"$SETUP_MARKER\" 2>/dev/null\n    run_setup_wizard\nelif [[ -f \"$WIZARD_IN_PROGRESS\" ]]; then\n    if gum confirm \"Previous setup was interrupted. Resume wizard?\" --default=true; then\n        run_setup_wizard\n    else\n        rollback_config\n        show_status\n    fi\nelif [[ ! -f \"$SETUP_MARKER\" ]] || [[ ! -f \"$CONFIG_FILE\" ]]; then\n    run_setup_wizard\nelse\n    show_status\nfi\n"
+    },
+    "profile": {
+      "bash": "# Crush configuration helper functions\n\ncrush_rollback() {\n    local backup=\"$HOME/.local/share/crush/crush.json.backup\"\n    local config=\"$HOME/.local/share/crush/crush.json\"\n    if [[ -f \"$backup\" ]]; then\n        cp \"$backup\" \"$config\"\n        echo \"✓ Rolled back to previous configuration\"\n        echo \"  Restart Crush to use restored settings\"\n    else\n        echo \"✗ No backup found at $backup\"\n        return 1\n    fi\n}\n\ncrush_reset() {\n    echo \"This will reset Crush configuration and re-run the setup wizard.\"\n    read -p \"Continue? [y/N] \" -r\n    [[ $REPLY =~ ^[Yy]$ ]] || return 1\n    rm -f \"$HOME/.config/crush/.flox_setup_done\"\n    echo \"Run 'flox activate' to restart the setup wizard\"\n}\n",
+      "zsh": "# Crush configuration helper functions\n\ncrush_rollback() {\n    local backup=\"$HOME/.local/share/crush/crush.json.backup\"\n    local config=\"$HOME/.local/share/crush/crush.json\"\n    if [[ -f \"$backup\" ]]; then\n        cp \"$backup\" \"$config\"\n        echo \"✓ Rolled back to previous configuration\"\n        echo \"  Restart Crush to use restored settings\"\n    else\n        echo \"✗ No backup found at $backup\"\n        return 1\n    fi\n}\n\ncrush_reset() {\n    echo \"This will reset Crush configuration and re-run the setup wizard.\"\n    read -q \"?Continue? [y/N] \" || return 1\n    echo\n    rm -f \"$HOME/.config/crush/.flox_setup_done\"\n    echo \"Run 'flox activate' to restart the setup wizard\"\n}\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    }
   },
   "packages": [
     {
-      "attr_path": "crush",
+      "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/58byhpgdv6m6znlxkc4x9sr7jh1hhp9a-crush-0.13.5.drv",
-      "description": "Glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "FSL-1.1-MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "crush-0.13.5",
-      "pname": "crush",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:35:18.478400Z",
+      "derivation": "/nix/store/kibssl5bdrgnyibp8gmszb3lbchvgcgj-curl-8.14.1.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "curl-8.14.1",
+      "pname": "curl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:32.745323Z",
       "stabilities": [
         "unstable"
       ],
-      "unfree": true,
-      "version": "0.13.5",
+      "unfree": false,
+      "version": "8.14.1",
       "outputs_to_install": [
-        "out"
+        "bin",
+        "man"
       ],
       "outputs": {
-        "out": "/nix/store/18bnnsvabgm7wz1a8hbjgyj16zy5rrl9-crush-0.13.5"
+        "bin": "/nix/store/daqkbhfb98im7w73lk61irbydq1lpq2n-curl-8.14.1-bin",
+        "dev": "/nix/store/3l3cdqp6bk47m43s87k0qaivvj9r10kp-curl-8.14.1-dev",
+        "devdoc": "/nix/store/z05aliw0hig4id56mygpisrmwrhswd0j-curl-8.14.1-devdoc",
+        "man": "/nix/store/fkqg97zhj3hi5x0dl9llyg2x333sg8b9-curl-8.14.1-man",
+        "out": "/nix/store/32i2wvq3scw9dwck2gzkwqs5fncg1b8r-curl-8.14.1"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
       "priority": 5
     },
     {
-      "attr_path": "crush",
+      "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/pc56090qad9v3g2sa0c3nx3n30n8xw2l-crush-0.13.5.drv",
-      "description": "Glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "FSL-1.1-MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "crush-0.13.5",
-      "pname": "crush",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:28:57.830399Z",
+      "derivation": "/nix/store/h13n275s26bhpnrbbi686mzrhhaml73l-curl-8.14.1.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "curl-8.14.1",
+      "pname": "curl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:04.302249Z",
       "stabilities": [
         "unstable"
       ],
-      "unfree": true,
-      "version": "0.13.5",
+      "unfree": false,
+      "version": "8.14.1",
       "outputs_to_install": [
-        "out"
+        "bin",
+        "man"
       ],
       "outputs": {
-        "out": "/nix/store/h5p3vaq0466kpkkph3gqmqfpvg7hxp5p-crush-0.13.5"
+        "bin": "/nix/store/l93sz0xmd0pm4xjyz9bhlyfgh09bzsxn-curl-8.14.1-bin",
+        "debug": "/nix/store/vraq79imsxdv0f39m9v2z3g5fa75i9x7-curl-8.14.1-debug",
+        "dev": "/nix/store/33q1v0ji5zg5jp2znpmkzl4f48a06p4i-curl-8.14.1-dev",
+        "devdoc": "/nix/store/vnd6zyyhgh04n6zvzcnlf7zxm3mpz6nq-curl-8.14.1-devdoc",
+        "man": "/nix/store/cym6k6y7zbifdqa0lwkk02drb3yk0s4f-curl-8.14.1-man",
+        "out": "/nix/store/spnfxfzjm38ni9fj25zgcj4i1xxzgq7q-curl-8.14.1"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
       "priority": 5
     },
     {
-      "attr_path": "crush",
+      "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/kxj81dchcg7rgg5mqbzvws9pm49bps8z-crush-0.13.5.drv",
-      "description": "Glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "FSL-1.1-MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "crush-0.13.5",
-      "pname": "crush",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:54:57.527140Z",
+      "derivation": "/nix/store/vkg6v5f233q27nkmxywxk4pkslzcp5a8-curl-8.14.1.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "curl-8.14.1",
+      "pname": "curl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:08.756474Z",
       "stabilities": [
         "unstable"
       ],
-      "unfree": true,
-      "version": "0.13.5",
+      "unfree": false,
+      "version": "8.14.1",
       "outputs_to_install": [
-        "out"
+        "bin",
+        "man"
       ],
       "outputs": {
-        "out": "/nix/store/pxn8c1radhqk2n7gpzczqsrgjh1y9d62-crush-0.13.5"
+        "bin": "/nix/store/ashjvarapkgzyb38b6m3zpynfmz1n0xd-curl-8.14.1-bin",
+        "dev": "/nix/store/g72d0ls7iwb4lqa2gm930rx8a5272fy7-curl-8.14.1-dev",
+        "devdoc": "/nix/store/1gqad1nz2cvh92psygzn175vpxyg0rdv-curl-8.14.1-devdoc",
+        "man": "/nix/store/3l9g8nqlhf3cbdaja215qs5rh5y08qdj-curl-8.14.1-man",
+        "out": "/nix/store/87q480903wqmqwzyd385cw09bikhkax9-curl-8.14.1"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
       "priority": 5
     },
     {
-      "attr_path": "crush",
+      "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/m4p09qp0d1k53q2fy3rjnn5qjljnkfhp-crush-0.13.5.drv",
-      "description": "Glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "FSL-1.1-MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "crush-0.13.5",
-      "pname": "crush",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:20:47.153987Z",
+      "derivation": "/nix/store/g1smgp5dhq2ii8np7vm7n5znki3ak1b1-curl-8.14.1.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "curl-8.14.1",
+      "pname": "curl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:13:48.573116Z",
       "stabilities": [
         "unstable"
       ],
-      "unfree": true,
-      "version": "0.13.5",
+      "unfree": false,
+      "version": "8.14.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/8ggin0y50drxqzlkci4p71v2nan6gc7s-curl-8.14.1-bin",
+        "debug": "/nix/store/l2d22g8knzk23dx1xs780an5hn9w4z4v-curl-8.14.1-debug",
+        "dev": "/nix/store/awayiin721c5khfrn2vqx1cnb6rjswg0-curl-8.14.1-dev",
+        "devdoc": "/nix/store/ng1844h0cz649lqv8w1cq0iagwkl39jw-curl-8.14.1-devdoc",
+        "man": "/nix/store/1w1ywxmz7mfcgpb7gxw95mgffrd8nj6f-curl-8.14.1-man",
+        "out": "/nix/store/g3vj4z918zal30klpdd9papkavis01sh-curl-8.14.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/7my3rgi90s1haw3fz762lrdyy73dx8h3-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-05T18:02:23.888976441Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/g58srzm2jrm9vwvz5s4sj9z2vpxxgxkg-crush-0.13.5"
+        "dist": "/nix/store/ci0csf2snc7h5g1qm03mw8ggq64img1m-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/dypvq42niihlv88bhdvznn6cy6l0y9gc-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/8im6dgscbg7hghm2anwi2la5az19p576-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-05T18:02:23.888977948Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/cnsh7kmb5bivk2qps25460kyblzh1pp8-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/x8dy1d9fzb9kzm6b2lrbij45g10p6r5v-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/kc27v6whcgmfw54fx31j561xfd4l632f-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-05T18:02:23.888978613Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/zh9gjf26d589k2fvzn0n08d3p0h8ipbz-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/zf8m76x02gga11x1bkmvg5pb65nvayvc-flox-mcp-server-0.2.0"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/i7da40pyfvk25xwk2xkg7rlzv3zqf4s3-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:33.689601Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/6acx1nn0f2i5v6dkdzaap2hdngkp1lpz-gum-0.17.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/vn184rxp6dqbd1lacq122him8nif1ljj-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:06.108211Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/caisq1py34nrn7q3lx4sswkm0zlpdr4n-gum-0.17.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/xzwzl56m1rwcb5pbmq85cvhyhfd1angc-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:09.706711Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/w467h914divp2k8qyk5x14hci2jm7ww6-gum-0.17.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/3l47qcfk0x158cx0f3ql2pggnxgd6v9p-gum-0.17.0.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gum-0.17.0",
+      "pname": "gum",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:13:50.524735Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.17.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/jbjrj4hbf2bgdvr6vl4dalwn31s669p4-gum-0.17.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/7hf5gwzdlj1y94kbh5zkl5gy5zhp9n1h-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:47.757529Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/8cadjdrc1gjc66ijgn2wnmfj6yajnxmb-jq-1.8.1-bin",
+        "dev": "/nix/store/vcjkcdi02h123i073sxma5kfhps9z2fd-jq-1.8.1-dev",
+        "doc": "/nix/store/sbr5199a3y3vpx1kaphyl4nnjlpzzzym-jq-1.8.1-doc",
+        "man": "/nix/store/11rdl4l7v5gswf5gdizk02jy39bw7bby-jq-1.8.1-man",
+        "out": "/nix/store/i8v8j94vx41c1wfzp1n69ddbrrf192pq-jq-1.8.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/r3407x6ni6fznp3n9fpvn8rh0ybwf0g5-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:25.152446Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/ync89vi4g1xnkj4fxspc63zfvs7dk8aw-jq-1.8.1-bin",
+        "dev": "/nix/store/194yri6cyqad6yvbhpqp5wswsppnsi7x-jq-1.8.1-dev",
+        "doc": "/nix/store/cjmvz6ma3qnhdvapjf2yghw28lrah0ja-jq-1.8.1-doc",
+        "man": "/nix/store/44k1613ynml3cgx5v9k6saqw994hqcl9-jq-1.8.1-man",
+        "out": "/nix/store/hz4c9q3baf434zw2y0yzb3a5kkj3rhwl-jq-1.8.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/g23rabsw9k8igm73syz8xbwc76145cgc-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:23.585062Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/8kcm1dcivx14cp5z39wzma81jbrvaazs-jq-1.8.1-bin",
+        "dev": "/nix/store/wjxxw199ix3mkg8ms6k0hqfg7swxr2qv-jq-1.8.1-dev",
+        "doc": "/nix/store/17mfk267mjhnvgbm03w0scsfq82a65na-jq-1.8.1-doc",
+        "man": "/nix/store/88l2hgigy77vjgkdjps6l6vl8svxgaaa-jq-1.8.1-man",
+        "out": "/nix/store/ladmn1j7zikwdmih15d8rfh7z550y1q2-jq-1.8.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/22067a6y3jqcmwj75pd2v2a9ccizajd0-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:14:10.752274Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/7jvwwz45qap70i6asxzcnbshhz88a5sv-jq-1.8.1-bin",
+        "dev": "/nix/store/5rp4imr3xn3qwwxpgmss2q9pj8bak9wy-jq-1.8.1-dev",
+        "doc": "/nix/store/j572lmsgrx4a9bim6gwlyn9mnlf67490-jq-1.8.1-doc",
+        "man": "/nix/store/laqc7c2c9j09vm1w58vmj633vc2wb3wv-jq-1.8.1-man",
+        "out": "/nix/store/byi56qh6h63rdhfjh4plnyndfcpqx13p-jq-1.8.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/z4lr6rqyi0w7hgsyv5kvnhjrakirr751-openssl-3.5.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "openssl-3.5.1",
+      "pname": "openssl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:57.623761Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/bpawzvf8z4yjmwr3zc7haxhv99sl8s2a-openssl-3.5.1-bin",
+        "dev": "/nix/store/4fwifkd3zn4m6y7zacyhpwy5frj63knk-openssl-3.5.1-dev",
+        "doc": "/nix/store/69p0m85qi4rw0ka8jqciba0p9q3140b0-openssl-3.5.1-doc",
+        "man": "/nix/store/2jh1wcwhjylfxzly4hbb5fz55b1lxxm5-openssl-3.5.1-man",
+        "out": "/nix/store/0ais7wnqw8xzj0331c2jka53s6g14wqb-openssl-3.5.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/ka1rgg9jrhim4p54h6cb4jih6g51qcww-openssl-3.5.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "openssl-3.5.1",
+      "pname": "openssl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:48.150233Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/4zzrcin7jdph1ybm7pkwlypv4khmqgf3-openssl-3.5.1-bin",
+        "debug": "/nix/store/n0r6fn7sd0bvmpwm8s5nlmm626jilcra-openssl-3.5.1-debug",
+        "dev": "/nix/store/hg5ryywl9xqg82kvzwvqkx4m2yckkdsg-openssl-3.5.1-dev",
+        "doc": "/nix/store/91mrccm5jwv94w8lvh7c0wf0cygj0yal-openssl-3.5.1-doc",
+        "man": "/nix/store/slgd9x3x372g5bm73qbijj41rqb560fd-openssl-3.5.1-man",
+        "out": "/nix/store/rzlvprd99wlbiv2wsqgp23kmxhkm1yfr-openssl-3.5.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/ncpm3s6gw15xqq45zs140p0m8rx5axnp-openssl-3.5.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "openssl-3.5.1",
+      "pname": "openssl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:33.687721Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/4w92hq61lhdzin9mkvzlxvd603pgwm9w-openssl-3.5.1-bin",
+        "dev": "/nix/store/63827r05nfpr7bg23zpivb9sn33cshy4-openssl-3.5.1-dev",
+        "doc": "/nix/store/3kbg9sqs4i8j7rkr6q7gb25c0bjqylyr-openssl-3.5.1-doc",
+        "man": "/nix/store/h59wasb1qrmvsgz79bl0sqnrhx0vccha-openssl-3.5.1-man",
+        "out": "/nix/store/v3cq87zwjd4f91y0i1023kkb9wvwc71z-openssl-3.5.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/7d5p0ip9nd3aj3r1a2pmhsxxizqqnis8-openssl-3.5.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "openssl-3.5.1",
+      "pname": "openssl",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:14:35.710666Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.5.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/nn4b544v4sanvsf22mjiw3qh8mwh6pzh-openssl-3.5.1-bin",
+        "debug": "/nix/store/rj7yspi9mw9zcbma7v3h2zbh03bkjb82-openssl-3.5.1-debug",
+        "dev": "/nix/store/qqfiw89h8j4pilcyqapldzq5vf0vqgxy-openssl-3.5.1-dev",
+        "doc": "/nix/store/g9nxr4sig9dkhfvgc0ma1qb6fs3xm5dn-openssl-3.5.1-doc",
+        "man": "/nix/store/kmyzbfp60f9b85lhpr3njswxlm76b0av-openssl-3.5.1-man",
+        "out": "/nix/store/gi615r79j260ihhzdkhrg6qva9wfrbyy-openssl-3.5.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/z27ycmmsfq9ikwi0bdbpwx1yvw41ljc7-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970596127Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vch6q0nfr3ggc6vkpm12mz4qqg6r7hsi-crush-0.21.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/ga86hb99s0qjvw0d1qznd8siv4s6cky5-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970600173Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/920hl947c8imnfzqs6j7shl0cb0bpf7s-crush-0.21.0"
+      },
+      "system": "aarch64-linux",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/qpv07vc3c76q6i16hxam5xjh759rndx0-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970601021Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dl0fzlh8a9hlm13x12vbzcmkq68gbfah-crush-0.21.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/8imf767pjgqc1mcf8z155r8bxli3r23k-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970601750Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/5qkkx86h3kn44la68rj356d6ya88g9s9-crush-0.21.0"
+      },
+      "system": "x86_64-linux",
+      "group": "crush",
       "priority": 5
     }
   ]
