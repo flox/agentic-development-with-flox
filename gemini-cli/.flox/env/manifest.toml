@@ -1,11 +1,3 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##   https://flox.dev/docs/reference/command-reference/manifest.toml/
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
 version = 1
 
 
@@ -17,8 +9,8 @@ version = 1
 [install]
 gemini-cli.pkg-path = "gemini-cli"
 gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-vscode-ide-companion"
-# gum.pkg-path = "gum"
-# gum.version = "^0.14.5"
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 
 
 ## Environment Variables ---------------------------------------------
@@ -31,6 +23,51 @@ gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Set up MCP server configuration for Flox
+setup_mcp_config() {
+    local settings_dir="$HOME/.gemini"
+    local settings_file="$settings_dir/settings.json"
+
+    # Create directory if it doesn't exist
+    if [ ! -d "$settings_dir" ]; then
+        mkdir -p "$settings_dir"
+        echo "📁 Created ~/.gemini directory for settings"
+    fi
+
+    # Check if settings.json exists
+    if [ ! -f "$settings_file" ]; then
+        # Create initial settings with Flox MCP server
+        cat > "$settings_file" << 'EOF'
+{
+  "mcpServers": {
+    "flox": {
+      "command": "flox-mcp",
+      "args": [],
+      "description": "MCP server for managing Flox environments and packages",
+      "trust": false
+    }
+  }
+}
+EOF
+        echo "✅ Created MCP configuration with Flox server at ~/.gemini/settings.json"
+    else
+        # Check if Flox MCP server is already configured
+        if ! grep -q '"flox"' "$settings_file" 2>/dev/null; then
+            echo "ℹ️  Existing settings.json found. To add Flox MCP server, add this to mcpServers:"
+            echo '
+    "flox": {
+      "command": "flox-mcp",
+      "args": [],
+      "description": "MCP server for managing Flox environments and packages",
+      "trust": false
+    }'
+        fi
+    fi
+}
+
+# Run setup
+setup_mcp_config
+
 echo ""
 echo "🤖 Gemini CLI - AI Agent in Your Terminal"
 echo ""
@@ -46,9 +83,12 @@ echo "  gemini -p \"prompt\"          # Non-interactive mode"
 echo "  gemini --output-format json # JSON output for scripting"
 echo "  gemini -m gemini-2.5-flash  # Specify model"
 echo ""
+echo "MCP Server:"
+echo "  🔧 Flox MCP server configured in ~/.gemini/settings.json"
+echo "  Use Flox tools in your prompts to manage environments and packages"
+echo ""
 echo "Optional enhancements:"
 echo "  GEMINI.md                   # Project context file (see README)"
-echo "  ~/.gemini/settings.json     # MCP server configuration"
 echo ""
 echo "VS Code extension installed and ready to use!"
 echo ""

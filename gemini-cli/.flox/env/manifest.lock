@@ -3,6 +3,14 @@
   "manifest": {
     "version": 1,
     "install": {
+      "flox-mcp-server": {
+        "pkg-path": "flox/flox-mcp-server",
+        "systems": [
+          "aarch64-darwin",
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
+      },
       "gemini-cli": {
         "pkg-path": "gemini-cli"
       },
@@ -11,36 +19,126 @@
       }
     },
     "hook": {
-      "on-activate": "echo \"\"\necho \"🤖 Gemini CLI - AI Agent in Your Terminal\"\necho \"\"\necho \"An open-source AI agent from Google bringing Gemini to your terminal.\"\necho \"\"\necho \"First-time setup:\"\necho \"  gemini                      # Launch interactive session\"\necho \"                              # Authenticate on first run (OAuth, API key, or Vertex AI)\"\necho \"\"\necho \"Usage:\"\necho \"  gemini                      # Interactive mode\"\necho \"  gemini -p \\\"prompt\\\"          # Non-interactive mode\"\necho \"  gemini --output-format json # JSON output for scripting\"\necho \"  gemini -m gemini-2.5-flash  # Specify model\"\necho \"\"\necho \"Optional enhancements:\"\necho \"  GEMINI.md                   # Project context file (see README)\"\necho \"  ~/.gemini/settings.json     # MCP server configuration\"\necho \"\"\necho \"VS Code extension installed and ready to use!\"\necho \"\"\necho \"Open Source • Apache-2.0 License\"\necho \"\"\n"
+      "on-activate": "# Set up MCP server configuration for Flox\nsetup_mcp_config() {\n    local settings_dir=\"$HOME/.gemini\"\n    local settings_file=\"$settings_dir/settings.json\"\n\n    # Create directory if it doesn't exist\n    if [ ! -d \"$settings_dir\" ]; then\n        mkdir -p \"$settings_dir\"\n        echo \"📁 Created ~/.gemini directory for settings\"\n    fi\n\n    # Check if settings.json exists\n    if [ ! -f \"$settings_file\" ]; then\n        # Create initial settings with Flox MCP server\n        cat > \"$settings_file\" << 'EOF'\n{\n  \"mcpServers\": {\n    \"flox\": {\n      \"command\": \"flox-mcp\",\n      \"args\": [],\n      \"description\": \"MCP server for managing Flox environments and packages\",\n      \"trust\": false\n    }\n  }\n}\nEOF\n        echo \"✅ Created MCP configuration with Flox server at ~/.gemini/settings.json\"\n    else\n        # Check if Flox MCP server is already configured\n        if ! grep -q '\"flox\"' \"$settings_file\" 2>/dev/null; then\n            echo \"ℹ️  Existing settings.json found. To add Flox MCP server, add this to mcpServers:\"\n            echo '\n    \"flox\": {\n      \"command\": \"flox-mcp\",\n      \"args\": [],\n      \"description\": \"MCP server for managing Flox environments and packages\",\n      \"trust\": false\n    }'\n        fi\n    fi\n}\n\n# Run setup\nsetup_mcp_config\n\necho \"\"\necho \"🤖 Gemini CLI - AI Agent in Your Terminal\"\necho \"\"\necho \"An open-source AI agent from Google bringing Gemini to your terminal.\"\necho \"\"\necho \"First-time setup:\"\necho \"  gemini                      # Launch interactive session\"\necho \"                              # Authenticate on first run (OAuth, API key, or Vertex AI)\"\necho \"\"\necho \"Usage:\"\necho \"  gemini                      # Interactive mode\"\necho \"  gemini -p \\\"prompt\\\"          # Non-interactive mode\"\necho \"  gemini --output-format json # JSON output for scripting\"\necho \"  gemini -m gemini-2.5-flash  # Specify model\"\necho \"\"\necho \"MCP Server:\"\necho \"  🔧 Flox MCP server configured in ~/.gemini/settings.json\"\necho \"  Use Flox tools in your prompts to manage environments and packages\"\necho \"\"\necho \"Optional enhancements:\"\necho \"  GEMINI.md                   # Project context file (see README)\"\necho \"\"\necho \"VS Code extension installed and ready to use!\"\necho \"\"\necho \"Open Source • Apache-2.0 License\"\necho \"\"\n"
     },
     "profile": {},
     "options": {}
   },
   "packages": [
     {
-      "attr_path": "gemini-cli",
+      "attr_path": "flox-mcp-server",
       "broken": false,
-      "derivation": "/nix/store/jnns1wyxkzclwa4fy90j5kc7ajh6z14i-gemini-cli-0.11.3.drv",
-      "description": "AI agent that brings the power of Gemini directly into your terminal",
-      "install_id": "gemini-cli",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "gemini-cli-0.11.3",
-      "pname": "gemini-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:35:19.070416Z",
+      "derivation": "/nix/store/7my3rgi90s1haw3fz762lrdyy73dx8h3-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T15:23:13.907879406Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.2.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/127yg7h9j1q6fnc4s7j8ahvfzj05802a-gemini-cli-0.11.3"
+        "dist": "/nix/store/ci0csf2snc7h5g1qm03mw8ggq64img1m-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/dypvq42niihlv88bhdvznn6cy6l0y9gc-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/8im6dgscbg7hghm2anwi2la5az19p576-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T15:23:13.907894042Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/cnsh7kmb5bivk2qps25460kyblzh1pp8-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/x8dy1d9fzb9kzm6b2lrbij45g10p6r5v-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/kc27v6whcgmfw54fx31j561xfd4l632f-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T15:23:13.907899096Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/zh9gjf26d589k2fvzn0n08d3p0h8ipbz-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/zf8m76x02gga11x1bkmvg5pb65nvayvc-flox-mcp-server-0.2.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gemini-cli",
+      "broken": false,
+      "derivation": "/nix/store/7jn8ciih03cmadxkx29f1pjsid3wiqry-gemini-cli-0.5.5.drv",
+      "description": "AI agent that brings the power of Gemini directly into your terminal",
+      "install_id": "gemini-cli",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gemini-cli-0.5.5",
+      "pname": "gemini-cli",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:33.305670Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.5.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/n4hfddcq84yjvm2r547p10fl0qrpln8h-gemini-cli-0.5.5"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
@@ -49,27 +147,27 @@
     {
       "attr_path": "gemini-cli",
       "broken": false,
-      "derivation": "/nix/store/mx4dhh9wjc2sw6hf4hvfxj5nlgsnhszp-gemini-cli-0.11.3.drv",
+      "derivation": "/nix/store/5wn5ia1pyjccf06s0sblpqv4n5bwm3yj-gemini-cli-0.5.5.drv",
       "description": "AI agent that brings the power of Gemini directly into your terminal",
       "install_id": "gemini-cli",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "gemini-cli-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gemini-cli-0.5.5",
       "pname": "gemini-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:28:58.741367Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:05.164037Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/xya7dn3vngayy4xq788wi1yikpgspmb1-gemini-cli-0.11.3"
+        "out": "/nix/store/p70cf2gichb3gkif7nkrhwx1pd0ymv5c-gemini-cli-0.5.5"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -78,27 +176,27 @@
     {
       "attr_path": "gemini-cli",
       "broken": false,
-      "derivation": "/nix/store/k10kx2658p3z9b7zsvqs353pvi4rb1xr-gemini-cli-0.11.3.drv",
+      "derivation": "/nix/store/51j52gib1mpb28c5gcc85b9hvbcjg4a7-gemini-cli-0.5.5.drv",
       "description": "AI agent that brings the power of Gemini directly into your terminal",
       "install_id": "gemini-cli",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "gemini-cli-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gemini-cli-0.5.5",
       "pname": "gemini-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:54:58.099333Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:09.306995Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/f3bhj9cpzxj2khky308z0j9b3kfcmcs4-gemini-cli-0.11.3"
+        "out": "/nix/store/5ny32bphk9fng25q0ppzfgn7zi45fn59-gemini-cli-0.5.5"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
@@ -107,27 +205,27 @@
     {
       "attr_path": "gemini-cli",
       "broken": false,
-      "derivation": "/nix/store/3dd31wsqjfgjlyg7zlwnbmk3qyiyfpjj-gemini-cli-0.11.3.drv",
+      "derivation": "/nix/store/l1iga9mwakwcrgzl69qsb3g0drx2avwz-gemini-cli-0.5.5.drv",
       "description": "AI agent that brings the power of Gemini directly into your terminal",
       "install_id": "gemini-cli",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "gemini-cli-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "gemini-cli-0.5.5",
       "pname": "gemini-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:20:48.169990Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:13:49.512597Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/jpcyv57a3j0s2ca1i9fwswpd6j94dpjh-gemini-cli-0.11.3"
+        "out": "/nix/store/azgibvvl4kbhcpk5hvxry14c5kw6pyb1-gemini-cli-0.5.5"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -136,27 +234,27 @@
     {
       "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
       "broken": false,
-      "derivation": "/nix/store/1k9gfkbas0mfgqisg7vbif96fc7af874-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "derivation": "/nix/store/g9m103iccng4mllg17lhqk0gb7y6pr7m-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5.drv",
       "description": "Enable Gemini CLI with direct access to your IDE workspace",
       "install_id": "gemini-cli-vscode-ide-companion",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.5.5",
       "pname": "gemini-cli-vscode-ide-companion",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:37:48.486609Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:46:58.269549Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/l96d1xi4pkb1ic2j00rp83gm1894kcc9-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+        "out": "/nix/store/lwsp8gvwgrjb459x8nmq6bvf1lr90gxq-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
@@ -165,27 +263,27 @@
     {
       "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
       "broken": false,
-      "derivation": "/nix/store/m5jn2rrv903hzjws2slgps49zi2l7blx-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "derivation": "/nix/store/5ij4bcwrqzjz3bfzygvc18n8821pfj0l-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5.drv",
       "description": "Enable Gemini CLI with direct access to your IDE workspace",
       "install_id": "gemini-cli-vscode-ide-companion",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.5.5",
       "pname": "gemini-cli-vscode-ide-companion",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:32:17.421768Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:17:34.922226Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/84vdjszzl3n2rf78389qm004fcx34l5j-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+        "out": "/nix/store/7n9j42xl75h70h5q4vfzznbyfzsvbicw-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -194,27 +292,27 @@
     {
       "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
       "broken": false,
-      "derivation": "/nix/store/6chx6rdyspmz0apwqm8ykq2c9hk3vfhf-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "derivation": "/nix/store/53x9lhka2mzycc6nqn349ikpkkj93xqc-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5.drv",
       "description": "Enable Gemini CLI with direct access to your IDE workspace",
       "install_id": "gemini-cli-vscode-ide-companion",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.5.5",
       "pname": "gemini-cli-vscode-ide-companion",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:57:20.422548Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:44:34.321553Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/vqr2qq9kbgamlp4kq291wicwjx696vad-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+        "out": "/nix/store/1anlyzmq0mkjfr06fczf5k35rc5v0s9c-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
@@ -223,27 +321,27 @@
     {
       "attr_path": "vscode-extensions.Google.gemini-cli-vscode-ide-companion",
       "broken": false,
-      "derivation": "/nix/store/z568gp273w3azv131n7gwbm1fkl0rr87-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3.drv",
+      "derivation": "/nix/store/s0ldx4i15niqbqz1a0i7k5f7pradam88-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5.drv",
       "description": "Enable Gemini CLI with direct access to your IDE workspace",
       "install_id": "gemini-cli-vscode-ide-companion",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.11.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "vscode-extension-gemini-cli-vscode-ide-companion-0.5.5",
       "pname": "gemini-cli-vscode-ide-companion",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:24:26.668910Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:17:32.379797Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.11.3",
+      "version": "0.5.5",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/ym6ff3sfgn8zkd6i51h3hbbl16gag6kh-vscode-extension-gemini-cli-vscode-ide-companion-0.11.3"
+        "out": "/nix/store/49frfa0kgr65lkakv2zd0qd2c05bc413-vscode-extension-gemini-cli-vscode-ide-companion-0.5.5"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

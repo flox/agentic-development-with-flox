@@ -7,6 +7,7 @@ A Flox environment for [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 - **Dual-mode operation**: Interactive sessions or non-interactive automation
 - **Built-in tools**: File system operations, shell command execution, web fetching, Google Search
 - **MCP support**: Extend functionality with Model Context Protocol servers
+- **Flox MCP server**: Pre-configured MCP server for managing Flox environments and packages
 - **Project context**: Optional `GEMINI.md` files to tailor AI behavior per project
 - **Multiple auth options**: OAuth (free tier), API key, or Vertex AI
 - **VS Code integration**: IDE companion extension included
@@ -21,6 +22,7 @@ The environment includes:
 
 - `gemini` - Gemini CLI tool
 - VS Code Gemini CLI IDE Companion extension
+- `flox-mcp` - Flox MCP server for package and environment management
 
 ## 🏁 Getting Started
 
@@ -171,18 +173,45 @@ Now when you run `gemini` in that directory, it will use this context automatica
 
 ### MCP Server Configuration
 
-Extend Gemini CLI with custom tools via Model Context Protocol:
+#### Pre-configured Flox MCP Server
+
+This environment automatically configures the **Flox MCP server** on first activation, allowing you to manage Flox environments and packages directly from Gemini:
+
+```bash
+# The Flox MCP server is automatically configured in ~/.gemini/settings.json
+# Use it in your prompts:
+gemini -p "@flox list all installed packages"
+gemini -p "@flox search for Python packages"
+gemini -p "@flox create a new environment for a Node.js project"
+```
+
+**Available Flox MCP tools:**
+- Search for packages in the Flox catalog
+- List installed packages in environments
+- Create and manage Flox environments
+- Install and uninstall packages
+- Run commands in Flox environments
+
+#### Adding Additional MCP Servers
+
+You can extend Gemini CLI with more MCP servers:
 
 ```bash
 # Edit MCP configuration
 nano ~/.gemini/settings.json
 ```
 
-**Example MCP configuration:**
+**Example configuration with Flox and additional servers:**
 
 ```json
 {
   "mcpServers": {
+    "flox": {
+      "command": "flox-mcp",
+      "args": [],
+      "description": "MCP server for managing Flox environments and packages",
+      "trust": false
+    },
     "github": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
@@ -221,6 +250,11 @@ nano ~/.gemini/settings.json
 Once configured, use MCP tools in your prompts:
 
 ```bash
+# Flox MCP server (pre-configured)
+gemini -p "@flox install nodejs in current environment"
+gemini -p "@flox show available versions of rust"
+
+# Additional MCP servers (if configured)
 gemini -p "@github List my open pull requests"
 gemini -p "@database Query user table for recent signups"
 ```
@@ -254,6 +288,10 @@ gemini -p "Generate comprehensive API documentation for all exported functions" 
 
 # Update README
 gemini -p "Update README.md with current features and usage examples"
+
+# Use Flox to manage dependencies
+gemini -p "@flox what packages are installed in this environment?"
+gemini -p "@flox add testing tools to my environment"
 
 # Document code with comments
 gemini -p "Add JSDoc comments to all functions in src/utils.js"
@@ -351,7 +389,10 @@ nano ~/.gemini/settings.json
 # Check settings.json syntax
 cat ~/.gemini/settings.json | jq .
 
-# Verify MCP server is executable
+# Verify Flox MCP server is available
+which flox-mcp  # Should be available in the environment
+
+# Verify other MCP servers are executable
 which npx  # For npx-based servers
 python -m my_mcp_server --help  # For Python servers
 
@@ -392,9 +433,9 @@ code --list-extensions | grep gemini
 ## 💻 System Compatibility
 
 This environment works on:
-- Linux x86_64
-- macOS ARM64 (Apple Silicon)
-- macOS x86_64 (Intel)
+- Linux x86_64 (full support including Flox MCP server)
+- macOS ARM64 / Apple Silicon (full support including Flox MCP server)
+- macOS x86_64 / Intel (Gemini CLI and VS Code extension only; Flox MCP server not available)
 
 ## 🔒 Security Considerations
 
