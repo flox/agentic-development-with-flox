@@ -91,6 +91,7 @@ Within interactive sessions, use these commands:
 ```
 /login       - Authenticate with GitHub
 /model       - Switch between AI models
+/mcp         - View and manage MCP servers
 /feedback    - Submit confidential feedback
 /help        - Show available commands
 /exit        - Exit Copilot CLI
@@ -166,6 +167,10 @@ copilot --version           # Display version information
 - Additional context sources
 - Specialized language support
 - Team-specific patterns and rules
+- **Flox package management** via MCP server
+
+**MCP Server Configuration:**
+While GitHub Copilot CLI's exact MCP configuration method isn't fully documented, it supports MCP servers through its `/mcp` command. The Flox MCP server (`flox-mcp`) is automatically available in this environment when activated on supported systems.
 
 ### 🎯 Context Awareness
 

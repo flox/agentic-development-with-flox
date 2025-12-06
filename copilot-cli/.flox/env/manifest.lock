@@ -3,12 +3,22 @@
   "manifest": {
     "version": 1,
     "install": {
+      "flox-mcp-server": {
+        "pkg-path": "flox/flox-mcp-server",
+        "pkg-group": "mcp",
+        "systems": [
+          "aarch64-darwin",
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
+      },
       "github-copilot-cli": {
-        "pkg-path": "github-copilot-cli"
+        "pkg-path": "github-copilot-cli",
+        "pkg-group": "main"
       }
     },
     "hook": {
-      "on-activate": "echo \"\"\necho \"🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal\"\necho \"\"\necho \"Copilot CLI brings the power of GitHub Copilot directly to your command line.\"\necho \"\"\necho \"First-time setup:\"\necho \"  copilot                     # Launch interactive session\"\necho \"  /login                      # Authenticate with GitHub (in session)\"\necho \"\"\necho \"Usage:\"\necho \"  copilot                     # Start conversational coding assistant\"\necho \"  copilot --help              # Show all options\"\necho \"\"\necho \"In-session commands:\"\necho \"  /login                      # Authenticate with GitHub\"\necho \"  /model                      # Switch AI models (Claude Sonnet 4.5, GPT-5)\"\necho \"  /feedback                   # Submit feedback\"\necho \"\"\necho \"Features:\"\necho \"  • Natural language conversations about code\"\necho \"  • Build, debug, and understand code\"\necho \"  • GitHub context awareness (repos, issues, PRs)\"\necho \"  • Preview-before-execution safety\"\necho \"  • MCP extensibility\"\necho \"\"\necho \"Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)\"\necho \"\"\n"
+      "on-activate": "# Check if flox-mcp is available on this system\ncheck_flox_mcp() {\n    if command -v flox-mcp >/dev/null 2>&1; then\n        echo \"  🔧 Flox MCP server available (flox-mcp)\"\n        echo \"     Use /mcp in Copilot to view available MCP servers\"\n        return 0\n    else\n        return 1\n    fi\n}\n\necho \"\"\necho \"🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal\"\necho \"\"\necho \"Copilot CLI brings the power of GitHub Copilot directly to your command line.\"\necho \"\"\necho \"First-time setup:\"\necho \"  copilot                     # Launch interactive session\"\necho \"  /login                      # Authenticate with GitHub (in session)\"\necho \"\"\necho \"Usage:\"\necho \"  copilot                     # Start conversational coding assistant\"\necho \"  copilot --help              # Show all options\"\necho \"\"\necho \"In-session commands:\"\necho \"  /login                      # Authenticate with GitHub\"\necho \"  /model                      # Switch AI models (Claude Sonnet 4.5, GPT-5)\"\necho \"  /mcp                        # View and manage MCP servers\"\necho \"  /feedback                   # Submit feedback\"\necho \"\"\necho \"Features:\"\necho \"  • Natural language conversations about code\"\necho \"  • Build, debug, and understand code\"\necho \"  • GitHub context awareness (repos, issues, PRs)\"\necho \"  • Preview-before-execution safety\"\necho \"  • MCP extensibility\"\ncheck_flox_mcp\necho \"\"\necho \"Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)\"\necho \"\"\n"
     },
     "profile": {},
     "options": {}
@@ -17,117 +27,211 @@
     {
       "attr_path": "github-copilot-cli",
       "broken": false,
-      "derivation": "/nix/store/n4kh24dmyidw1z7w9ir2bh9f41rf4anw-github-copilot-cli-0.0.351.drv",
+      "derivation": "/nix/store/yb1mv7vw6yk49xx9p7drv112si6iiy6d-github-copilot-cli-0.0.365.drv",
       "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
       "install_id": "github-copilot-cli",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "github-copilot-cli-0.0.351",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=418468ac9527e799809c900eda37cbff999199b6",
+      "name": "github-copilot-cli-0.0.365",
       "pname": "github-copilot-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:35:19.172097Z",
+      "rev": "418468ac9527e799809c900eda37cbff999199b6",
+      "rev_count": 905402,
+      "rev_date": "2025-12-02T09:27:49Z",
+      "scrape_date": "2025-12-04T02:53:41.622633Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "0.0.351",
+      "version": "0.0.365",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/4xh3b09nh1mab7rwc3wa2dg5las130dn-github-copilot-cli-0.0.351"
+        "out": "/nix/store/xjs3rbab4c6sbnyld2r3gg57m4nsg4yl-github-copilot-cli-0.0.365"
       },
       "system": "aarch64-darwin",
-      "group": "toplevel",
+      "group": "main",
       "priority": 5
     },
     {
       "attr_path": "github-copilot-cli",
       "broken": false,
-      "derivation": "/nix/store/a0s30avp47k3biywzzjxzv4kpy00nqm0-github-copilot-cli-0.0.351.drv",
+      "derivation": "/nix/store/2w5px0bwy8gc780bvymwlvpxv4bk6cr6-github-copilot-cli-0.0.365.drv",
       "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
       "install_id": "github-copilot-cli",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "github-copilot-cli-0.0.351",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=418468ac9527e799809c900eda37cbff999199b6",
+      "name": "github-copilot-cli-0.0.365",
       "pname": "github-copilot-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:28:58.873180Z",
+      "rev": "418468ac9527e799809c900eda37cbff999199b6",
+      "rev_count": 905402,
+      "rev_date": "2025-12-02T09:27:49Z",
+      "scrape_date": "2025-12-04T03:02:20.782584Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "0.0.351",
+      "version": "0.0.365",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/n2w1prrycl8l4b6p8hmn4kxs8db7aigx-github-copilot-cli-0.0.351"
+        "out": "/nix/store/nl2cb1mbciahrl3pxwv41pyb2nbqpn99-github-copilot-cli-0.0.365"
       },
       "system": "aarch64-linux",
-      "group": "toplevel",
+      "group": "main",
       "priority": 5
     },
     {
       "attr_path": "github-copilot-cli",
       "broken": false,
-      "derivation": "/nix/store/97qg2n3fw8llk6p3nrrhdccvfymb7lgz-github-copilot-cli-0.0.351.drv",
+      "derivation": "/nix/store/l99ai3yhn2k8qj6nkipihfkw6pil2r77-github-copilot-cli-0.0.365.drv",
       "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
       "install_id": "github-copilot-cli",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "github-copilot-cli-0.0.351",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=418468ac9527e799809c900eda37cbff999199b6",
+      "name": "github-copilot-cli-0.0.365",
       "pname": "github-copilot-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:54:58.195862Z",
+      "rev": "418468ac9527e799809c900eda37cbff999199b6",
+      "rev_count": 905402,
+      "rev_date": "2025-12-02T09:27:49Z",
+      "scrape_date": "2025-12-04T03:11:44.204265Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "0.0.351",
+      "version": "0.0.365",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/9c1gm6jn95jywhz4iqhcqh5cfdyzhc5j-github-copilot-cli-0.0.351"
+        "out": "/nix/store/gs148wk9j1232bq7q9ca6w0ljg1s5y4i-github-copilot-cli-0.0.365"
       },
       "system": "x86_64-darwin",
-      "group": "toplevel",
+      "group": "main",
       "priority": 5
     },
     {
       "attr_path": "github-copilot-cli",
       "broken": false,
-      "derivation": "/nix/store/l8wi8il13vs1gb6l9hljy6p4yq3ciq57-github-copilot-cli-0.0.351.drv",
+      "derivation": "/nix/store/ll0n4y31q96afdq4hdvdg7sq0b46sy1f-github-copilot-cli-0.0.365.drv",
       "description": "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal",
       "install_id": "github-copilot-cli",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "github-copilot-cli-0.0.351",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=418468ac9527e799809c900eda37cbff999199b6",
+      "name": "github-copilot-cli-0.0.365",
       "pname": "github-copilot-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:20:48.311745Z",
+      "rev": "418468ac9527e799809c900eda37cbff999199b6",
+      "rev_count": 905402,
+      "rev_date": "2025-12-02T09:27:49Z",
+      "scrape_date": "2025-12-04T03:20:08.688298Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "0.0.351",
+      "version": "0.0.365",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/vkcq09y5rq5y45niaygd93l26dj9n60i-github-copilot-cli-0.0.351"
+        "out": "/nix/store/c39vzb51lrzvqq1svsyamzn697qyqpf1-github-copilot-cli-0.0.365"
       },
       "system": "x86_64-linux",
-      "group": "toplevel",
+      "group": "main",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/7my3rgi90s1haw3fz762lrdyy73dx8h3-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T17:27:10.600296156Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/ci0csf2snc7h5g1qm03mw8ggq64img1m-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/dypvq42niihlv88bhdvznn6cy6l0y9gc-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "mcp",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/8im6dgscbg7hghm2anwi2la5az19p576-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T17:27:10.600298078Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/cnsh7kmb5bivk2qps25460kyblzh1pp8-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/x8dy1d9fzb9kzm6b2lrbij45g10p6r5v-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-linux",
+      "group": "mcp",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/kc27v6whcgmfw54fx31j561xfd4l632f-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-06T17:27:10.600298817Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/zh9gjf26d589k2fvzn0n08d3p0h8ipbz-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/zf8m76x02gga11x1bkmvg5pb65nvayvc-flox-mcp-server-0.2.0"
+      },
+      "system": "x86_64-linux",
+      "group": "mcp",
       "priority": 5
     }
   ]

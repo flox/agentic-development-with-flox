@@ -16,6 +16,11 @@ version = 1
 ## -------------------------------------------------------------------
 [install]
 github-copilot-cli.pkg-path = "github-copilot-cli"
+github-copilot-cli.pkg-group = "main"
+
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+flox-mcp-server.pkg-group = "mcp"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 
@@ -30,6 +35,17 @@ github-copilot-cli.pkg-path = "github-copilot-cli"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Check if flox-mcp is available on this system
+check_flox_mcp() {
+    if command -v flox-mcp >/dev/null 2>&1; then
+        echo "  🔧 Flox MCP server available (flox-mcp)"
+        echo "     Use /mcp in Copilot to view available MCP servers"
+        return 0
+    else
+        return 1
+    fi
+}
+
 echo ""
 echo "🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal"
 echo ""
@@ -46,6 +62,7 @@ echo ""
 echo "In-session commands:"
 echo "  /login                      # Authenticate with GitHub"
 echo "  /model                      # Switch AI models (Claude Sonnet 4.5, GPT-5)"
+echo "  /mcp                        # View and manage MCP servers"
 echo "  /feedback                   # Submit feedback"
 echo ""
 echo "Features:"
@@ -54,6 +71,7 @@ echo "  • Build, debug, and understand code"
 echo "  • GitHub context awareness (repos, issues, PRs)"
 echo "  • Preview-before-execution safety"
 echo "  • MCP extensibility"
+check_flox_mcp
 echo ""
 echo "Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)"
 echo ""
