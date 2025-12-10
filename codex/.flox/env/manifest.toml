@@ -16,8 +16,10 @@ version = 1
 ## -------------------------------------------------------------------
 [install]
 codex.pkg-path = "codex"
-# gum.pkg-path = "gum"
-# gum.version = "^0.14.5"
+
+# Flox MCP Server - enables Codex to manage Flox environments
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 
 
 ## Environment Variables ---------------------------------------------
@@ -31,6 +33,46 @@ codex.pkg-path = "codex"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Set up MCP server configuration for Flox
+setup_mcp_config() {
+    local config_dir="$HOME/.codex"
+    local config_file="$config_dir/config.toml"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$config_dir"
+
+    # Check if config.toml exists
+    if [ ! -f "$config_file" ]; then
+        # Create initial config with Flox MCP server
+        cat > "$config_file" << 'EOF'
+# Codex configuration
+# See https://github.com/openai/codex for options
+
+[mcp_servers.flox]
+command = "flox-mcp"
+args = []
+description = "MCP server for managing Flox environments and packages"
+EOF
+        echo "✅ Created MCP configuration with Flox server at ~/.codex/config.toml"
+    else
+        # Check if Flox MCP server is already configured
+        if ! grep -q '\[mcp_servers\.flox\]' "$config_file" 2>/dev/null; then
+            # Append Flox MCP server configuration
+            cat >> "$config_file" << 'EOF'
+
+[mcp_servers.flox]
+command = "flox-mcp"
+args = []
+description = "MCP server for managing Flox environments and packages"
+EOF
+            echo "✅ Added Flox MCP server to existing ~/.codex/config.toml"
+        fi
+    fi
+}
+
+# Run setup
+setup_mcp_config
+
 echo ""
 echo "🤖 Codex CLI - Local AI Coding Agent from OpenAI"
 echo ""
@@ -49,10 +91,14 @@ echo "Configuration (optional):"
 echo "  codex-config                # Edit ~/.codex/config.toml"
 echo "  codex-policy                # Manage execution policies"
 echo ""
+echo "MCP Server:"
+echo "  🔧 Flox MCP server configured in ~/.codex/config.toml"
+echo "  Use Flox tools in your prompts to manage environments and packages"
+echo ""
 echo "Features:"
 echo "  • Executes shell commands with approval system"
 echo "  • Memory system via AGENTS.md files"
-echo "  • MCP server integration"
+echo "  • MCP server integration with Flox"
 echo "  • Zero Data Retention option"
 echo ""
 '''

@@ -5,37 +5,51 @@
     "install": {
       "codex": {
         "pkg-path": "codex"
+      },
+      "flox-mcp-server": {
+        "pkg-path": "flox/flox-mcp-server",
+        "systems": [
+          "aarch64-darwin",
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
       }
     },
-    "hook": {},
-    "profile": {},
+    "hook": {
+      "on-activate": "# Set up MCP server configuration for Flox\nsetup_mcp_config() {\n    local config_dir=\"$HOME/.codex\"\n    local config_file=\"$config_dir/config.toml\"\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$config_dir\"\n\n    # Check if config.toml exists\n    if [ ! -f \"$config_file\" ]; then\n        # Create initial config with Flox MCP server\n        cat > \"$config_file\" << 'EOF'\n# Codex configuration\n# See https://github.com/openai/codex for options\n\n[mcp_servers.flox]\ncommand = \"flox-mcp\"\nargs = []\ndescription = \"MCP server for managing Flox environments and packages\"\nEOF\n        echo \"✅ Created MCP configuration with Flox server at ~/.codex/config.toml\"\n    else\n        # Check if Flox MCP server is already configured\n        if ! grep -q '\\[mcp_servers\\.flox\\]' \"$config_file\" 2>/dev/null; then\n            # Append Flox MCP server configuration\n            cat >> \"$config_file\" << 'EOF'\n\n[mcp_servers.flox]\ncommand = \"flox-mcp\"\nargs = []\ndescription = \"MCP server for managing Flox environments and packages\"\nEOF\n            echo \"✅ Added Flox MCP server to existing ~/.codex/config.toml\"\n        fi\n    fi\n}\n\n# Run setup\nsetup_mcp_config\n\necho \"\"\necho \"🤖 Codex CLI - Local AI Coding Agent from OpenAI\"\necho \"\"\necho \"Codex is a lightweight coding agent that runs locally on your computer.\"\necho \"\"\necho \"First-time setup:\"\necho \"  codex                       # Launch and sign in with ChatGPT account\"\necho \"                              # (Plus, Pro, Team, Edu, or Enterprise)\"\necho \"\"\necho \"Usage:\"\necho \"  codex                       # Interactive conversational mode\"\necho \"  codex exec <prompt>         # Non-interactive mode for scripting\"\necho \"  codex --help                # Show all options\"\necho \"\"\necho \"Configuration (optional):\"\necho \"  codex-config                # Edit ~/.codex/config.toml\"\necho \"  codex-policy                # Manage execution policies\"\necho \"\"\necho \"MCP Server:\"\necho \"  🔧 Flox MCP server configured in ~/.codex/config.toml\"\necho \"  Use Flox tools in your prompts to manage environments and packages\"\necho \"\"\necho \"Features:\"\necho \"  • Executes shell commands with approval system\"\necho \"  • Memory system via AGENTS.md files\"\necho \"  • MCP server integration with Flox\"\necho \"  • Zero Data Retention option\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Edit Codex configuration\ncodex-config() {\n    local config_file=\"$HOME/.codex/config.toml\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$(dirname \"$config_file\")\"\n\n    # Create empty config if it doesn't exist\n    if [[ ! -f \"$config_file\" ]]; then\n        echo \"# Codex configuration\" > \"$config_file\"\n        echo \"# See https://github.com/openai/codex for options\" >> \"$config_file\"\n    fi\n\n    \"$editor\" \"$config_file\"\n}\n\n# Helper: Manage execution policies\ncodex-policy() {\n    local policy_dir=\"$HOME/.codex/policy\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$policy_dir\"\n\n    if [[ -n \"$1\" ]]; then\n        # Edit specific policy file\n        \"$editor\" \"$policy_dir/$1\"\n    else\n        # Show policy directory\n        echo \"Codex policy directory: $policy_dir\"\n        echo \"\"\n        if command -v tree &> /dev/null; then\n            tree \"$policy_dir\"\n        else\n            ls -la \"$policy_dir\"\n        fi\n        echo \"\"\n        echo \"Usage: codex-policy <filename>  # Edit a policy file\"\n        echo \"Example: codex-policy default.codexpolicy\"\n    fi\n}\n\nexport -f codex-config codex-policy\n",
+      "zsh": "# Helper: Edit Codex configuration\ncodex-config() {\n    local config_file=\"$HOME/.codex/config.toml\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$(dirname \"$config_file\")\"\n\n    # Create empty config if it doesn't exist\n    if [[ ! -f \"$config_file\" ]]; then\n        echo \"# Codex configuration\" > \"$config_file\"\n        echo \"# See https://github.com/openai/codex for options\" >> \"$config_file\"\n    fi\n\n    \"$editor\" \"$config_file\"\n}\n\n# Helper: Manage execution policies\ncodex-policy() {\n    local policy_dir=\"$HOME/.codex/policy\"\n    local editor=\"${EDITOR:-nano}\"\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$policy_dir\"\n\n    if [[ -n \"$1\" ]]; then\n        # Edit specific policy file\n        \"$editor\" \"$policy_dir/$1\"\n    else\n        # Show policy directory\n        echo \"Codex policy directory: $policy_dir\"\n        echo \"\"\n        if command -v tree &> /dev/null; then\n            tree \"$policy_dir\"\n        else\n            ls -la \"$policy_dir\"\n        fi\n        echo \"\"\n        echo \"Usage: codex-policy <filename>  # Edit a policy file\"\n        echo \"Example: codex-policy default.codexpolicy\"\n    fi\n}\n",
+      "fish": "# Helper: Edit Codex configuration\nfunction codex-config\n    set config_file \"$HOME/.codex/config.toml\"\n    set editor (set -q EDITOR; and echo $EDITOR; or echo \"nano\")\n\n    # Create directory if it doesn't exist\n    mkdir -p (dirname \"$config_file\")\n\n    # Create empty config if it doesn't exist\n    if not test -f \"$config_file\"\n        echo \"# Codex configuration\" > \"$config_file\"\n        echo \"# See https://github.com/openai/codex for options\" >> \"$config_file\"\n    end\n\n    eval $editor \"$config_file\"\nend\n\n# Helper: Manage execution policies\nfunction codex-policy\n    set policy_dir \"$HOME/.codex/policy\"\n    set editor (set -q EDITOR; and echo $EDITOR; or echo \"nano\")\n\n    # Create directory if it doesn't exist\n    mkdir -p \"$policy_dir\"\n\n    if test (count $argv) -gt 0\n        # Edit specific policy file\n        eval $editor \"$policy_dir/$argv[1]\"\n    else\n        # Show policy directory\n        echo \"Codex policy directory: $policy_dir\"\n        echo \"\"\n        if command -v tree &> /dev/null\n            tree \"$policy_dir\"\n        else\n            ls -la \"$policy_dir\"\n        end\n        echo \"\"\n        echo \"Usage: codex-policy <filename>  # Edit a policy file\"\n        echo \"Example: codex-policy default.codexpolicy\"\n    end\nend\n"
+    },
     "options": {}
   },
   "packages": [
     {
       "attr_path": "codex",
       "broken": false,
-      "derivation": "/nix/store/ik57mlak789v496qrzy29vqs4qsr75dc-codex-0.53.0.drv",
+      "derivation": "/nix/store/5d3qpzpdf9p4hhqk0hn6zayizg36378d-codex-0.42.0.drv",
       "description": "Lightweight coding agent that runs in your terminal",
       "install_id": "codex",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "codex-0.53.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "codex-0.42.0",
       "pname": "codex",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:35:18.401337Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T01:44:32.640698Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.53.0",
+      "version": "0.42.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/74ghykj4ldscdpvmjxcm19qcyvc1qvhz-codex-0.53.0"
+        "out": "/nix/store/67annmfwgz60y8p97ysddi9bvc7lcy7r-codex-0.42.0"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
@@ -44,27 +58,27 @@
     {
       "attr_path": "codex",
       "broken": false,
-      "derivation": "/nix/store/xf2fg9cb8j6s9w0xngvrxg80nhqbbv2j-codex-0.53.0.drv",
+      "derivation": "/nix/store/scplg2q2i052xzcvhv29ksqmhaq5gvaj-codex-0.42.0.drv",
       "description": "Lightweight coding agent that runs in your terminal",
       "install_id": "codex",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "codex-0.53.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "codex-0.42.0",
       "pname": "codex",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:28:57.714144Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:14:04.129477Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.53.0",
+      "version": "0.42.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/1bn2alh9qvvasbbipyj34ffdk1g6lvba-codex-0.53.0"
+        "out": "/nix/store/giaxvl815yjlqk4x5c216bns0hq9gsnr-codex-0.42.0"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -73,27 +87,27 @@
     {
       "attr_path": "codex",
       "broken": false,
-      "derivation": "/nix/store/lk1m8r89q4xrir3kxlxryh22jmgm36ji-codex-0.53.0.drv",
+      "derivation": "/nix/store/ig6bb5ngdd3y8idbnjnbz2l309idlsms-codex-0.42.0.drv",
       "description": "Lightweight coding agent that runs in your terminal",
       "install_id": "codex",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "codex-0.53.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "codex-0.42.0",
       "pname": "codex",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:54:57.448101Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T02:42:08.660186Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.53.0",
+      "version": "0.42.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/cnid0lqkh3wz35cywb8i8jvd187hnm0x-codex-0.53.0"
+        "out": "/nix/store/g9jivkyhfdq5vscvlfkzqd6ll84qxzsl-codex-0.42.0"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
@@ -102,27 +116,117 @@
     {
       "attr_path": "codex",
       "broken": false,
-      "derivation": "/nix/store/g52zsynj4a7zdjbqdry23imhxdbc0vdq-codex-0.53.0.drv",
+      "derivation": "/nix/store/0mmaaaa73a5zzdlbwbj8bji4cc94rg71-codex-0.42.0.drv",
       "description": "Lightweight coding agent that runs in your terminal",
       "install_id": "codex",
       "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "codex-0.53.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "name": "codex-0.42.0",
       "pname": "codex",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:20:47.025694Z",
+      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+      "rev_count": 868392,
+      "rev_date": "2025-09-28T05:12:35Z",
+      "scrape_date": "2025-09-30T03:13:48.398754Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "0.53.0",
+      "version": "0.42.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/kzkkwrh9y7bq9n38395bnc23rqsz6kpb-codex-0.53.0"
+        "out": "/nix/store/715pa7q07wkvhw7gx1gkdqilvknpnyqc-codex-0.42.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/7my3rgi90s1haw3fz762lrdyy73dx8h3-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-09T15:56:14.829797627Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/ci0csf2snc7h5g1qm03mw8ggq64img1m-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/dypvq42niihlv88bhdvznn6cy6l0y9gc-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/8im6dgscbg7hghm2anwi2la5az19p576-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-09T15:56:14.829798339Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/cnsh7kmb5bivk2qps25460kyblzh1pp8-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/x8dy1d9fzb9kzm6b2lrbij45g10p6r5v-flox-mcp-server-0.2.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/kc27v6whcgmfw54fx31j561xfd4l632f-flox-mcp-server-0.2.0.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "name": "flox-mcp-server-0.2.0",
+      "pname": "flox-mcp-server",
+      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
+      "rev_count": 28,
+      "rev_date": "2025-11-25T20:47:48Z",
+      "scrape_date": "2025-12-09T15:56:14.829798858Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/zh9gjf26d589k2fvzn0n08d3p0h8ipbz-flox-mcp-server-0.2.0-dist",
+        "out": "/nix/store/zf8m76x02gga11x1bkmvg5pb65nvayvc-flox-mcp-server-0.2.0"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
