@@ -319,11 +319,20 @@ ollama pull qwen2.5-coder:7b
 }
 ```
 
-**Recommended models:**
-- `qwen2.5-coder:7b` - Fast, 8GB VRAM
+**⚠️ IMPORTANT - Tool Support Required:**
+Nanocoder requires models that support function calling (tools). **Not all models support this feature.**
+
+**✅ Recommended tool-capable models:**
+- `qwen2.5-coder:7b` - Fast, 8GB VRAM, excellent tool support
+- `llama3.1:8b` - Reliable tool support, good performance
+- `mistral:7b` - Strong tool capabilities
 - `qwen2.5-coder:32b` - High quality, 24GB+ VRAM
 - `deepseek-coder:33b` - Strong understanding, 24GB+ VRAM
-- `codellama:34b` - Alternative option
+
+**❌ Models that do NOT work:**
+- `phi3:latest` - No tool support
+- `phi3:medium` - No tool support
+- Most base/chat models without explicit tool support
 
 ### MCP Server Integration
 
@@ -545,6 +554,30 @@ ollama list
 nanocoder
 /model
 ```
+
+### Tool Support Errors
+
+**Issue:** `does not support tools` error
+
+**Root Cause:** Model lacks function calling capabilities required by Nanocoder
+
+**Solutions:**
+```bash
+# Switch to a tool-capable model
+ollama pull llama3.1:8b
+ollama pull qwen2.5-coder:7b
+
+# Update configuration
+nanocoder
+/model llama3.1:8b
+
+# Or reconfigure completely
+rm agents.config.json
+nanocoder
+/setup-config  # Choose a tool-capable model
+```
+
+**Prevention:** Always verify tool support before selecting models. See "Recommended tool-capable models" section above.
 
 ### Custom Commands Not Working
 

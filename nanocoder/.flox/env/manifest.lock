@@ -3,13 +3,17 @@
   "manifest": {
     "version": 1,
     "install": {
+      "gum": {
+        "pkg-path": "gum",
+        "version": "^0.14.5"
+      },
       "nanocoder": {
         "pkg-path": "flox/nanocoder",
         "pkg-group": "nanocoder"
       }
     },
     "hook": {
-      "on-activate": "echo \"\"\necho \"🔬 Nanocoder - Local-First CLI Coding Agent\"\necho \"\"\necho \"A community-driven, privacy-focused coding agent for your terminal.\"\necho \"\"\necho \"First-time setup:\"\necho \"  nanocoder                   # Launch interactive session\"\necho \"  /setup-config               # Guided configuration wizard\"\necho \"\"\necho \"Usage:\"\necho \"  nanocoder                   # Start interactive coding session\"\necho \"  !command                    # Execute shell commands directly\"\necho \"\"\necho \"Slash commands (in session):\"\necho \"  /setup-config               # Configure providers and settings\"\necho \"  /provider                   # Show/switch AI providers\"\necho \"  /model                      # List/switch models\"\necho \"  /mcp                        # List MCP services\"\necho \"  /custom-commands            # Show custom commands\"\necho \"  /clear                      # Clear session history\"\necho \"  /export                     # Export conversation\"\necho \"\"\necho \"Built by the community, for the community ⚒\"\necho \"\"\n"
+      "on-activate": "# Create AGENTS.md for nanocoder initialization (idempotent)\nif [ ! -f \"$FLOX_ENV_PROJECT/AGENTS.md\" ]; then\n  cat > \"$FLOX_ENV_PROJECT/AGENTS.md\" << 'EOF'\n# Nanocoder Project\n\nThis directory is initialized for nanocoder development.\nEOF\nfi\n\necho \"\"\ngum style \\\n  --foreground 99 --border-foreground 99 --border double \\\n  --align center --width 60 --margin \"1 2\" --padding \"2 4\" \\\n  \"🔬 Nanocoder - Local-First CLI Coding Agent\n\nA community-driven, privacy-focused coding agent\nbuilt by the community, for the community ⚒\"\n\necho \"\"\necho \"Usage:\"\necho \"  nanocoder                   # Start interactive coding session\"\necho \"  !command                    # Execute shell commands directly\"\necho \"\"\necho \"Slash commands (in session):\"\necho \"  /setup-config               # Configure providers and settings\"\necho \"  /provider                   # Show/switch AI providers\"\necho \"  /model                      # List/switch models\"\necho \"  /mcp                        # List MCP services\"\necho \"  /custom-commands            # Show custom commands\"\necho \"  /clear                      # Clear session history\"\necho \"  /export                     # Export conversation\"\necho \"\"\necho \"$(gum style --foreground 208 \"⚠️  Important:\") For Ollama users, ensure you have tool-capable models:\"\necho \"  ollama pull qwen2.5-coder:7b    # Recommended (tools + coding)\"\necho \"  ollama pull llama3.1:8b         # Reliable tool support\"\necho \"  ollama pull mistral:7b          # Alternative option\"\necho \"\"\necho \"$(gum style --foreground 241 \"💡 Note:\") Models like phi3:latest do NOT support tools and won't work.\"\necho \"\"\n"
     },
     "profile": {},
     "options": {}
@@ -137,6 +141,130 @@
       },
       "system": "x86_64-linux",
       "group": "nanocoder",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/8n0labp3m7za7azv53f6yfps5ifc0pfl-gum-0.14.5.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "name": "gum-0.14.5",
+      "pname": "gum",
+      "rev": "9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "rev_count": 742084,
+      "rev_date": "2025-01-21T14:28:11Z",
+      "scrape_date": "2025-01-23T00:15:48Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.14.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/8ll1vyz1qj1n551icmnr52yblf2y57yd-gum-0.14.5"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/7rm5j6xfgb7z552cvbdaxhvjdgg12d5r-gum-0.14.5.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "name": "gum-0.14.5",
+      "pname": "gum",
+      "rev": "9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "rev_count": 742084,
+      "rev_date": "2025-01-21T14:28:11Z",
+      "scrape_date": "2025-01-23T00:15:48Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.14.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/grlkv28clq587zfv398cdga67yci0xp1-gum-0.14.5"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/vgsn25lfv75rnhfnwa04wx8xm68z80sv-gum-0.14.5.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "name": "gum-0.14.5",
+      "pname": "gum",
+      "rev": "9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "rev_count": 742084,
+      "rev_date": "2025-01-21T14:28:11Z",
+      "scrape_date": "2025-01-23T00:15:48Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.14.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/xig0syqgpam9vlam4zr5xka6sj0a2ss0-gum-0.14.5"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gum",
+      "broken": false,
+      "derivation": "/nix/store/pbahvb6vvamnr3c4jba3hf6myawcdxyp-gum-0.14.5.drv",
+      "description": "Tasty Bubble Gum for your shell",
+      "install_id": "gum",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "name": "gum-0.14.5",
+      "pname": "gum",
+      "rev": "9e4d5190a9482a1fb9d18adf0bdb83c6e506eaab",
+      "rev_count": 742084,
+      "rev_date": "2025-01-21T14:28:11Z",
+      "scrape_date": "2025-01-23T00:15:48Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.14.5",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/y5m3h1r4zsgxy95g41cif5lxnnml1pkp-gum-0.14.5"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
       "priority": 5
     }
   ]

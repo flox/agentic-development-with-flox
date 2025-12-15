@@ -46,6 +46,130 @@
   },
   "packages": [
     {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/z27ycmmsfq9ikwi0bdbpwx1yvw41ljc7-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970596127Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vch6q0nfr3ggc6vkpm12mz4qqg6r7hsi-crush-0.21.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/ga86hb99s0qjvw0d1qznd8siv4s6cky5-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970600173Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/920hl947c8imnfzqs6j7shl0cb0bpf7s-crush-0.21.0"
+      },
+      "system": "aarch64-linux",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/qpv07vc3c76q6i16hxam5xjh759rndx0-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970601021Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dl0fzlh8a9hlm13x12vbzcmkq68gbfah-crush-0.21.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "crush",
+      "priority": 5
+    },
+    {
+      "attr_path": "crush",
+      "broken": false,
+      "derivation": "/nix/store/8imf767pjgqc1mcf8z155r8bxli3r23k-crush-0.21.0.drv",
+      "description": "The glamourous AI coding agent for your favourite terminal",
+      "install_id": "crush",
+      "license": "MIT",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "name": "crush-0.21.0",
+      "pname": "crush",
+      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
+      "rev_count": 33,
+      "rev_date": "2025-12-06T03:05:15Z",
+      "scrape_date": "2025-12-06T14:59:15.970601750Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.21.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/5qkkx86h3kn44la68rj356d6ya88g9s9-crush-0.21.0"
+      },
+      "system": "x86_64-linux",
+      "group": "crush",
+      "priority": 5
+    },
+    {
       "attr_path": "curl",
       "broken": false,
       "derivation": "/nix/store/kibssl5bdrgnyibp8gmszb3lbchvgcgj-curl-8.14.1.drv",
@@ -661,130 +785,6 @@
       },
       "system": "x86_64-linux",
       "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "crush",
-      "broken": false,
-      "derivation": "/nix/store/z27ycmmsfq9ikwi0bdbpwx1yvw41ljc7-crush-0.21.0.drv",
-      "description": "The glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
-      "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970596127Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.21.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/vch6q0nfr3ggc6vkpm12mz4qqg6r7hsi-crush-0.21.0"
-      },
-      "system": "aarch64-darwin",
-      "group": "crush",
-      "priority": 5
-    },
-    {
-      "attr_path": "crush",
-      "broken": false,
-      "derivation": "/nix/store/ga86hb99s0qjvw0d1qznd8siv4s6cky5-crush-0.21.0.drv",
-      "description": "The glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
-      "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970600173Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.21.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/920hl947c8imnfzqs6j7shl0cb0bpf7s-crush-0.21.0"
-      },
-      "system": "aarch64-linux",
-      "group": "crush",
-      "priority": 5
-    },
-    {
-      "attr_path": "crush",
-      "broken": false,
-      "derivation": "/nix/store/qpv07vc3c76q6i16hxam5xjh759rndx0-crush-0.21.0.drv",
-      "description": "The glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
-      "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970601021Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.21.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/dl0fzlh8a9hlm13x12vbzcmkq68gbfah-crush-0.21.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "crush",
-      "priority": 5
-    },
-    {
-      "attr_path": "crush",
-      "broken": false,
-      "derivation": "/nix/store/8imf767pjgqc1mcf8z155r8bxli3r23k-crush-0.21.0.drv",
-      "description": "The glamourous AI coding agent for your favourite terminal",
-      "install_id": "crush",
-      "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
-      "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970601750Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.21.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/5qkkx86h3kn44la68rj356d6ya88g9s9-crush-0.21.0"
-      },
-      "system": "x86_64-linux",
-      "group": "crush",
       "priority": 5
     }
   ]

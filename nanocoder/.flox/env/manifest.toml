@@ -17,8 +17,8 @@ version = 1
 [install]
 nanocoder.pkg-path = "flox/nanocoder"
 nanocoder.pkg-group = "nanocoder"
-# gum.pkg-path = "gum"
-# gum.version = "^0.14.5"
+gum.pkg-path = "gum"
+gum.version = "^0.14.5"
 
 
 ## Environment Variables ---------------------------------------------
@@ -31,14 +31,24 @@ nanocoder.pkg-group = "nanocoder"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# Create AGENTS.md for nanocoder initialization (idempotent)
+if [ ! -f "$FLOX_ENV_PROJECT/AGENTS.md" ]; then
+  cat > "$FLOX_ENV_PROJECT/AGENTS.md" << 'EOF'
+# Nanocoder Project
+
+This directory is initialized for nanocoder development.
+EOF
+fi
+
 echo ""
-echo "🔬 Nanocoder - Local-First CLI Coding Agent"
-echo ""
-echo "A community-driven, privacy-focused coding agent for your terminal."
-echo ""
-echo "First-time setup:"
-echo "  nanocoder                   # Launch interactive session"
-echo "  /setup-config               # Guided configuration wizard"
+gum style \
+  --foreground 99 --border-foreground 99 --border double \
+  --align center --width 60 --margin "1 2" --padding "2 4" \
+  "🔬 Nanocoder - Local-First CLI Coding Agent
+
+A community-driven, privacy-focused coding agent
+built by the community, for the community ⚒"
+
 echo ""
 echo "Usage:"
 echo "  nanocoder                   # Start interactive coding session"
@@ -53,7 +63,12 @@ echo "  /custom-commands            # Show custom commands"
 echo "  /clear                      # Clear session history"
 echo "  /export                     # Export conversation"
 echo ""
-echo "Built by the community, for the community ⚒"
+echo "$(gum style --foreground 208 "⚠️  Important:") For Ollama users, ensure you have tool-capable models:"
+echo "  ollama pull qwen2.5-coder:7b    # Recommended (tools + coding)"
+echo "  ollama pull llama3.1:8b         # Reliable tool support"
+echo "  ollama pull mistral:7b          # Alternative option"
+echo ""
+echo "$(gum style --foreground 241 "💡 Note:") Models like phi3:latest do NOT support tools and won't work."
 echo ""
 '''
 
