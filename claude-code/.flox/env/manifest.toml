@@ -18,11 +18,6 @@ version = 1
 claude-code.pkg-path = "claude-code"
 openssl.pkg-path = "openssl"
 flac.pkg-path = "flac"
-libvorbis.pkg-path = "libvorbis"
-libogg.pkg-path = "libogg"
-libopus.pkg-path = "libopus"
-lame.pkg-path = "lame"
-opusfile.pkg-path = "opusfile"
 
 # Flox MCP Server - enables Claude Code to manage Flox environments
 flox-mcp-server.pkg-path = "flox/flox-mcp-server"

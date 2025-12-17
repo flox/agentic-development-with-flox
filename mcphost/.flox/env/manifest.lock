@@ -1,0 +1,145 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "mcphost": {
+        "pkg-path": "mcphost"
+      }
+    },
+    "vars": {
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY:-}",
+      "GITHUB_TOKEN": "${GITHUB_TOKEN:-}",
+      "GOOGLE_API_KEY": "${GOOGLE_API_KEY:-}",
+      "MCPHOST_CONFIG": "$HOME/.mcphost.yml",
+      "OPENAI_API_KEY": "${OPENAI_API_KEY:-}"
+    },
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🌐 MCPHost - LLM Host for Model Context Protocol\"\necho \"\"\necho \"Enables LLMs to interact with external tools through MCP servers.\"\necho \"Supports Claude, OpenAI, Google Gemini, and Ollama models.\"\necho \"\"\necho \"Quick start:\"\necho \"  mcphost-init                # Create example config (first time)\"\necho \"  mcphost                     # Interactive mode\"\necho \"  mcphost -p \\\"prompt\\\"         # Non-interactive mode\"\necho \"  mcphost script file.sh      # Run automation script\"\necho \"  mcphost --help              # Show all options\"\necho \"\"\necho \"Configuration:\"\necho \"  Config file: ~/.mcphost.yml  # Define MCP servers here\"\necho \"\"\necho \"Note: MCPHost is NOT a service - it's an interactive CLI tool.\"\necho \"      It cannot be run as a background service.\"\necho \"\"\necho \"Documentation: https://github.com/mark3labs/mcphost\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Create example MCPHost configuration\nmcphost-init() {\n    local config_file=\"$HOME/.mcphost.yml\"\n\n    if [[ -f \"$config_file\" ]]; then\n        echo \"Config already exists at: $config_file\"\n        return 0\n    fi\n\n    cat > \"$config_file\" << 'EOF'\n# MCPHost Configuration\n# See: https://github.com/mark3labs/mcphost\n\n# MCP Servers\nmcpServers:\n  # Builtin filesystem server\n  filesystem:\n    type: \"builtin\"\n    name: \"fs\"\n    options:\n      # Note: Edit these paths to match your needs\n      # MCPHost supports ${env://HOME} syntax for environment variables\n      allowed_directories: [\"/tmp\", \"${env://HOME}/documents\"]\n\n  # Builtin bash server for command execution\n  bash:\n    type: \"builtin\"\n    name: \"bash\"\n\n  # Builtin todo manager\n  todo:\n    type: \"builtin\"\n    name: \"todo\"\n\n  # Builtin HTTP fetcher\n  http:\n    type: \"builtin\"\n    name: \"http\"\n\n# Model configuration (default)\nmodel: \"anthropic:claude-3-5-sonnet-latest\"\n\n# Generation parameters\nmax-tokens: 4096\ntemperature: 0.7\nEOF\n\n    echo \"✓ Created example config at: $config_file\"\n    echo \"  Edit it to add more MCP servers or change the model.\"\n}\n\nexport -f mcphost-init\n",
+      "zsh": "# Helper: Create example MCPHost configuration\nmcphost-init() {\n    local config_file=\"$HOME/.mcphost.yml\"\n\n    if [[ -f \"$config_file\" ]]; then\n        echo \"Config already exists at: $config_file\"\n        return 0\n    fi\n\n    cat > \"$config_file\" << 'EOF'\n# MCPHost Configuration\n# See: https://github.com/mark3labs/mcphost\n\n# MCP Servers\nmcpServers:\n  # Builtin filesystem server\n  filesystem:\n    type: \"builtin\"\n    name: \"fs\"\n    options:\n      # Note: Edit these paths to match your needs\n      # MCPHost supports ${env://HOME} syntax for environment variables\n      allowed_directories: [\"/tmp\", \"${env://HOME}/documents\"]\n\n  # Builtin bash server for command execution\n  bash:\n    type: \"builtin\"\n    name: \"bash\"\n\n  # Builtin todo manager\n  todo:\n    type: \"builtin\"\n    name: \"todo\"\n\n  # Builtin HTTP fetcher\n  http:\n    type: \"builtin\"\n    name: \"http\"\n\n# Model configuration (default)\nmodel: \"anthropic:claude-3-5-sonnet-latest\"\n\n# Generation parameters\nmax-tokens: 4096\ntemperature: 0.7\nEOF\n\n    echo \"✓ Created example config at: $config_file\"\n    echo \"  Edit it to add more MCP servers or change the model.\"\n}\n",
+      "fish": "# Helper: Create example MCPHost configuration\nfunction mcphost-init\n    set config_file \"$HOME/.mcphost.yml\"\n\n    if test -f \"$config_file\"\n        echo \"Config already exists at: $config_file\"\n        return 0\n    end\n\n    cat > \"$config_file\" << 'EOF'\n# MCPHost Configuration\n# See: https://github.com/mark3labs/mcphost\n\n# MCP Servers\nmcpServers:\n  # Builtin filesystem server\n  filesystem:\n    type: \"builtin\"\n    name: \"fs\"\n    options:\n      # Note: Edit these paths to match your needs\n      # MCPHost supports ${env://HOME} syntax for environment variables\n      allowed_directories: [\"/tmp\", \"${env://HOME}/documents\"]\n\n  # Builtin bash server for command execution\n  bash:\n    type: \"builtin\"\n    name: \"bash\"\n\n  # Builtin todo manager\n  todo:\n    type: \"builtin\"\n    name: \"todo\"\n\n  # Builtin HTTP fetcher\n  http:\n    type: \"builtin\"\n    name: \"http\"\n\n# Model configuration (default)\nmodel: \"anthropic:claude-3-5-sonnet-latest\"\n\n# Generation parameters\nmax-tokens: 4096\ntemperature: 0.7\nEOF\n\n    echo \"✓ Created example config at: $config_file\"\n    echo \"  Edit it to add more MCP servers or change the model.\"\nend\n"
+    },
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "mcphost",
+      "broken": false,
+      "derivation": "/nix/store/jbld16vq79776p7rj88nhb3440xqg0gb-mcphost-0.32.0.drv",
+      "description": "CLI host application that enables Large Language Models (LLMs) to interact with external tools through the Model Context Protocol (MCP)",
+      "install_id": "mcphost",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "mcphost-0.32.0",
+      "pname": "mcphost",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:01:51.210986Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.32.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/08z0ibysw9hw85lb7yd2xjq874cds2ca-mcphost-0.32.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "mcphost",
+      "broken": false,
+      "derivation": "/nix/store/xvhbra5wwfzxif9p1ynaki34yk5587kc-mcphost-0.32.0.drv",
+      "description": "CLI host application that enables Large Language Models (LLMs) to interact with external tools through the Model Context Protocol (MCP)",
+      "install_id": "mcphost",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "mcphost-0.32.0",
+      "pname": "mcphost",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:18:07.746914Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.32.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/hy0xzmdl612lls070sfr5fcyyw17lzdf-mcphost-0.32.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "mcphost",
+      "broken": false,
+      "derivation": "/nix/store/jfz6y1fnhpcifs5045dhjbfd9kl0i972-mcphost-0.32.0.drv",
+      "description": "CLI host application that enables Large Language Models (LLMs) to interact with external tools through the Model Context Protocol (MCP)",
+      "install_id": "mcphost",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "mcphost-0.32.0",
+      "pname": "mcphost",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:34:08.415986Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.32.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vi5z69fljjjc32s145xi8swchrx2sjbb-mcphost-0.32.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "mcphost",
+      "broken": false,
+      "derivation": "/nix/store/996jr43ajl7gyw1h9bxy4h20lkq39x18-mcphost-0.32.0.drv",
+      "description": "CLI host application that enables Large Language Models (LLMs) to interact with external tools through the Model Context Protocol (MCP)",
+      "install_id": "mcphost",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "mcphost-0.32.0",
+      "pname": "mcphost",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:50:31.877418Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.32.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/j1d52wkdcj7lpp7vv5nq7qqnhvb1fbdr-mcphost-0.32.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

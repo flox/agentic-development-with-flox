@@ -1,0 +1,263 @@
+## Flox Environment Manifest -----------------------------------------
+##
+##   _Everything_ you need to know about the _manifest_ is here:
+##
+##   https://flox.dev/docs/reference/command-reference/manifest.toml/
+##
+## -------------------------------------------------------------------
+# Flox manifest version managed by Flox CLI
+version = 1
+
+
+## Install Packages --------------------------------------------------
+##  $ flox install gum  <- puts a package in [install] section below
+##  $ flox search gum   <- search for a package
+##  $ flox show gum     <- show all versions of a package
+## -------------------------------------------------------------------
+[install]
+mcphost.pkg-path = "mcphost"
+# gum.pkg-path = "gum"
+# gum.version = "^0.14.5"
+
+
+## Environment Variables ---------------------------------------------
+##  ... available for use in the activated environment
+##      as well as [hook], [profile] scripts and [services] below.
+## -------------------------------------------------------------------
+[vars]
+# Configuration location
+MCPHOST_CONFIG = "$HOME/.mcphost.yml"
+
+# API Keys pass-through for MCP servers
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY:-}"
+OPENAI_API_KEY = "${OPENAI_API_KEY:-}"
+GOOGLE_API_KEY = "${GOOGLE_API_KEY:-}"
+GITHUB_TOKEN = "${GITHUB_TOKEN:-}"
+
+
+## Activation Hook ---------------------------------------------------
+##  ... run by _bash_ shell when you run 'flox activate'.
+## -------------------------------------------------------------------
+[hook]
+on-activate = '''
+echo ""
+echo "🌐 MCPHost - LLM Host for Model Context Protocol"
+echo ""
+echo "Enables LLMs to interact with external tools through MCP servers."
+echo "Supports Claude, OpenAI, Google Gemini, and Ollama models."
+echo ""
+echo "Quick start:"
+echo "  mcphost-init                # Create example config (first time)"
+echo "  mcphost                     # Interactive mode"
+echo "  mcphost -p \"prompt\"         # Non-interactive mode"
+echo "  mcphost script file.sh      # Run automation script"
+echo "  mcphost --help              # Show all options"
+echo ""
+echo "Configuration:"
+echo "  Config file: ~/.mcphost.yml  # Define MCP servers here"
+echo ""
+echo "Note: MCPHost is NOT a service - it's an interactive CLI tool."
+echo "      It cannot be run as a background service."
+echo ""
+echo "Documentation: https://github.com/mark3labs/mcphost"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+## ... sourced by _your shell_ when you run 'flox activate'.
+## -------------------------------------------------------------------
+[profile]
+bash = '''
+# Helper: Create example MCPHost configuration
+mcphost-init() {
+    local config_file="$HOME/.mcphost.yml"
+
+    if [[ -f "$config_file" ]]; then
+        echo "Config already exists at: $config_file"
+        return 0
+    fi
+
+    cat > "$config_file" << 'EOF'
+# MCPHost Configuration
+# See: https://github.com/mark3labs/mcphost
+
+# MCP Servers
+mcpServers:
+  # Builtin filesystem server
+  filesystem:
+    type: "builtin"
+    name: "fs"
+    options:
+      # Note: Edit these paths to match your needs
+      # MCPHost supports ${env://HOME} syntax for environment variables
+      allowed_directories: ["/tmp", "${env://HOME}/documents"]
+
+  # Builtin bash server for command execution
+  bash:
+    type: "builtin"
+    name: "bash"
+
+  # Builtin todo manager
+  todo:
+    type: "builtin"
+    name: "todo"
+
+  # Builtin HTTP fetcher
+  http:
+    type: "builtin"
+    name: "http"
+
+# Model configuration (default)
+model: "anthropic:claude-3-5-sonnet-latest"
+
+# Generation parameters
+max-tokens: 4096
+temperature: 0.7
+EOF
+
+    echo "✓ Created example config at: $config_file"
+    echo "  Edit it to add more MCP servers or change the model."
+}
+
+export -f mcphost-init
+'''
+
+zsh = '''
+# Helper: Create example MCPHost configuration
+mcphost-init() {
+    local config_file="$HOME/.mcphost.yml"
+
+    if [[ -f "$config_file" ]]; then
+        echo "Config already exists at: $config_file"
+        return 0
+    fi
+
+    cat > "$config_file" << 'EOF'
+# MCPHost Configuration
+# See: https://github.com/mark3labs/mcphost
+
+# MCP Servers
+mcpServers:
+  # Builtin filesystem server
+  filesystem:
+    type: "builtin"
+    name: "fs"
+    options:
+      # Note: Edit these paths to match your needs
+      # MCPHost supports ${env://HOME} syntax for environment variables
+      allowed_directories: ["/tmp", "${env://HOME}/documents"]
+
+  # Builtin bash server for command execution
+  bash:
+    type: "builtin"
+    name: "bash"
+
+  # Builtin todo manager
+  todo:
+    type: "builtin"
+    name: "todo"
+
+  # Builtin HTTP fetcher
+  http:
+    type: "builtin"
+    name: "http"
+
+# Model configuration (default)
+model: "anthropic:claude-3-5-sonnet-latest"
+
+# Generation parameters
+max-tokens: 4096
+temperature: 0.7
+EOF
+
+    echo "✓ Created example config at: $config_file"
+    echo "  Edit it to add more MCP servers or change the model."
+}
+'''
+
+fish = '''
+# Helper: Create example MCPHost configuration
+function mcphost-init
+    set config_file "$HOME/.mcphost.yml"
+
+    if test -f "$config_file"
+        echo "Config already exists at: $config_file"
+        return 0
+    end
+
+    cat > "$config_file" << 'EOF'
+# MCPHost Configuration
+# See: https://github.com/mark3labs/mcphost
+
+# MCP Servers
+mcpServers:
+  # Builtin filesystem server
+  filesystem:
+    type: "builtin"
+    name: "fs"
+    options:
+      # Note: Edit these paths to match your needs
+      # MCPHost supports ${env://HOME} syntax for environment variables
+      allowed_directories: ["/tmp", "${env://HOME}/documents"]
+
+  # Builtin bash server for command execution
+  bash:
+    type: "builtin"
+    name: "bash"
+
+  # Builtin todo manager
+  todo:
+    type: "builtin"
+    name: "todo"
+
+  # Builtin HTTP fetcher
+  http:
+    type: "builtin"
+    name: "http"
+
+# Model configuration (default)
+model: "anthropic:claude-3-5-sonnet-latest"
+
+# Generation parameters
+max-tokens: 4096
+temperature: 0.7
+EOF
+
+    echo "✓ Created example config at: $config_file"
+    echo "  Edit it to add more MCP servers or change the model."
+end
+'''
+
+
+## Services ---------------------------------------------------------
+##  $ flox services start             <- Starts all services
+##  $ flox services status            <- Status of running services
+##  $ flox activate --start-services  <- Activates & starts all
+## ------------------------------------------------------------------
+[services]
+# MCPHost is an interactive CLI tool, not a service.
+# It's designed for interactive conversations or single prompts.
+# myservice.command = "python3 -m http.server"
+
+
+## Include ----------------------------------------------------------
+## ... environments to create a composed environment
+## ------------------------------------------------------------------
+[include]
+# environments = [
+#     { dir = "../common" }
+# ]
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

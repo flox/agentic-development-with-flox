@@ -48,29 +48,29 @@
     {
       "attr_path": "crush",
       "broken": false,
-      "derivation": "/nix/store/z27ycmmsfq9ikwi0bdbpwx1yvw41ljc7-crush-0.21.0.drv",
+      "derivation": "/nix/store/0j2s2w90qdx48lbpls8scr0bl6dal58n-crush-0.24.0.drv",
       "description": "The glamourous AI coding agent for your favourite terminal",
       "install_id": "crush",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=9e9d0a68d87b0d466fb0204ed2f7241d0bb75fe0",
+      "name": "crush-0.24.0",
       "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970596127Z",
+      "rev": "9e9d0a68d87b0d466fb0204ed2f7241d0bb75fe0",
+      "rev_count": 43,
+      "rev_date": "2025-12-16T00:26:46Z",
+      "scrape_date": "2025-12-15T19:37:44.491401499Z",
       "stabilities": [
         "stable",
         "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "0.21.0",
+      "version": "0.24.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/vch6q0nfr3ggc6vkpm12mz4qqg6r7hsi-crush-0.21.0"
+        "out": "/nix/store/rh2pjhhzv7md58xiv7bcbwy54pi1z4q5-crush-0.24.0"
       },
       "system": "aarch64-darwin",
       "group": "crush",
@@ -89,7 +89,7 @@
       "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
       "rev_count": 33,
       "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970600173Z",
+      "scrape_date": "2025-12-15T19:37:44.491404333Z",
       "stabilities": [
         "stable",
         "staging",
@@ -110,29 +110,29 @@
     {
       "attr_path": "crush",
       "broken": false,
-      "derivation": "/nix/store/qpv07vc3c76q6i16hxam5xjh759rndx0-crush-0.21.0.drv",
+      "derivation": "/nix/store/j9gz42nr6cwnflifs5kkpcrn8v7ajd0j-crush-0.24.0.drv",
       "description": "The glamourous AI coding agent for your favourite terminal",
       "install_id": "crush",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "name": "crush-0.21.0",
+      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=039b4bcefff0ef78bff1a4151373a13c08ca3cc9",
+      "name": "crush-0.24.0",
       "pname": "crush",
-      "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
-      "rev_count": 33,
-      "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970601021Z",
+      "rev": "039b4bcefff0ef78bff1a4151373a13c08ca3cc9",
+      "rev_count": 42,
+      "rev_date": "2025-12-15T23:13:58Z",
+      "scrape_date": "2025-12-15T19:37:44.491404754Z",
       "stabilities": [
         "stable",
         "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "0.21.0",
+      "version": "0.24.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/dl0fzlh8a9hlm13x12vbzcmkq68gbfah-crush-0.21.0"
+        "out": "/nix/store/an2jaxng5wkrvmvb87d3jjl1rk3ba7qs-crush-0.24.0"
       },
       "system": "x86_64-darwin",
       "group": "crush",
@@ -151,7 +151,7 @@
       "rev": "1c13a7bbd48edb8625ec57c7a9ffa11e10b1131a",
       "rev_count": 33,
       "rev_date": "2025-12-06T03:05:15Z",
-      "scrape_date": "2025-12-06T14:59:15.970601750Z",
+      "scrape_date": "2025-12-15T19:37:44.491405274Z",
       "stabilities": [
         "stable",
         "staging",
@@ -320,7 +320,7 @@
       "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
       "rev_count": 28,
       "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T18:02:23.888976441Z",
+      "scrape_date": "2025-12-15T19:37:44.491431293Z",
       "stabilities": [
         "unstable"
       ],
@@ -350,7 +350,7 @@
       "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
       "rev_count": 28,
       "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T18:02:23.888977948Z",
+      "scrape_date": "2025-12-15T19:37:44.491432405Z",
       "stabilities": [
         "unstable"
       ],
@@ -380,7 +380,7 @@
       "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
       "rev_count": 28,
       "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T18:02:23.888978613Z",
+      "scrape_date": "2025-12-15T19:37:44.491433036Z",
       "stabilities": [
         "unstable"
       ],

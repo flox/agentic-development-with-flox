@@ -1,0 +1,160 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "jq": {
+        "pkg-path": "jq"
+      },
+      "vllm": {
+        "pkg-path": "flox-cuda/python3Packages.vllm",
+        "pkg-group": "vllm",
+        "systems": [
+          "x86_64-linux"
+        ]
+      }
+    },
+    "vars": {
+      "HF_TOKEN": "${HF_TOKEN:-}",
+      "VLLM_API_KEY": "${VLLM_API_KEY:-}",
+      "VLLM_CONFIG_DIR": "$HOME/.config/vllm",
+      "VLLM_GPU_MEMORY_UTILIZATION": "${VLLM_GPU_MEMORY_UTILIZATION:-0.9}",
+      "VLLM_HOST": "${VLLM_HOST:-0.0.0.0}",
+      "VLLM_LOG_DIR": "$FLOX_ENV_CACHE/logs",
+      "VLLM_MAX_MODEL_LEN": "${VLLM_MAX_MODEL_LEN:-2048}",
+      "VLLM_MODEL": "${VLLM_MODEL:-TinyLlama/TinyLlama-1.1B-Chat-v1.0}",
+      "VLLM_MODELS_DIR": "${VLLM_MODELS_DIR:-$HOME/.cache/vllm/models}",
+      "VLLM_PORT": "${VLLM_PORT:-8000}",
+      "VLLM_SERVED_MODEL_NAME": "${VLLM_SERVED_MODEL_NAME:-}"
+    },
+    "hook": {
+      "on-activate": "# Create required directories\nmkdir -p \"$VLLM_CONFIG_DIR\"\nmkdir -p \"$VLLM_MODELS_DIR\"\nmkdir -p \"$VLLM_LOG_DIR\"\n\necho \"\"\necho \"🚀 vLLM - High-Performance LLM Inference Server\"\necho \"\"\necho \"Fast, memory-efficient serving of large language models with:\"\necho \"  • PagedAttention for 24x higher throughput\"\necho \"  • Continuous batching for optimal GPU utilization\"\necho \"  • OpenAI-compatible API server\"\necho \"  • Support for popular models (Llama, Mistral, Qwen, etc.)\"\necho \"\"\n\n# Check for GPU\nif ! command -v nvidia-smi &> /dev/null; then\n  echo \"⚠️  WARNING: nvidia-smi not found. vLLM requires NVIDIA GPU with CUDA.\"\n  echo \"\"\nelif ! nvidia-smi &> /dev/null; then\n  echo \"⚠️  WARNING: Cannot access GPU. Check NVIDIA drivers.\"\n  echo \"\"\nelse\n  echo \"✓ GPU detected: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)\"\n  echo \"\"\nfi\n\n# Check for model configuration\nif [ \"$VLLM_MODEL\" = \"TinyLlama/TinyLlama-1.1B-Chat-v1.0\" ]; then\n  echo \"📦 Default Model Configuration:\"\n  echo \"  Using: TinyLlama-1.1B (lightweight test model)\"\n  echo \"\"\n  echo \"⚠️  IMPORTANT: TinyLlama is a small model for testing/development.\"\n  echo \"  For production use, set your own model:\"\n  echo \"\"\n  echo \"  export VLLM_MODEL='mistralai/Mistral-7B-Instruct-v0.2'\"\n  echo \"  flox activate -s\"\n  echo \"\"\n  echo \"  📚 Recommended production models by GPU size:\"\n  echo \"    • 8GB VRAM:  microsoft/Phi-3-mini-4k-instruct\"\n  echo \"    • 16GB VRAM: mistralai/Mistral-7B-Instruct-v0.2\"\n  echo \"    • 24GB VRAM: meta-llama/Llama-2-13b-chat-hf\"\n  echo \"    • 40GB+ VRAM: mistralai/Mixtral-8x7B-Instruct-v0.1\"\n  echo \"\"\n  echo \"  Note: Some models (Llama, Gemma) require HF token:\"\n  echo \"    export HF_TOKEN='hf_your_token_here'\"\n  echo \"\"\nelse\n  echo \"✓ Custom model configured: $VLLM_MODEL\"\n  echo \"\"\nfi\n\necho \"Quick start:\"\necho \"  vllm-status              # Check server status\"\necho \"  vllm-test                # Test API endpoint\"\necho \"  vllm-models              # List available models\"\necho \"  vllm-download <model>    # Pre-download a model\"\necho \"\"\necho \"Service management:\"\necho \"  flox activate -s         # Start vLLM server\"\necho \"  flox services status     # Check service status\"\necho \"  flox services logs vllm  # View server logs\"\necho \"  flox services restart vllm # Restart server\"\necho \"\"\necho \"Configuration:\"\necho \"  Host: $VLLM_HOST:$VLLM_PORT\"\necho \"  Models: $VLLM_MODELS_DIR\"\necho \"  GPU Memory: ${VLLM_GPU_MEMORY_UTILIZATION} (90% default)\"\necho \"\"\necho \"Documentation: https://docs.vllm.ai/\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Check vLLM server status\nvllm-status() {\n    echo \"vLLM Server Status\"\n    echo \"-----------------\"\n\n    # Check if service is running via Flox\n    if flox services status 2>/dev/null | grep -q \"vllm.*running\"; then\n        echo \"✓ vLLM service is running (Flox-managed)\"\n    elif pgrep -f \"vllm.entrypoints.openai.api_server\" > /dev/null; then\n        echo \"✓ vLLM is running (standalone)\"\n    else\n        echo \"✗ vLLM service not running\"\n        echo \"  Start with: flox activate -s\"\n    fi\n\n    echo \"\"\n\n    # Check if server is responding\n    if curl -s \"http://$VLLM_HOST:$VLLM_PORT/health\" > /dev/null 2>&1; then\n        echo \"✓ Server responding at http://$VLLM_HOST:$VLLM_PORT\"\n\n        # Get model info if available\n        local models=$(curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)\n        if [ -n \"$models\" ]; then\n            echo \"✓ Loaded models:\"\n            echo \"$models\" | sed 's/^/    - /'\n        fi\n    else\n        echo \"✗ Server not responding at http://$VLLM_HOST:$VLLM_PORT\"\n    fi\n}\n\n# Helper: Test vLLM API endpoint\nvllm-test() {\n    local prompt=\"${1:-Hello, how are you?}\"\n    local model=\"${2:-$VLLM_SERVED_MODEL_NAME}\"\n\n    if [ -z \"$model\" ]; then\n        model=$(curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[0].id' 2>/dev/null)\n    fi\n\n    if [ -z \"$model\" ]; then\n        echo \"Error: No model loaded. Start server with VLLM_MODEL set.\"\n        return 1\n    fi\n\n    echo \"Testing vLLM API...\"\n    echo \"Model: $model\"\n    echo \"Prompt: $prompt\"\n    echo \"\"\n\n    local response=$(curl -s -X POST \"http://$VLLM_HOST:$VLLM_PORT/v1/completions\" \\\n        -H \"Content-Type: application/json\" \\\n        -d \"{\n            \\\"model\\\": \\\"$model\\\",\n            \\\"prompt\\\": \\\"$prompt\\\",\n            \\\"max_tokens\\\": 100,\n            \\\"temperature\\\": 0.7\n        }\" 2>/dev/null)\n\n    if [ -n \"$response\" ]; then\n        echo \"Response:\"\n        echo \"$response\" | jq -r '.choices[0].text' 2>/dev/null || echo \"$response\"\n    else\n        echo \"Error: No response from server\"\n        return 1\n    fi\n}\n\n# Helper: List available models\nvllm-models() {\n    echo \"Available models at http://$VLLM_HOST:$VLLM_PORT:\"\n    curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[] | \"  - \\(.id) (owned by: \\(.owned_by))\"' 2>/dev/null || echo \"  Server not running or no models loaded\"\n}\n\n# Helper: Pre-download a model from Hugging Face\nvllm-download() {\n    local model=\"${1}\"\n\n    if [ -z \"$model\" ]; then\n        echo \"Usage: vllm-download <model-name>\"\n        echo \"\"\n        echo \"Examples:\"\n        echo \"  vllm-download mistralai/Mistral-7B-Instruct-v0.2\"\n        echo \"  vllm-download meta-llama/Llama-2-7b-chat-hf\"\n        echo \"  vllm-download Qwen/Qwen2-7B-Instruct\"\n        return 1\n    fi\n\n    echo \"Pre-downloading model: $model\"\n    echo \"To cache directory: $VLLM_MODELS_DIR\"\n    echo \"\"\n\n    if [ -n \"$HF_TOKEN\" ]; then\n        echo \"Using Hugging Face token for authentication\"\n    fi\n\n    # Use vLLM's download utility if available\n    if command -v vllm &> /dev/null; then\n        python -c \"from vllm import LLM; LLM(model='$model', download_dir='$VLLM_MODELS_DIR', load_format='dummy')\" 2>&1 | grep -v \"^INFO\"\n        echo \"✓ Model downloaded successfully\"\n    else\n        echo \"Downloading with huggingface-cli...\"\n        huggingface-cli download \"$model\" --cache-dir \"$VLLM_MODELS_DIR\"\n    fi\n}\n\nexport -f vllm-status vllm-test vllm-models vllm-download\n",
+      "zsh": "# Helper: Check vLLM server status\nvllm-status() {\n    echo \"vLLM Server Status\"\n    echo \"-----------------\"\n\n    # Check if service is running via Flox\n    if flox services status 2>/dev/null | grep -q \"vllm.*running\"; then\n        echo \"✓ vLLM service is running (Flox-managed)\"\n    elif pgrep -f \"vllm.entrypoints.openai.api_server\" > /dev/null; then\n        echo \"✓ vLLM is running (standalone)\"\n    else\n        echo \"✗ vLLM service not running\"\n        echo \"  Start with: flox activate -s\"\n    fi\n\n    echo \"\"\n\n    # Check if server is responding\n    if curl -s \"http://$VLLM_HOST:$VLLM_PORT/health\" > /dev/null 2>&1; then\n        echo \"✓ Server responding at http://$VLLM_HOST:$VLLM_PORT\"\n\n        # Get model info if available\n        local models=$(curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)\n        if [ -n \"$models\" ]; then\n            echo \"✓ Loaded models:\"\n            echo \"$models\" | sed 's/^/    - /'\n        fi\n    else\n        echo \"✗ Server not responding at http://$VLLM_HOST:$VLLM_PORT\"\n    fi\n}\n\n# Helper: Test vLLM API endpoint\nvllm-test() {\n    local prompt=\"${1:-Hello, how are you?}\"\n    local model=\"${2:-$VLLM_SERVED_MODEL_NAME}\"\n\n    if [ -z \"$model\" ]; then\n        model=$(curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[0].id' 2>/dev/null)\n    fi\n\n    if [ -z \"$model\" ]; then\n        echo \"Error: No model loaded. Start server with VLLM_MODEL set.\"\n        return 1\n    fi\n\n    echo \"Testing vLLM API...\"\n    echo \"Model: $model\"\n    echo \"Prompt: $prompt\"\n    echo \"\"\n\n    local response=$(curl -s -X POST \"http://$VLLM_HOST:$VLLM_PORT/v1/completions\" \\\n        -H \"Content-Type: application/json\" \\\n        -d \"{\n            \\\"model\\\": \\\"$model\\\",\n            \\\"prompt\\\": \\\"$prompt\\\",\n            \\\"max_tokens\\\": 100,\n            \\\"temperature\\\": 0.7\n        }\" 2>/dev/null)\n\n    if [ -n \"$response\" ]; then\n        echo \"Response:\"\n        echo \"$response\" | jq -r '.choices[0].text' 2>/dev/null || echo \"$response\"\n    else\n        echo \"Error: No response from server\"\n        return 1\n    fi\n}\n\n# Helper: List available models\nvllm-models() {\n    echo \"Available models at http://$VLLM_HOST:$VLLM_PORT:\"\n    curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[] | \"  - \\(.id) (owned by: \\(.owned_by))\"' 2>/dev/null || echo \"  Server not running or no models loaded\"\n}\n\n# Helper: Pre-download a model from Hugging Face\nvllm-download() {\n    local model=\"${1}\"\n\n    if [ -z \"$model\" ]; then\n        echo \"Usage: vllm-download <model-name>\"\n        echo \"\"\n        echo \"Examples:\"\n        echo \"  vllm-download mistralai/Mistral-7B-Instruct-v0.2\"\n        echo \"  vllm-download meta-llama/Llama-2-7b-chat-hf\"\n        echo \"  vllm-download Qwen/Qwen2-7B-Instruct\"\n        return 1\n    fi\n\n    echo \"Pre-downloading model: $model\"\n    echo \"To cache directory: $VLLM_MODELS_DIR\"\n    echo \"\"\n\n    if [ -n \"$HF_TOKEN\" ]; then\n        echo \"Using Hugging Face token for authentication\"\n    fi\n\n    # Use vLLM's download utility if available\n    if command -v vllm &> /dev/null; then\n        python -c \"from vllm import LLM; LLM(model='$model', download_dir='$VLLM_MODELS_DIR', load_format='dummy')\" 2>&1 | grep -v \"^INFO\"\n        echo \"✓ Model downloaded successfully\"\n    else\n        echo \"Downloading with huggingface-cli...\"\n        huggingface-cli download \"$model\" --cache-dir \"$VLLM_MODELS_DIR\"\n    fi\n}\n",
+      "fish": "# Helper: Check vLLM server status\nfunction vllm-status\n    echo \"vLLM Server Status\"\n    echo \"-----------------\"\n\n    # Check if service is running via Flox\n    if flox services status 2>/dev/null | grep -q \"vllm.*running\"\n        echo \"✓ vLLM service is running (Flox-managed)\"\n    else if pgrep -f \"vllm.entrypoints.openai.api_server\" > /dev/null\n        echo \"✓ vLLM is running (standalone)\"\n    else\n        echo \"✗ vLLM service not running\"\n        echo \"  Start with: flox activate -s\"\n    end\n\n    echo \"\"\n\n    # Check if server is responding\n    if curl -s \"http://$VLLM_HOST:$VLLM_PORT/health\" > /dev/null 2>&1\n        echo \"✓ Server responding at http://$VLLM_HOST:$VLLM_PORT\"\n\n        # Get model info if available\n        set models (curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)\n        if test -n \"$models\"\n            echo \"✓ Loaded models:\"\n            echo \"$models\" | sed 's/^/    - /'\n        end\n    else\n        echo \"✗ Server not responding at http://$VLLM_HOST:$VLLM_PORT\"\n    end\nend\n\n# Helper: Test vLLM API endpoint\nfunction vllm-test\n    set prompt (test -n \"$argv[1]\"; and echo \"$argv[1]\"; or echo \"Hello, how are you?\")\n    set model (test -n \"$argv[2]\"; and echo \"$argv[2]\"; or echo \"$VLLM_SERVED_MODEL_NAME\")\n\n    if test -z \"$model\"\n        set model (curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[0].id' 2>/dev/null)\n    end\n\n    if test -z \"$model\"\n        echo \"Error: No model loaded. Start server with VLLM_MODEL set.\"\n        return 1\n    end\n\n    echo \"Testing vLLM API...\"\n    echo \"Model: $model\"\n    echo \"Prompt: $prompt\"\n    echo \"\"\n\n    set response (curl -s -X POST \"http://$VLLM_HOST:$VLLM_PORT/v1/completions\" \\\n        -H \"Content-Type: application/json\" \\\n        -d \"{\n            \\\"model\\\": \\\"$model\\\",\n            \\\"prompt\\\": \\\"$prompt\\\",\n            \\\"max_tokens\\\": 100,\n            \\\"temperature\\\": 0.7\n        }\" 2>/dev/null)\n\n    if test -n \"$response\"\n        echo \"Response:\"\n        echo \"$response\" | jq -r '.choices[0].text' 2>/dev/null; or echo \"$response\"\n    else\n        echo \"Error: No response from server\"\n        return 1\n    end\nend\n\n# Helper: List available models\nfunction vllm-models\n    echo \"Available models at http://$VLLM_HOST:$VLLM_PORT:\"\n    curl -s \"http://$VLLM_HOST:$VLLM_PORT/v1/models\" 2>/dev/null | jq -r '.data[] | \"  - \\(.id) (owned by: \\(.owned_by))\"' 2>/dev/null; or echo \"  Server not running or no models loaded\"\nend\n\n# Helper: Pre-download a model from Hugging Face\nfunction vllm-download\n    set model \"$argv[1]\"\n\n    if test -z \"$model\"\n        echo \"Usage: vllm-download <model-name>\"\n        echo \"\"\n        echo \"Examples:\"\n        echo \"  vllm-download mistralai/Mistral-7B-Instruct-v0.2\"\n        echo \"  vllm-download meta-llama/Llama-2-7b-chat-hf\"\n        echo \"  vllm-download Qwen/Qwen2-7B-Instruct\"\n        return 1\n    end\n\n    echo \"Pre-downloading model: $model\"\n    echo \"To cache directory: $VLLM_MODELS_DIR\"\n    echo \"\"\n\n    if test -n \"$HF_TOKEN\"\n        echo \"Using Hugging Face token for authentication\"\n    end\n\n    # Use vLLM's download utility if available\n    if command -v vllm &> /dev/null\n        python -c \"from vllm import LLM; LLM(model='$model', download_dir='$VLLM_MODELS_DIR', load_format='dummy')\" 2>&1 | grep -v \"^INFO\"\n        echo \"✓ Model downloaded successfully\"\n    else\n        echo \"Downloading with huggingface-cli...\"\n        huggingface-cli download \"$model\" --cache-dir \"$VLLM_MODELS_DIR\"\n    end\nend\n"
+    },
+    "options": {
+      "systems": [
+        "x86_64-linux"
+      ],
+      "cuda-detection": true
+    },
+    "services": {
+      "vllm": {
+        "command": "# Ensure directories exist\nmkdir -p \"$VLLM_LOG_DIR\"\nmkdir -p \"$VLLM_MODELS_DIR\"\n\n# Model is now always set (either user-provided or default TinyLlama)\necho \"Loading model: $VLLM_MODEL\"\n\n# Warn if using default model\nif [ \"$VLLM_MODEL\" = \"TinyLlama/TinyLlama-1.1B-Chat-v1.0\" ]; then\n    echo \"⚠️  Using default TinyLlama model (testing/development only)\"\n    echo \"   For production, set: export VLLM_MODEL='your-preferred-model'\"\n    echo \"\"\nfi\n\n# Export HF token if available\nif [ -n \"$HF_TOKEN\" ]; then\n    export HF_TOKEN=\"${HF_TOKEN}\"\n    echo \"Using Hugging Face token for model download\"\nfi\n\n# Build vLLM command\nVLLM_CMD=\"python -m vllm.entrypoints.openai.api_server\"\nVLLM_CMD=\"$VLLM_CMD --host $VLLM_HOST\"\nVLLM_CMD=\"$VLLM_CMD --port $VLLM_PORT\"\nVLLM_CMD=\"$VLLM_CMD --model $VLLM_MODEL\"\nVLLM_CMD=\"$VLLM_CMD --max-model-len $VLLM_MAX_MODEL_LEN\"\nVLLM_CMD=\"$VLLM_CMD --gpu-memory-utilization $VLLM_GPU_MEMORY_UTILIZATION\"\nVLLM_CMD=\"$VLLM_CMD --download-dir $VLLM_MODELS_DIR\"\n\n# Add API key if configured\nif [ -n \"$VLLM_API_KEY\" ]; then\n    VLLM_CMD=\"$VLLM_CMD --api-key $VLLM_API_KEY\"\nfi\n\n# Add served model name if different\nif [ -n \"$VLLM_SERVED_MODEL_NAME\" ]; then\n    VLLM_CMD=\"$VLLM_CMD --served-model-name $VLLM_SERVED_MODEL_NAME\"\nfi\n\necho \"Starting vLLM server with model: $VLLM_MODEL\"\necho \"Server will be available at: http://$VLLM_HOST:$VLLM_PORT\"\necho \"\"\n\n# Start vLLM server with logging\nexec $VLLM_CMD 2>&1 | tee -a \"$VLLM_LOG_DIR/vllm.log\"\n",
+        "is-daemon": true,
+        "shutdown": {
+          "command": "pkill -f vllm.entrypoints.openai.api_server"
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/j0z01cn0a90bjxwq4wy46n82pyk248rj-curl-8.17.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "curl-8.17.0",
+      "pname": "curl",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:49:54.717174Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.17.0",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/0rfz69vp1nl0q2hxzig20hc60sk72z62-curl-8.17.0-bin",
+        "debug": "/nix/store/h1fxw0xrifxvbhcp7b8hxsgirxxxfzav-curl-8.17.0-debug",
+        "dev": "/nix/store/ikmdk37frjdblkba3wl3xws2wwgln17x-curl-8.17.0-dev",
+        "devdoc": "/nix/store/jm6irg81cc0hqg43l39lkxr6pb0w2xk5-curl-8.17.0-devdoc",
+        "man": "/nix/store/ijd0yybyzwm98d3q6x7a9cyixgxk0i5d-curl-8.17.0-man",
+        "out": "/nix/store/8idis3j5l13c3x74jl8xly0k4qyk9mx6-curl-8.17.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "jq",
+      "broken": false,
+      "derivation": "/nix/store/36z704f13najr08hfbb7i3v44vl3fr12-jq-1.8.1.drv",
+      "description": "Lightweight and flexible command-line JSON processor",
+      "install_id": "jq",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "name": "jq-1.8.1",
+      "pname": "jq",
+      "rev": "1306659b587dc277866c7b69eb97e5f07864d8c4",
+      "rev_count": 912002,
+      "rev_date": "2025-12-15T06:20:37Z",
+      "scrape_date": "2025-12-16T03:50:17.983241Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.8.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/qvbwz06cqra3cmlra40v0adw75j6j7wm-jq-1.8.1-bin",
+        "dev": "/nix/store/jq07r49vk5wa10a1kk2y87nwbbl62qxz-jq-1.8.1-dev",
+        "doc": "/nix/store/brd1gvvbq8bblpbizmyjhsfwr7nlmvyq-jq-1.8.1-doc",
+        "man": "/nix/store/6wpy08grkd8315ad3wsx8dd92cx5n26z-jq-1.8.1-man",
+        "out": "/nix/store/gs6yqc24w093xsnnz3kkhls8jz7pnffy-jq-1.8.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "python3Packages.vllm",
+      "broken": false,
+      "derivation": "/nix/store/czifyqccvyf75phzhzjy752pcdxhf0j7-python3.13-vllm-0.11.2.drv",
+      "description": "High-throughput and memory-efficient inference and serving engine for LLMs",
+      "install_id": "vllm",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=5ae3b07d8d6527c42f17c876e404993199144b6a",
+      "name": "python3.13-vllm-0.11.2",
+      "pname": "vllm",
+      "rev": "5ae3b07d8d6527c42f17c876e404993199144b6a",
+      "rev_count": 901419,
+      "rev_date": "2025-11-24T06:39:56Z",
+      "scrape_date": "2025-12-17T10:07:20.103595136Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.11.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/ik4qjvsy9h697r022xdw4fjj6ycnms84-python3.13-vllm-0.11.2-dist",
+        "out": "/nix/store/wfh5a8141dgizvz8fdq88wzs5cvydncs-python3.13-vllm-0.11.2"
+      },
+      "system": "x86_64-linux",
+      "group": "vllm",
+      "priority": 5
+    }
+  ]
+}

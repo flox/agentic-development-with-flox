@@ -1,0 +1,80 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "gpt4all": {
+        "pkg-path": "gpt4all",
+        "systems": [
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "gpt4all",
+      "broken": false,
+      "derivation": "/nix/store/fi0jw85fqppc60k48alcvjhrl43d8d3d-gpt4all-3.10.0.drv",
+      "description": "Free-to-use, locally running, privacy-aware chatbot. No GPU or internet required",
+      "install_id": "gpt4all",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=7df7ff7d8e00218376575f0acdcc5d66741351ee",
+      "name": "gpt4all-3.10.0",
+      "pname": "gpt4all",
+      "rev": "7df7ff7d8e00218376575f0acdcc5d66741351ee",
+      "rev_count": 870157,
+      "rev_date": "2025-10-02T04:57:58Z",
+      "scrape_date": "2025-10-03T04:56:40.164874Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.10.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/njfqn3qg6jdbbc9xs83i2vg461vvcnby-gpt4all-3.10.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gpt4all",
+      "broken": false,
+      "derivation": "/nix/store/27hv04cmya6nflyhrdr0cj20dk9114is-gpt4all-3.10.0.drv",
+      "description": "Free-to-use, locally running, privacy-aware chatbot. No GPU or internet required",
+      "install_id": "gpt4all",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=7df7ff7d8e00218376575f0acdcc5d66741351ee",
+      "name": "gpt4all-3.10.0",
+      "pname": "gpt4all",
+      "rev": "7df7ff7d8e00218376575f0acdcc5d66741351ee",
+      "rev_count": 870157,
+      "rev_date": "2025-10-02T04:57:58Z",
+      "scrape_date": "2025-10-03T05:27:33.830157Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.10.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/01ncpn4pw7rmvrb4d2flxxvvqm7svkwx-gpt4all-3.10.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
