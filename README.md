@@ -32,6 +32,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 - [**aichat**](./aichat) - Multi-provider LLM CLI (OpenAI, Claude, Gemini, Ollama, Groq, Azure, Bedrock, etc.)
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI interface
+- [**gpt4all**](./gpt4all) - GPT4All local LLM interface
 
 ### AI Coding Tools
 
@@ -49,9 +50,17 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
 - [**coderabbit-cli**](./coderabbit-cli) - CodeRabbit code review tool
 
+### Local AI/ML Infrastructure
+
+- [**ollama**](./ollama) - Local LLM inference server with GPU/CUDA support
+- [**open-webui**](./open-webui) - Feature-rich web UI for LLMs (Ollama, OpenAI)
+- [**comfyui**](./comfyui) - Node-based UI for Stable Diffusion workflows
+- [**vllm**](./vllm) - High-throughput LLM serving engine
+
 ### Supporting Tools
 
 - [**flox-mcp-server**](./flox-mcp-server) - MCP server enabling AI assistants to manage Flox environments
+- [**mcphost**](./mcphost) - MCP host environment
 - [**claude-code**](./claude-code) - Claude Code environment
 - [**claude-code-router**](./claude-code-router) - Claude Code router
 - [**claude-code-acp**](./claude-code-acp) - Claude Code with ACP
@@ -128,7 +137,36 @@ The `manifest.toml` file defines:
 
 ## Composable Development Environments
 
-AI coding tools frequently generate code requiring backend infrastructure. The following environments from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) can be composed with AI coding environments to provide local development infrastructure.
+AI coding tools frequently generate code requiring backend infrastructure. This repository includes several local AI/ML infrastructure environments that can be composed with the coding tools:
+
+### Included Infrastructure Environments
+
+**Local LLM Serving**
+- **ollama** - Run Llama, Mistral, CodeLlama and other models locally with GPU acceleration
+- **vllm** - Production-grade LLM serving with optimized throughput
+- **gpt4all** - CPU-optimized local LLM inference
+
+**Web Interfaces**
+- **open-webui** - Full-featured chat interface for local and remote LLMs
+- **comfyui** - Visual workflow builder for Stable Diffusion and image generation
+
+**MCP Infrastructure**
+- **mcphost** - Model Context Protocol host for AI agent communication
+
+These can be activated directly or composed with coding environments:
+
+```bash
+# Run Ollama for local inference
+cd ollama && flox activate -s
+
+# Layer with AI coding tools
+cd ../aichat
+flox activate -- cd ../ollama && flox activate
+```
+
+### Additional environments from floxrox catalog
+
+The following environments from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) can also be composed with AI coding environments:
 
 ### Available via `floxrox/<environment-name>`
 
