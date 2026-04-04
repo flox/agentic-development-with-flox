@@ -6,11 +6,9 @@
       "claude-code": {
         "pkg-path": "claude-code"
       },
-      "flac": {
-        "pkg-path": "flac"
-      },
       "flox-mcp-server": {
         "pkg-path": "flox/flox-mcp-server",
+        "pkg-group": "mcp",
         "systems": [
           "aarch64-darwin",
           "aarch64-linux",
@@ -18,7 +16,8 @@
         ]
       },
       "openssl": {
-        "pkg-path": "openssl"
+        "pkg-path": "openssl",
+        "pkg-group": "openssl"
       }
     },
     "hook": {
@@ -36,29 +35,264 @@
   },
   "packages": [
     {
-      "attr_path": "claude-code",
+      "attr_path": "flox-mcp-server",
       "broken": false,
-      "derivation": "/nix/store/a4g2bvd65a1kf7ib4qym8k5ah3176v1c-claude-code-1.0.126.drv",
-      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
-      "install_id": "claude-code",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "claude-code-1.0.126",
-      "pname": "claude-code",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T01:44:32.094011Z",
+      "derivation": "/nix/store/inlxks5yk57808y2kc654g2y2wdh73hh-flox-mcp-server-0.2.2.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
+      "name": "flox-mcp-server-0.2.2",
+      "pname": "flox-mcp-server",
+      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
+      "rev_count": 30,
+      "rev_date": "2026-02-03T16:40:14Z",
+      "scrape_date": "2026-04-04T13:03:11.568593590Z",
       "stabilities": [
         "unstable"
       ],
-      "unfree": true,
-      "version": "1.0.126",
+      "unfree": false,
+      "version": "0.2.2",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/nrq3rj5aaamjrkwa983qc4sk0l7ii2wm-claude-code-1.0.126"
+        "dist": "/nix/store/hdfanrwiqj9302qiivnpqanfq1zk8srh-flox-mcp-server-0.2.2-dist",
+        "out": "/nix/store/6ln8l75s9pi54xz1dlksya8rlq8cz230-flox-mcp-server-0.2.2"
+      },
+      "system": "aarch64-darwin",
+      "group": "mcp",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/pdimfq1f3l2kmx2plr6xpas8abby5y2p-flox-mcp-server-0.2.2.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
+      "name": "flox-mcp-server-0.2.2",
+      "pname": "flox-mcp-server",
+      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
+      "rev_count": 30,
+      "rev_date": "2026-02-03T16:40:14Z",
+      "scrape_date": "2026-04-04T13:03:11.568606713Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/6zjsiagcmx2qflf30kgcnfakipynghlk-flox-mcp-server-0.2.2-dist",
+        "out": "/nix/store/h4y7xqn88gyxd7vymv40y9jnf4l06p5i-flox-mcp-server-0.2.2"
+      },
+      "system": "aarch64-linux",
+      "group": "mcp",
+      "priority": 5
+    },
+    {
+      "attr_path": "flox-mcp-server",
+      "broken": false,
+      "derivation": "/nix/store/nnqy64nl48nwnz26x2kwagr10ryz54yg-flox-mcp-server-0.2.2.drv",
+      "description": "MCP server for Flox package manager",
+      "install_id": "flox-mcp-server",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
+      "name": "flox-mcp-server-0.2.2",
+      "pname": "flox-mcp-server",
+      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
+      "rev_count": 30,
+      "rev_date": "2026-02-03T16:40:14Z",
+      "scrape_date": "2026-04-04T13:03:11.568612028Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.2",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/g2xdbvax1d4yv0czq31pkfnyf5snynh1-flox-mcp-server-0.2.2-dist",
+        "out": "/nix/store/xwcqr4jvj2fqnm6jhxaakigbry38y7vk-flox-mcp-server-0.2.2"
+      },
+      "system": "x86_64-linux",
+      "group": "mcp",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/xzhhrkjg60fxcbdkpkmgks5393g0bnpg-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:01:31.979755Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/fvxzw0b4nzrf1rrg40cipn9r4ghdifvc-openssl-3.6.1-bin",
+        "dev": "/nix/store/a1m09nkw4zpqcjhdggiddb333b4z1v0l-openssl-3.6.1-dev",
+        "doc": "/nix/store/r8zh8frv16vn6582arji90vgk4rja637-openssl-3.6.1-doc",
+        "man": "/nix/store/rjw5rf70cvbaf7l7iv468x1m4hwa7qa2-openssl-3.6.1-man",
+        "out": "/nix/store/r3p3sm0hljbrznasz9wzxmpgn3brzh5x-openssl-3.6.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "openssl",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/gd4bqfybqfzc9hrzy2lkzlv83hkbhwmb-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:33:18.606097Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/anfxxkr88ry4wsfqm6in54p2a5radrs2-openssl-3.6.1-bin",
+        "debug": "/nix/store/2i7rbfcgk2ablcsivf6wsc20534bvspq-openssl-3.6.1-debug",
+        "dev": "/nix/store/ampimckfng4zil3amrhajfxhgxfr92wd-openssl-3.6.1-dev",
+        "doc": "/nix/store/07hchbxmk0f8a1kzm6g8ly4a49mgbhp8-openssl-3.6.1-doc",
+        "man": "/nix/store/n090313n6x2vi67ic4k5fnnmbvavcsc0-openssl-3.6.1-man",
+        "out": "/nix/store/v7kiykvis3nb7swg26v78m31vs63z8n1-openssl-3.6.1"
+      },
+      "system": "aarch64-linux",
+      "group": "openssl",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/kifmy9pn65h90cdzhdfik2583abiqswf-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:02:46.661214Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/7fml52f9issfrvijs2qk6pgh1yzm87rx-openssl-3.6.1-bin",
+        "dev": "/nix/store/1y8av976r39xmy6q3izq9fx370inbz83-openssl-3.6.1-dev",
+        "doc": "/nix/store/5y4jlbzf5jnw3rd4ydczi6gz2vcgzdaq-openssl-3.6.1-doc",
+        "man": "/nix/store/g26nfcllq8yamqhngkkid62l2j6z0agd-openssl-3.6.1-man",
+        "out": "/nix/store/jmngn7k1rmayszm7176zhz7ac223ia27-openssl-3.6.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "openssl",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/dip8yqvwhqwgyici1w70n0gfm3ql46r1-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:37:18.887641Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/8q9wrmngl1mhvqgg0l018339zz86m184-openssl-3.6.1-bin",
+        "debug": "/nix/store/4bsbm214ybdhfg886j1nhyqhig1jqr71-openssl-3.6.1-debug",
+        "dev": "/nix/store/79xszwqidf98ag703b5c82q3pwg9lyzq-openssl-3.6.1-dev",
+        "doc": "/nix/store/y4pjymdjj68hnbffxr2niafwjy2ngy7s-openssl-3.6.1-doc",
+        "man": "/nix/store/dcwdxd2av5wj077jpj0zk5c4hddc9s44-openssl-3.6.1-man",
+        "out": "/nix/store/bga5xf95jaypy385hvxm4h3yxl3m1566-openssl-3.6.1"
+      },
+      "system": "x86_64-linux",
+      "group": "openssl",
+      "priority": 5
+    },
+    {
+      "attr_path": "claude-code",
+      "broken": false,
+      "derivation": "/nix/store/4z54zdlwrjgisaric1d02ngqp05wpcaq-claude-code-2.1.88.drv",
+      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
+      "install_id": "claude-code",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "claude-code-2.1.88",
+      "pname": "claude-code",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:01:03.597595Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "2.1.88",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vf5f8hz9h2ilkcpsg9gxf0hh2fhvs3km-claude-code-2.1.88"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
@@ -67,27 +301,28 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/j3zkbpygyxwzh1psmrz1w9zjnaknps0k-claude-code-1.0.126.drv",
+      "derivation": "/nix/store/ml1dw6g7zqpjzw9gsrr4pnla02fnx94f-claude-code-2.1.88.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "claude-code-1.0.126",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "claude-code-2.1.88",
       "pname": "claude-code",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:14:04.083743Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:32:35.586881Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "1.0.126",
+      "version": "2.1.88",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/yi50lbb040chl1wym3zrf216fi47ms02-claude-code-1.0.126"
+        "out": "/nix/store/cc801q3sks6w273mb477166gwhv4y803-claude-code-2.1.88"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -96,27 +331,28 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/s8cxr6i7v139b37ylx46y15k0sgqhh9c-claude-code-1.0.126.drv",
+      "derivation": "/nix/store/aalb1i4mig6dfw6463kds76dpyg4f6q6-claude-code-2.1.88.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "claude-code-1.0.126",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "claude-code-2.1.88",
       "pname": "claude-code",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:42:08.628304Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:02:18.464802Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "1.0.126",
+      "version": "2.1.88",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/qkafcw0c75l88kp1i7iajrww5l1ccnzv-claude-code-1.0.126"
+        "out": "/nix/store/7aclyyn4abfcgn55nmwzd5375d9b7kqq-claude-code-2.1.88"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
@@ -125,391 +361,28 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/7br9nsjfdw96da3adijpmgp0cgavgv3l-claude-code-1.0.126.drv",
+      "derivation": "/nix/store/5d2q4rq44q4dg0c6gas9z44kr35p78hl-claude-code-2.1.88.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "claude-code-1.0.126",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "claude-code-2.1.88",
       "pname": "claude-code",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T03:13:48.349878Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:36:31.718046Z",
       "stabilities": [
+        "staging",
         "unstable"
       ],
       "unfree": true,
-      "version": "1.0.126",
+      "version": "2.1.88",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/vcf5ij85r5s3146fnp55vd8za0flbz7n-claude-code-1.0.126"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flac",
-      "broken": false,
-      "derivation": "/nix/store/ic9jgxqglkc2f801094c52zhb7qrk4bq-flac-1.5.0.drv",
-      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
-      "install_id": "flac",
-      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "flac-1.5.0",
-      "pname": "flac",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T01:44:33.170591Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.5.0",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/cjcfa03gc2v1l6137b0r9hyhp5vncfqp-flac-1.5.0-bin",
-        "dev": "/nix/store/cbsbqgf8mv1d5m62sr1q7ff8ysymli8h-flac-1.5.0-dev",
-        "doc": "/nix/store/nb5v4vz6s7crk3pahhxb43yk4qk9cwan-flac-1.5.0-doc",
-        "man": "/nix/store/k19sqhpfsyycrh7jncanwg78cicd55y4-flac-1.5.0-man",
-        "out": "/nix/store/knnkxmyc032l6sxmsn69pbgrfi286p8w-flac-1.5.0"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flac",
-      "broken": false,
-      "derivation": "/nix/store/c28w1yffks4qhzdrs8650l7gmvla104j-flac-1.5.0.drv",
-      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
-      "install_id": "flac",
-      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "flac-1.5.0",
-      "pname": "flac",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:14:04.919494Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.5.0",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/fx8yxbnd1wa58pl31cw10bh0qv487n7z-flac-1.5.0-bin",
-        "dev": "/nix/store/xxldhm4lc8yr37bxwlpml4zmp0kln3yg-flac-1.5.0-dev",
-        "doc": "/nix/store/r1lgkwa4pp8wjcwpvz6rilscsnq49zvv-flac-1.5.0-doc",
-        "man": "/nix/store/0j1aankkxl34v85q696rglgvslkfds1j-flac-1.5.0-man",
-        "out": "/nix/store/02xjjgnvwxap3rbx21wxggqryv8i2z47-flac-1.5.0"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flac",
-      "broken": false,
-      "derivation": "/nix/store/74x0vc6ajwbpbrgygbd4ck2nf2iv1a9f-flac-1.5.0.drv",
-      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
-      "install_id": "flac",
-      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "flac-1.5.0",
-      "pname": "flac",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:42:09.167591Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.5.0",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/1miijrs1d7hyww6xjxp4lwrkl9g9wddl-flac-1.5.0-bin",
-        "dev": "/nix/store/9gdp96sph4hy7cjbig2vkzk7zb20p1nb-flac-1.5.0-dev",
-        "doc": "/nix/store/r0bizhkllh9bi9mgzi87zzqvmw8ci3i2-flac-1.5.0-doc",
-        "man": "/nix/store/9ywhgh1s29wqmiam7mn6y6z1vlk50d7r-flac-1.5.0-man",
-        "out": "/nix/store/9z9k7hw0fpc4z2kw9dj155dffhj3rbws-flac-1.5.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flac",
-      "broken": false,
-      "derivation": "/nix/store/8f4dz87rkzinrp8k2xdb1gm37xpixnjy-flac-1.5.0.drv",
-      "description": "Library and tools for encoding and decoding the FLAC lossless audio file format",
-      "install_id": "flac",
-      "license": "[ BSD-3-Clause, GFDL-1.3-or-later, GPL-2.0-or-later, LGPL-2.1-or-later ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "flac-1.5.0",
-      "pname": "flac",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T03:13:49.255131Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.5.0",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/sndhvn9q7g9bgbqkspnc8j9fix9hypiz-flac-1.5.0-bin",
-        "dev": "/nix/store/k0dmdzlkh2a9zb4gfdka28snrprbpq83-flac-1.5.0-dev",
-        "doc": "/nix/store/mzq4rpisxcyx7cj4bcc2zahavg4sqmch-flac-1.5.0-doc",
-        "man": "/nix/store/2rynai6112k2k65zi32fzyxll3fw9jkf-flac-1.5.0-man",
-        "out": "/nix/store/20idlzn0vam7ql7c7dj5fzb3c74glsar-flac-1.5.0"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/7my3rgi90s1haw3fz762lrdyy73dx8h3-flox-mcp-server-0.2.0.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "name": "flox-mcp-server-0.2.0",
-      "pname": "flox-mcp-server",
-      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "rev_count": 28,
-      "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T15:33:02.450030114Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.2.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "dist": "/nix/store/ci0csf2snc7h5g1qm03mw8ggq64img1m-flox-mcp-server-0.2.0-dist",
-        "out": "/nix/store/dypvq42niihlv88bhdvznn6cy6l0y9gc-flox-mcp-server-0.2.0"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/8im6dgscbg7hghm2anwi2la5az19p576-flox-mcp-server-0.2.0.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "name": "flox-mcp-server-0.2.0",
-      "pname": "flox-mcp-server",
-      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "rev_count": 28,
-      "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T15:33:02.450032656Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.2.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "dist": "/nix/store/cnsh7kmb5bivk2qps25460kyblzh1pp8-flox-mcp-server-0.2.0-dist",
-        "out": "/nix/store/x8dy1d9fzb9kzm6b2lrbij45g10p6r5v-flox-mcp-server-0.2.0"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/kc27v6whcgmfw54fx31j561xfd4l632f-flox-mcp-server-0.2.0.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "name": "flox-mcp-server-0.2.0",
-      "pname": "flox-mcp-server",
-      "rev": "86a2d182f1f3bbf6e69a9b73e7936746e4825ebd",
-      "rev_count": 28,
-      "rev_date": "2025-11-25T20:47:48Z",
-      "scrape_date": "2025-12-05T15:33:02.450033926Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.2.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "dist": "/nix/store/zh9gjf26d589k2fvzn0n08d3p0h8ipbz-flox-mcp-server-0.2.0-dist",
-        "out": "/nix/store/zf8m76x02gga11x1bkmvg5pb65nvayvc-flox-mcp-server-0.2.0"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "openssl",
-      "broken": false,
-      "derivation": "/nix/store/z4lr6rqyi0w7hgsyv5kvnhjrakirr751-openssl-3.5.1.drv",
-      "description": "Cryptographic library that implements the SSL and TLS protocols",
-      "install_id": "openssl",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "openssl-3.5.1",
-      "pname": "openssl",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T01:44:57.623761Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "3.5.1",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/bpawzvf8z4yjmwr3zc7haxhv99sl8s2a-openssl-3.5.1-bin",
-        "dev": "/nix/store/4fwifkd3zn4m6y7zacyhpwy5frj63knk-openssl-3.5.1-dev",
-        "doc": "/nix/store/69p0m85qi4rw0ka8jqciba0p9q3140b0-openssl-3.5.1-doc",
-        "man": "/nix/store/2jh1wcwhjylfxzly4hbb5fz55b1lxxm5-openssl-3.5.1-man",
-        "out": "/nix/store/0ais7wnqw8xzj0331c2jka53s6g14wqb-openssl-3.5.1"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "openssl",
-      "broken": false,
-      "derivation": "/nix/store/ka1rgg9jrhim4p54h6cb4jih6g51qcww-openssl-3.5.1.drv",
-      "description": "Cryptographic library that implements the SSL and TLS protocols",
-      "install_id": "openssl",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "openssl-3.5.1",
-      "pname": "openssl",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:14:48.150233Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "3.5.1",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/4zzrcin7jdph1ybm7pkwlypv4khmqgf3-openssl-3.5.1-bin",
-        "debug": "/nix/store/n0r6fn7sd0bvmpwm8s5nlmm626jilcra-openssl-3.5.1-debug",
-        "dev": "/nix/store/hg5ryywl9xqg82kvzwvqkx4m2yckkdsg-openssl-3.5.1-dev",
-        "doc": "/nix/store/91mrccm5jwv94w8lvh7c0wf0cygj0yal-openssl-3.5.1-doc",
-        "man": "/nix/store/slgd9x3x372g5bm73qbijj41rqb560fd-openssl-3.5.1-man",
-        "out": "/nix/store/rzlvprd99wlbiv2wsqgp23kmxhkm1yfr-openssl-3.5.1"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "openssl",
-      "broken": false,
-      "derivation": "/nix/store/ncpm3s6gw15xqq45zs140p0m8rx5axnp-openssl-3.5.1.drv",
-      "description": "Cryptographic library that implements the SSL and TLS protocols",
-      "install_id": "openssl",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "openssl-3.5.1",
-      "pname": "openssl",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T02:42:33.687721Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "3.5.1",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/4w92hq61lhdzin9mkvzlxvd603pgwm9w-openssl-3.5.1-bin",
-        "dev": "/nix/store/63827r05nfpr7bg23zpivb9sn33cshy4-openssl-3.5.1-dev",
-        "doc": "/nix/store/3kbg9sqs4i8j7rkr6q7gb25c0bjqylyr-openssl-3.5.1-doc",
-        "man": "/nix/store/h59wasb1qrmvsgz79bl0sqnrhx0vccha-openssl-3.5.1-man",
-        "out": "/nix/store/v3cq87zwjd4f91y0i1023kkb9wvwc71z-openssl-3.5.1"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "openssl",
-      "broken": false,
-      "derivation": "/nix/store/7d5p0ip9nd3aj3r1a2pmhsxxizqqnis8-openssl-3.5.1.drv",
-      "description": "Cryptographic library that implements the SSL and TLS protocols",
-      "install_id": "openssl",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "name": "openssl-3.5.1",
-      "pname": "openssl",
-      "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
-      "rev_count": 868392,
-      "rev_date": "2025-09-28T05:12:35Z",
-      "scrape_date": "2025-09-30T03:14:35.710666Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "3.5.1",
-      "outputs_to_install": [
-        "bin",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/nn4b544v4sanvsf22mjiw3qh8mwh6pzh-openssl-3.5.1-bin",
-        "debug": "/nix/store/rj7yspi9mw9zcbma7v3h2zbh03bkjb82-openssl-3.5.1-debug",
-        "dev": "/nix/store/qqfiw89h8j4pilcyqapldzq5vf0vqgxy-openssl-3.5.1-dev",
-        "doc": "/nix/store/g9nxr4sig9dkhfvgc0ma1qb6fs3xm5dn-openssl-3.5.1-doc",
-        "man": "/nix/store/kmyzbfp60f9b85lhpr3njswxlm76b0av-openssl-3.5.1-man",
-        "out": "/nix/store/gi615r79j260ihhzdkhrg6qva9wfrbyy-openssl-3.5.1"
+        "out": "/nix/store/ihph9p2b60hgm9ymiql6j4mrm8119vnf-claude-code-2.1.88"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

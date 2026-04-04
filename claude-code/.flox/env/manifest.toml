@@ -17,12 +17,12 @@ version = 1
 [install]
 claude-code.pkg-path = "claude-code"
 openssl.pkg-path = "openssl"
-flac.pkg-path = "flac"
+openssl.pkg-group = "openssl"
 
 # Flox MCP Server - enables Claude Code to manage Flox environments
 flox-mcp-server.pkg-path = "flox/flox-mcp-server"
 flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
-
+flox-mcp-server.pkg-group = "mcp"
 
 ## Environment Variables ---------------------------------------------
 ##  ... available for use in the activated environment
