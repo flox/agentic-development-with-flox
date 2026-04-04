@@ -1,26 +1,22 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##   https://flox.dev/docs/reference/command-reference/manifest.toml/
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
 [install]
-crush.pkg-path = "flox/crush"
+crush.pkg-path = "crush"
 crush.pkg-group = "crush"
 gum.pkg-path = "gum"
 jq.pkg-path = "jq"
+jq.outputs = "all"
 openssl.pkg-path = "openssl"
+openssl.outputs = "all"
 curl.pkg-path = "curl"
+curl.outputs = "all"
 
 # Flox MCP Server - enables Crush to manage Flox environments
 flox-mcp-server.pkg-path = "flox/flox-mcp-server"
 flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+flox-mcp-server.outputs = "all"
 
 
 ## Environment Variables ---------------------------------------------
