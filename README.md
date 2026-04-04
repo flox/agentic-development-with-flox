@@ -39,6 +39,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
+- [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
 - [**cursor-agent**](./cursor-agent) - Cursor Agent CLI
 - [**kilocode-cli**](./kilocode-cli) - Kilocode CLI

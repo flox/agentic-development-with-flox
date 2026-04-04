@@ -1,0 +1,79 @@
+schema-version = "1.11.0"
+
+
+## Install Packages --------------------------------------------------
+[install]
+# OpenClaw via separate flake (nixpkgs marks it insecure; the flake overrides that).
+openclaw.flake = "github:barstoolbluz/openclaw-nix"
+
+
+## Environment Variables ---------------------------------------------
+[vars]
+# Suppress Node.js punycode deprecation warning from OpenClaw's dependencies
+NODE_OPTIONS = "--no-deprecation"
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+# Point OpenClaw config/state at the Flox environment cache (not $HOME)
+export OPENCLAW_CONFIG_PATH="$FLOX_ENV_CACHE/openclaw/openclaw.json"
+export OPENCLAW_STATE_DIR="$FLOX_ENV_CACHE/openclaw"
+
+# Bootstrap minimal config on first activation; pass RESET=1 flox activate to regenerate
+mkdir -p "$(dirname "$OPENCLAW_CONFIG_PATH")"
+if [ ! -f "$OPENCLAW_CONFIG_PATH" ] || [ "${RESET:-0}" = "1" ]; then
+    cat > "$OPENCLAW_CONFIG_PATH" << 'EOF'
+{
+  "gateway": {
+    "mode": "local"
+  }
+}
+EOF
+fi
+
+echo ""
+echo "OpenClaw - Self-hosted, Open-source AI Assistant/Agent"
+echo ""
+echo "First-time setup:"
+echo "  openclaw onboard              # Interactive onboarding wizard"
+echo "  openclaw configure            # Setup credentials and channels"
+echo ""
+echo "Usage:"
+echo "  flox activate -s              # Start the Gateway as a Flox service"
+echo "  openclaw tui                  # Terminal UI connected to Gateway"
+echo "  openclaw agent --message \"..\" # Run one agent turn"
+echo "  openclaw doctor               # Health checks and quick fixes"
+echo "  openclaw --help               # Show all commands"
+echo ""
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+bash = '''
+# Helper: Edit OpenClaw configuration
+openclaw-config() {
+    "${EDITOR:-nano}" "$OPENCLAW_CONFIG_PATH"
+}
+
+export -f openclaw-config
+'''
+
+zsh = '''
+# Helper: Edit OpenClaw configuration
+openclaw-config() {
+    "${EDITOR:-nano}" "$OPENCLAW_CONFIG_PATH"
+}
+'''
+
+
+## Services ---------------------------------------------------------
+[services]
+gateway.command = "openclaw gateway"
+
+
+## Other Environment Options -----------------------------------------
+[options]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

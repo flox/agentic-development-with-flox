@@ -1,0 +1,145 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "schema-version": "1.11.0",
+    "install": {
+      "openclaw": {
+        "flake": "github:barstoolbluz/openclaw-nix"
+      }
+    },
+    "vars": {
+      "NODE_OPTIONS": "--no-deprecation"
+    },
+    "hook": {
+      "on-activate": "# Point OpenClaw config/state at the Flox environment cache (not $HOME)\nexport OPENCLAW_CONFIG_PATH=\"$FLOX_ENV_CACHE/openclaw/openclaw.json\"\nexport OPENCLAW_STATE_DIR=\"$FLOX_ENV_CACHE/openclaw\"\n\n# Bootstrap minimal config on first activation; pass RESET=1 flox activate to regenerate\nmkdir -p \"$(dirname \"$OPENCLAW_CONFIG_PATH\")\"\nif [ ! -f \"$OPENCLAW_CONFIG_PATH\" ] || [ \"${RESET:-0}\" = \"1\" ]; then\n    cat > \"$OPENCLAW_CONFIG_PATH\" << 'EOF'\n{\n  \"gateway\": {\n    \"mode\": \"local\"\n  }\n}\nEOF\nfi\n\necho \"\"\necho \"OpenClaw - Self-hosted, Open-source AI Assistant/Agent\"\necho \"\"\necho \"First-time setup:\"\necho \"  openclaw onboard              # Interactive onboarding wizard\"\necho \"  openclaw configure            # Setup credentials and channels\"\necho \"\"\necho \"Usage:\"\necho \"  flox activate -s              # Start the Gateway as a Flox service\"\necho \"  openclaw tui                  # Terminal UI connected to Gateway\"\necho \"  openclaw agent --message \\\"..\\\" # Run one agent turn\"\necho \"  openclaw doctor               # Health checks and quick fixes\"\necho \"  openclaw --help               # Show all commands\"\necho \"\"\n"
+    },
+    "profile": {
+      "bash": "# Helper: Edit OpenClaw configuration\nopenclaw-config() {\n    \"${EDITOR:-nano}\" \"$OPENCLAW_CONFIG_PATH\"\n}\n\nexport -f openclaw-config\n",
+      "zsh": "# Helper: Edit OpenClaw configuration\nopenclaw-config() {\n    \"${EDITOR:-nano}\" \"$OPENCLAW_CONFIG_PATH\"\n}\n"
+    },
+    "options": {},
+    "services": {
+      "gateway": {
+        "command": "openclaw gateway"
+      }
+    }
+  },
+  "packages": [
+    {
+      "install_id": "openclaw",
+      "locked-url": "github:barstoolbluz/openclaw-nix/63b6c1ee889efc32e2979bf3191091244d880c09?narHash=sha256-LPAWI1jjXXT/pkuRD1Hw18AbdRo9QJzmeP6WX6KhOJU%3D",
+      "flake-description": "OpenClaw with insecure package override (nixpkgs marks openclaw insecure)",
+      "locked-flake-attr-path": "packages.aarch64-darwin.default",
+      "derivation": "/nix/store/xrarv66a82b17aab3k0k2w400yfwn49x-openclaw-2026.3.12.drv",
+      "outputs": {
+        "out": "/nix/store/a3lxrifkxicdzm7mp1vx23xi8w66lk9x-openclaw-2026.3.12"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "aarch64-darwin",
+      "system": "aarch64-darwin",
+      "name": "openclaw-2026.3.12",
+      "pname": "openclaw",
+      "version": "2026.3.12",
+      "description": "Self-hosted, open-source AI assistant/agent",
+      "licenses": [
+        "MIT"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 5
+    },
+    {
+      "install_id": "openclaw",
+      "locked-url": "github:barstoolbluz/openclaw-nix/63b6c1ee889efc32e2979bf3191091244d880c09?narHash=sha256-LPAWI1jjXXT/pkuRD1Hw18AbdRo9QJzmeP6WX6KhOJU%3D",
+      "flake-description": "OpenClaw with insecure package override (nixpkgs marks openclaw insecure)",
+      "locked-flake-attr-path": "packages.aarch64-linux.default",
+      "derivation": "/nix/store/88w28av2igaiz4zz0c77wpxz7hfknynw-openclaw-2026.3.12.drv",
+      "outputs": {
+        "out": "/nix/store/px1nqjz2xcnwi6ms1bii3bjifg031l2l-openclaw-2026.3.12"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "aarch64-linux",
+      "system": "aarch64-linux",
+      "name": "openclaw-2026.3.12",
+      "pname": "openclaw",
+      "version": "2026.3.12",
+      "description": "Self-hosted, open-source AI assistant/agent",
+      "licenses": [
+        "MIT"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 5
+    },
+    {
+      "install_id": "openclaw",
+      "locked-url": "github:barstoolbluz/openclaw-nix/63b6c1ee889efc32e2979bf3191091244d880c09?narHash=sha256-LPAWI1jjXXT/pkuRD1Hw18AbdRo9QJzmeP6WX6KhOJU%3D",
+      "flake-description": "OpenClaw with insecure package override (nixpkgs marks openclaw insecure)",
+      "locked-flake-attr-path": "packages.x86_64-darwin.default",
+      "derivation": "/nix/store/nksn97b163zn2kc39jcqv3105clxjqi3-openclaw-2026.3.12.drv",
+      "outputs": {
+        "out": "/nix/store/yfc7dk73zjnhfmyq63klw0rbkrr58x2a-openclaw-2026.3.12"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "x86_64-darwin",
+      "system": "x86_64-darwin",
+      "name": "openclaw-2026.3.12",
+      "pname": "openclaw",
+      "version": "2026.3.12",
+      "description": "Self-hosted, open-source AI assistant/agent",
+      "licenses": [
+        "MIT"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 5
+    },
+    {
+      "install_id": "openclaw",
+      "locked-url": "github:barstoolbluz/openclaw-nix/63b6c1ee889efc32e2979bf3191091244d880c09?narHash=sha256-LPAWI1jjXXT/pkuRD1Hw18AbdRo9QJzmeP6WX6KhOJU%3D",
+      "flake-description": "OpenClaw with insecure package override (nixpkgs marks openclaw insecure)",
+      "locked-flake-attr-path": "packages.x86_64-linux.default",
+      "derivation": "/nix/store/007dxxhxsd00qh6n85abv54wwdwa76sa-openclaw-2026.3.12.drv",
+      "outputs": {
+        "out": "/nix/store/m1xz59qg8r2x2508jm2gj11wfva7gkl0-openclaw-2026.3.12"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "x86_64-linux",
+      "system": "x86_64-linux",
+      "name": "openclaw-2026.3.12",
+      "pname": "openclaw",
+      "version": "2026.3.12",
+      "description": "Self-hosted, open-source AI assistant/agent",
+      "licenses": [
+        "MIT"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 5
+    }
+  ]
+}
