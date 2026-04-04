@@ -2,6 +2,10 @@
 
 A Flox environment for [OpenClaw](https://github.com/openclaw/openclaw), a self-hosted, open-source AI assistant and agent platform. OpenClaw provides a WebSocket gateway, terminal UI, and single-turn agent mode.
 
+## Flox Integration via FLOX.md
+
+OpenClaw does not currently support MCP server integration for extending agent skills. Instead, this environment includes a [FLOX.md](./FLOX.md) reference guide that OpenClaw agents can read directly to understand how to create, modify, and manage Flox environments. FLOX.md covers manifest structure, package installation, services, builds, composition, CUDA, containerization, and more. Point your agent at it when working with Flox.
+
 ## Features
 
 - **Self-hosted**: Runs on your own infrastructure, full control over data and configuration
