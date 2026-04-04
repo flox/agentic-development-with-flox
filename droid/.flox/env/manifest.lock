@@ -22,29 +22,29 @@
     {
       "attr_path": "droid",
       "broken": false,
-      "derivation": "/nix/store/qwqj3gwghixw127vqxy4zgyyppfyinc0-droid-0.26.2.drv",
+      "derivation": "/nix/store/rcx0vv7jzfl77dslbf94znh69gb5l82g-droid-0.94.1.drv",
       "description": "Factory AI's Droid - AI-powered development agent for your terminal",
       "install_id": "droid",
       "license": "Unfree",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
-      "name": "droid-0.26.2",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=b03b6e224d93f632fe7b0513086b97d9f45b5a1c",
+      "name": "droid-0.94.1",
       "pname": "droid",
-      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
-      "rev_count": 8,
-      "rev_date": "2025-11-19T02:25:47Z",
-      "scrape_date": "2025-11-20T05:45:28.708685074Z",
+      "rev": "b03b6e224d93f632fe7b0513086b97d9f45b5a1c",
+      "rev_count": 71,
+      "rev_date": "2026-04-04T13:36:08Z",
+      "scrape_date": "2026-04-04T14:07:22.353387690Z",
       "stabilities": [
-        "stable",
         "staging",
-        "unstable"
+        "unstable",
+        "stable"
       ],
       "unfree": true,
-      "version": "0.26.2",
+      "version": "0.94.1",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/ys46d2fvih9zpyl5c3rja4n0izswlviy-droid-0.26.2"
+        "out": "/nix/store/1v5lda681k2gwa8lgxq7awx8br5v96qk-droid-0.94.1"
       },
       "system": "aarch64-darwin",
       "group": "droid",
@@ -53,29 +53,29 @@
     {
       "attr_path": "droid",
       "broken": false,
-      "derivation": "/nix/store/f9h918ndd0vnmb87k0p05s2k56zk2n8q-droid-0.26.2.drv",
+      "derivation": "/nix/store/7wdbl7ycv1zinvqf5b71rlrr009p0342-droid-0.94.1.drv",
       "description": "Factory AI's Droid - AI-powered development agent for your terminal",
       "install_id": "droid",
       "license": "Unfree",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
-      "name": "droid-0.26.2",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=b03b6e224d93f632fe7b0513086b97d9f45b5a1c",
+      "name": "droid-0.94.1",
       "pname": "droid",
-      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
-      "rev_count": 10,
-      "rev_date": "2025-11-19T15:23:13Z",
-      "scrape_date": "2025-11-20T05:45:28.708691691Z",
+      "rev": "b03b6e224d93f632fe7b0513086b97d9f45b5a1c",
+      "rev_count": 71,
+      "rev_date": "2026-04-04T13:36:08Z",
+      "scrape_date": "2026-04-04T14:07:22.353395926Z",
       "stabilities": [
-        "stable",
         "staging",
-        "unstable"
+        "unstable",
+        "stable"
       ],
       "unfree": true,
-      "version": "0.26.2",
+      "version": "0.94.1",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/sd1m38rj7hzmlpnj880mhk6q4lvkz9jn-droid-0.26.2"
+        "out": "/nix/store/frqaqvv7capns3amv1qgjrc1bqsc0ahm-droid-0.94.1"
       },
       "system": "x86_64-linux",
       "group": "droid",
