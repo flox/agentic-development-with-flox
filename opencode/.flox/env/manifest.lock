@@ -4,7 +4,7 @@
     "version": 1,
     "install": {
       "opencode": {
-        "pkg-path": "flox/opencode"
+        "pkg-path": "opencode"
       }
     },
     "hook": {
@@ -17,29 +17,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/71cmg452zlrchrlkixchp80l5yg5n3x0-opencode-1.0.68.drv",
+      "derivation": "/nix/store/cbr72g13150hgm9y6c4h7mx2mlf0d5x4-opencode-1.2.27.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=c91bc00247306478e758acdf3e0b633ad42fb5a4",
-      "name": "opencode-1.0.68",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "name": "opencode-1.2.27",
       "pname": "opencode",
-      "rev": "c91bc00247306478e758acdf3e0b633ad42fb5a4",
-      "rev_count": 24,
-      "rev_date": "2025-11-21T23:51:04Z",
-      "scrape_date": "2025-11-22T02:16:00.717748068Z",
+      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "rev_count": 967235,
+      "rev_date": "2026-03-21T15:16:39Z",
+      "scrape_date": "2026-03-25T15:44:31.288021Z",
       "stabilities": [
-        "stable",
-        "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "1.0.68",
+      "version": "1.2.27",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/87lbr8467l4bmw3nhw5f6s90qmsaff00-opencode-1.0.68"
+        "out": "/nix/store/py2b28274xmcx4f5a0mw7vii5qd5x09w-opencode-1.2.27"
       },
       "system": "aarch64-darwin",
       "group": "toplevel",
@@ -48,29 +46,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/akdgb0bsfh15kzy4cvj1g53psmaik4r6-opencode-1.0.68.drv",
+      "derivation": "/nix/store/q61856x9m1w6xm1466qdszi0fyk9crp9-opencode-1.2.27.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=cd00fe2d324bd8927c9c21012328007bb5d93c5a",
-      "name": "opencode-1.0.68",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "name": "opencode-1.2.27",
       "pname": "opencode",
-      "rev": "cd00fe2d324bd8927c9c21012328007bb5d93c5a",
-      "rev_count": 23,
-      "rev_date": "2025-11-21T22:57:28Z",
-      "scrape_date": "2025-11-22T02:16:00.717756861Z",
+      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "rev_count": 967235,
+      "rev_date": "2026-03-21T15:16:39Z",
+      "scrape_date": "2026-03-25T16:25:30.143123Z",
       "stabilities": [
-        "stable",
-        "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "1.0.68",
+      "version": "1.2.27",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/61z188drxrhdjd473794plmicvbm2laj-opencode-1.0.68"
+        "out": "/nix/store/8212v9502khlb399pa9ipq91iv859bqz-opencode-1.2.27"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -79,29 +75,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/k5pvfmwmiiszvi8gn5960hnwak1i1ffn-opencode-1.0.68.drv",
+      "derivation": "/nix/store/5bmapr1j7z8hhay9lfw1hqi8q86a0rfq-opencode-1.2.27.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=21b1850ffed9ee2f91e6489378ada06568e218bc",
-      "name": "opencode-1.0.68",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "name": "opencode-1.2.27",
       "pname": "opencode",
-      "rev": "21b1850ffed9ee2f91e6489378ada06568e218bc",
-      "rev_count": 25,
-      "rev_date": "2025-11-21T23:53:18Z",
-      "scrape_date": "2025-11-22T02:16:00.717758878Z",
+      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "rev_count": 967235,
+      "rev_date": "2026-03-21T15:16:39Z",
+      "scrape_date": "2026-03-25T17:03:13.217490Z",
       "stabilities": [
-        "stable",
-        "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "1.0.68",
+      "version": "1.2.27",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/c954165pxdy6zkdds6p4xpsg80hy329f-opencode-1.0.68"
+        "out": "/nix/store/vfpqsyivxrhzq269nhlzydxs11fzj6d9-opencode-1.2.27"
       },
       "system": "x86_64-darwin",
       "group": "toplevel",
@@ -110,29 +104,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/v8gk3rmqmqs6p2zdshvkqfcc96w18hxn-opencode-1.0.68.drv",
+      "derivation": "/nix/store/ywp03vchyfdl874pm7g9ayfri8wvda81-opencode-1.2.27.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=55a2ca0a0c371b693f0d41829f7065e5a0a08744",
-      "name": "opencode-1.0.68",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "name": "opencode-1.2.27",
       "pname": "opencode",
-      "rev": "55a2ca0a0c371b693f0d41829f7065e5a0a08744",
-      "rev_count": 22,
-      "rev_date": "2025-11-21T22:08:18Z",
-      "scrape_date": "2025-11-22T02:16:00.717760688Z",
+      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
+      "rev_count": 967235,
+      "rev_date": "2026-03-21T15:16:39Z",
+      "scrape_date": "2026-03-25T17:47:47.566733Z",
       "stabilities": [
-        "stable",
-        "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "1.0.68",
+      "version": "1.2.27",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/ab6d13cwykj99gwsfrrvacy0wxxsgcvc-opencode-1.0.68"
+        "out": "/nix/store/0hr7kzmn5m4j4vgv5vnialjvvv99dl6g-opencode-1.2.27"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
