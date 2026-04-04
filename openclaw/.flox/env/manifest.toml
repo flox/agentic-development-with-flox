@@ -11,6 +11,8 @@ openclaw.flake = "github:barstoolbluz/openclaw-nix"
 [vars]
 # Suppress Node.js punycode deprecation warning from OpenClaw's dependencies
 NODE_OPTIONS = "--no-deprecation"
+# OpenRouter API key (required for model access). Set your key here with: flox edit
+# OPENROUTER_API_KEY = ""
 
 
 ## Activation Hook ---------------------------------------------------
@@ -36,6 +38,8 @@ echo ""
 echo "OpenClaw - Self-hosted, Open-source AI Assistant/Agent"
 echo ""
 echo "First-time setup:"
+echo "  export OPENROUTER_API_KEY=... # Required: get a key at openrouter.ai"
+echo "                                # Or set permanently via: flox edit"
 echo "  openclaw onboard              # Interactive onboarding wizard"
 echo "  openclaw configure            # Setup credentials and channels"
 echo ""
