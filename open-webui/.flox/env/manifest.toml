@@ -1,249 +1,109 @@
-# this is a reproducible   f l o x   environment
-# run on macOS and linux, x86 and arm
-version = 1
-
-
-[include]
-environments = [
-  { remote = "barstoolbluz/ollama" },
-]
-
+# Open WebUI frontend — backend-agnostic runtime
+#
+# Works with any OpenAI-compatible backend (SGLang, vLLM, Triton, llama.cpp, etc.)
+#
+# Quick start (pick a preset):
+#   BACKEND=vllm flox activate -s
+#   BACKEND=sglang flox activate -s
+#
+# Or configure manually:
+#   BACKEND_HOST=192.168.0.42 BACKEND_PORT=30000 flox activate -s
+#
+# All configuration via env vars (with sensible defaults):
+#   BACKEND        — preset: vllm|sglang|triton|ollama|llamacpp
+#   BACKEND_HOST   — inference server host      (default: 127.0.0.1)
+#   BACKEND_PORT   — inference server port      (default: 8000)
+#   BACKEND_HEALTH — health check endpoint      (default: /health)
+#   WEBUI_PORT     — Open WebUI listen port     (default: 8080)
+#   OPENAI_API_KEY — API key for backend        (default: none)
+#   DEFAULT_MODEL_PARAMS — JSON model params    (default: see hook)
+#   CORS_ALLOW_ORIGIN    — CORS origins         (default: *)
+#   WEBUI_AUTH     — enable auth                (default: false)
+schema-version = "1.11.0"
 
 [install]
-open-webui.pkg-path = "open-webui"
-open-webui.version = "0.6.40"
-ollama-cuda.pkg-path = "flox/ollama-cuda"
-ollama-cuda.pkg-group = "ollama-cuda"		#override for this environment
-ollama-cuda.systems = ["x86_64-linux", "aarch64-linux"]		#override for this environment
-
-[vars]
-OLLAMA_BASE_URL_DEFAULT = "http://127.0.0.1:11434"
-OLLAMA_API_BASE_URL_DEFAULT = "http://127.0.0.1:11434"
-HOST_DEFAULT = "0.0.0.0"
-PORT_DEFAULT = "8080"
-DEFAULT_MODELS_PROVIDER_DEFAULT = "ollama"
-DEFAULT_CONNECTION_NAME_DEFAULT = "Ollama"
-SCARF_NO_ANALYTICS_DEFAULT = "true"
-DO_NOT_TRACK_DEFAULT = "true"
-ANONYMIZED_TELEMETRY_DEFAULT = "false"
-
+# open-webui-frontend.pkg-path = "flox/open-webui-frontend"
+# Testing local build:
+open-webui-frontend.pkg-path = "flox/open-webui-frontend"
+open-webui-frontend.systems = ["x86_64-linux", "x86_64-darwin", "aarch64-darwin"]
+uv.pkg-path = "uv"
+gum.pkg-path = "gum"
+python311.pkg-path = "python311Full"
+gcc-unwrapped.pkg-path = "gcc-unwrapped"
+gcc-unwrapped.systems = ["x86_64-linux"]
+gcc-unwrapped.outputs = "all"
 
 [hook]
 on-activate = '''
-  # exports config + support for runtime override
-  export OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-$OLLAMA_BASE_URL_DEFAULT}"
-  export OLLAMA_API_BASE_URL="${OLLAMA_API_BASE_URL:-$OLLAMA_API_BASE_URL_DEFAULT}"
-  export HOST="${HOST:-$HOST_DEFAULT}"
-  export PORT="${PORT:-$PORT_DEFAULT}"
-  export DEFAULT_MODELS_PROVIDER="${DEFAULT_MODELS_PROVIDER:-$DEFAULT_MODELS_PROVIDER_DEFAULT}"
-  export DEFAULT_CONNECTION_NAME="${DEFAULT_CONNECTION_NAME:-$DEFAULT_CONNECTION_NAME_DEFAULT}"
-  export SCARF_NO_ANALYTICS="${SCARF_NO_ANALYTICS:-$SCARF_NO_ANALYTICS_DEFAULT}"
-  export DO_NOT_TRACK="${DO_NOT_TRACK:-$DO_NOT_TRACK_DEFAULT}"
-  export ANONYMIZED_TELEMETRY="${ANONYMIZED_TELEMETRY:-$ANONYMIZED_TELEMETRY_DEFAULT}"
-
-  # sets up data directories in $FLOX_ENV_CACHE
-  WEBUI_DATA_DIR="$FLOX_ENV_CACHE/openwebui"
-  mkdir -p "$WEBUI_DATA_DIR/cache"
-  mkdir -p "$WEBUI_DATA_DIR/data"
-  mkdir -p "$FLOX_ENV_CACHE/logs"
-
-  # exports derived paths (users can override)
-  export DATA_DIR="${DATA_DIR:-$WEBUI_DATA_DIR/data}"
-  export CACHE_DIR="${CACHE_DIR:-$WEBUI_DATA_DIR/cache}"
-  export HF_HOME="${HF_HOME:-$WEBUI_DATA_DIR/cache/huggingface}"
-  export SENTENCE_TRANSFORMERS_HOME="${SENTENCE_TRANSFORMERS_HOME:-$WEBUI_DATA_DIR/cache/sentence_transformers}"
-  export TIKTOKEN_CACHE_DIR="${TIKTOKEN_CACHE_DIR:-$WEBUI_DATA_DIR/cache/tiktoken}"
-  export WHISPER_MODEL_DIR="${WHISPER_MODEL_DIR:-$WEBUI_DATA_DIR/cache/whisper}"
-
-  # generates 256-bit key if not exists
-  KEY_FILE="$WEBUI_DATA_DIR/webui_secret_key"
-  if [ -z "$WEBUI_SECRET_KEY" ]; then
-    if [ ! -e "$KEY_FILE" ]; then
-      head -c 32 /dev/random | base64 > "$KEY_FILE"
-    fi
-    export WEBUI_SECRET_KEY=$(cat "$KEY_FILE")
+  # ── BACKEND preset (case-insensitive) ────────────────────────
+  # Sets sensible defaults per backend; explicit env vars always win.
+  if [ -n "${BACKEND:-}" ]; then
+    shopt -s nocasematch
+    case "$BACKEND" in
+      vllm)
+        : "${OPENAI_API_KEY:=sk-vllm-local-dev}"
+        ;;
+      sglang)
+        : "${BACKEND_PORT:=30000}"
+        ;;
+      triton)
+        : "${BACKEND_PORT:=9000}"
+        : "${BACKEND_HEALTH:=/v1/models}"
+        ;;
+      ollama)
+        : "${BACKEND_PORT:=11434}"
+        : "${BACKEND_HEALTH:=/}"
+        : "${ENABLE_OLLAMA_API:=true}"
+        ;;
+      llamacpp)
+        : "${BACKEND_PORT:=8080}"
+        : "${WEBUI_PORT:=8081}"
+        ;;
+      *)
+        echo "WARNING: unknown BACKEND preset '$BACKEND'" >&2
+        echo "  Valid presets: vllm, sglang, triton, ollama, llamacpp" >&2
+        ;;
+    esac
+    shopt -u nocasematch
   fi
 
-  # returns to project directory
-  cd "$FLOX_ENV_PROJECT"
+  # ── Defaults (preset values, if set above, are preserved) ────
+  export BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
+  export BACKEND_PORT="${BACKEND_PORT:-8000}"
+  export BACKEND_HEALTH="${BACKEND_HEALTH:-/health}"
+
+  if [ -z "${DEFAULT_MODEL_PARAMS:-}" ]; then
+    export DEFAULT_MODEL_PARAMS='{"stream_response": false, "max_tokens": 1024}'
+  fi
+  export CORS_ALLOW_ORIGIN="${CORS_ALLOW_ORIGIN:-*}"
+
+  _owui_bin="$(which open-webui-frontend)"
+  _owui_root="$(dirname "$(dirname "$(readlink -f "$_owui_bin")")")"
+  source "$_owui_root/share/open-webui/setup.sh"
+  unset _owui_bin _owui_root
 '''
 
+[services.open-webui]
+command = """until curl -sf "http://${BACKEND_HOST}:${BACKEND_PORT}${BACKEND_HEALTH}" >/dev/null 2>&1; do \
+  echo "Waiting for backend on ${BACKEND_HOST}:${BACKEND_PORT}..."; sleep 3; \
+done; \
+echo "Backend ready — starting Open WebUI on port ${PORT}"; \
+exec open-webui-frontend"""
+is-daemon = false
 
 [profile]
-bash = '''
-# displays config info
-webui_info() {
-  echo "======================================"
-  echo "  OpenWebUI Configuration"
-  echo "======================================"
-  echo ""
-  echo "Data Directory:"
-  echo "  $FLOX_ENV_CACHE/openwebui"
-  echo ""
-  echo "Services:"
-  echo "  OpenWebUI: http://$HOST:$PORT"
-  echo "  Ollama:    $OLLAMA_BASE_URL"
-  echo ""
-  echo "Quick Commands:"
-  echo "  webui_info     - Show this information"
-  echo "  webui_status   - Check service status"
-  echo "  webui_logs     - Tail service logs"
-  echo "  ollama_status  - Check Ollama connectivity"
-  echo "  ollama-info    - Show Ollama configuration"
-  echo "  ollama-health  - Test Ollama API health"
-  echo ""
-}
-export -f webui_info
-
-# checks service status
-webui_status() {
-  flox services status
-}
-export -f webui_status
-
-# tails service logs
-webui_logs() {
-  tail -f "$FLOX_ENV_CACHE/logs/openwebui.log"
-}
-export -f webui_logs
-
-# checks ollama connection (uses ollama-health from ollama-headless)
-ollama_status() {
-  if command -v ollama-health >/dev/null 2>&1; then
-    ollama-health
-  else
-    echo -n "Checking Ollama at $OLLAMA_BASE_URL ... "
-    if curl -sf "$OLLAMA_BASE_URL/api/tags" >/dev/null 2>&1; then
-      echo "✓ Connected"
-      return 0
-    else
-      echo "✗ Cannot connect"
-      echo "Make sure Ollama is running with: flox activate -s"
-      return 1
-    fi
+common = '''
+  echo "Open WebUI frontend"
+  if [ -n "${BACKEND:-}" ]; then
+    echo "  preset:  ${BACKEND}"
   fi
-}
-export -f ollama_status
+  echo "  backend: http://${BACKEND_HOST}:${BACKEND_PORT}/v1"
+  echo "  webui:   http://localhost:${PORT}"
+  echo ""
+  echo "  flox activate -s  to start"
+  echo "  presets: vllm | sglang | triton | ollama | llamacpp"
 '''
-
-zsh = '''
-# displays config info
-webui_info() {
-  echo "======================================"
-  echo "  OpenWebUI Configuration"
-  echo "======================================"
-  echo ""
-  echo "Data Directory:"
-  echo "  $FLOX_ENV_CACHE/openwebui"
-  echo ""
-  echo "Services:"
-  echo "  OpenWebUI: http://$HOST:$PORT"
-  echo "  Ollama:    $OLLAMA_BASE_URL"
-  echo ""
-  echo "Quick Commands:"
-  echo "  webui_info     - Show this information"
-  echo "  webui_status   - Check service status"
-  echo "  webui_logs     - Tail service logs"
-  echo "  ollama_status  - Check Ollama connectivity"
-  echo "  ollama-info    - Show Ollama configuration"
-  echo "  ollama-health  - Test Ollama API health"
-  echo ""
-}
-
-# checks service status
-webui_status() {
-  flox services status
-}
-
-# tails service logs
-webui_logs() {
-  tail -f "$FLOX_ENV_CACHE/logs/openwebui.log"
-}
-
-# checks ollama connection (uses ollama-health from ollama-headless)
-ollama_status() {
-  if command -v ollama-health >/dev/null 2>&1; then
-    ollama-health
-  else
-    echo -n "Checking Ollama at $OLLAMA_BASE_URL ... "
-    if curl -sf "$OLLAMA_BASE_URL/api/tags" >/dev/null 2>&1; then
-      echo "✓ Connected"
-      return 0
-    else
-      echo "✗ Cannot connect"
-      echo "Make sure Ollama is running with: flox activate -s"
-      return 1
-    fi
-  fi
-}
-'''
-
-fish = '''
-# displays config info
-function webui_info
-  echo "======================================"
-  echo "  OpenWebUI Configuration"
-  echo "======================================"
-  echo ""
-  echo "Data Directory:"
-  echo "  $FLOX_ENV_CACHE/openwebui"
-  echo ""
-  echo "Services:"
-  echo "  OpenWebUI: http://$HOST:$PORT"
-  echo "  Ollama:    $OLLAMA_BASE_URL"
-  echo ""
-  echo "Quick Commands:"
-  echo "  webui_info     - Show this information"
-  echo "  webui_status   - Check service status"
-  echo "  webui_logs     - Tail service logs"
-  echo "  ollama_status  - Check Ollama connectivity"
-  echo "  ollama-info    - Show Ollama configuration"
-  echo "  ollama-health  - Test Ollama API health"
-  echo ""
-end
-
-# checks service status
-function webui_status
-  flox services status
-end
-
-# tails service logs
-function webui_logs
-  tail -f "$FLOX_ENV_CACHE/logs/openwebui.log"
-end
-
-# checks ollama connection (uses ollama-health from ollama-headless)
-function ollama_status
-  if command -v ollama-health >/dev/null 2>&1
-    ollama-health
-  else
-    echo -n "Checking Ollama at $OLLAMA_BASE_URL ... "
-    if curl -sf "$OLLAMA_BASE_URL/api/tags" >/dev/null 2>&1
-      echo "✓ Connected"
-      return 0
-    else
-      echo "✗ Cannot connect"
-      echo "Make sure Ollama is running with: flox activate -s"
-      return 1
-    end
-  end
-end
-'''
-
-
-[services.openwebui]
-command = '''
-  mkdir -p "$FLOX_ENV_CACHE/logs"
-  exec open-webui serve --host "$HOST" --port "$PORT" 2>&1 | tee -a "$FLOX_ENV_CACHE/logs/openwebui.log"
-'''
-
 
 [options]
-systems = [
-  "aarch64-darwin",
-  "aarch64-linux",
-  "x86_64-darwin",
-  "x86_64-linux",
-]
-# Uncomment to disable CUDA detection.
-# cuda-detection = false
+#systems = ["x86_64-linux"]
+#cuda-detection = false

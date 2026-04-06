@@ -1,361 +1,158 @@
-# 🤖 Open WebUI + Ollama
+# Open WebUI Frontend
 
-A beautiful web interface for local LLMs, powered by Open WebUI and Ollama with GPU acceleration.
+Backend-agnostic [Open WebUI](https://github.com/open-webui/open-webui) v0.8.5 runtime.
+Works with any OpenAI-compatible inference server — vLLM, SGLang, Triton, llama.cpp, etc.
+Runs on Linux (x86_64) and macOS (Intel & Apple Silicon).
 
-## ✨ What You Get
+## Prerequisites
 
-- **Beautiful Chat Interface** - Open WebUI's polished UI for interacting with LLMs
-- **Local LLMs** - Run models completely offline with Ollama
-- **GPU Acceleration** - CUDA support on Linux for fast inference
-- **One-Command Setup** - Both services start together
-- **Privacy First** - All telemetry disabled, data stays local
-- **Model Library** - Access to Ollama's entire model catalog
+- [Flox](https://flox.dev) — a reproducible environment manager
+- A running OpenAI-compatible inference backend (vLLM, SGLang, Triton, llama.cpp, Ollama, etc.)
+- Supported platforms: `x86_64-linux`, `x86_64-darwin` (Intel Mac), `aarch64-darwin` (Apple Silicon Mac)
 
-## 🚀 Quick Start
+## Quick start
 
-```bash
-# Navigate to environment
-cd /home/daedalus/dev/floxenvs/open-webui
-
-# Start everything
-flox activate -s
-
-# Open browser
-# http://localhost:8080
-```
-
-That's it! Open WebUI is now running with Ollama backend.
-
-## 📦 Download Models
-
-### Popular Models
+Start a backend, then start the frontend pointing at it:
 
 ```bash
-ollama pull llama3.2:3b      # Fast, general purpose (3GB)
-ollama pull mistral:7b       # Excellent for coding (4GB)
-ollama pull phi3:mini         # Tiny but capable (2GB)
-ollama pull codellama:7b      # Specialized for code (4GB)
+# Terminal 1 — start a backend
+cd path/to/vllm-runtime && flox activate -s    # serves on :8000
+# or: cd path/to/sglang-runtime && flox activate -s  # serves on :30000
 
-# List available models
-ollama list
+# Terminal 2 — start the frontend
+cd path/to/openwebui-frontend
+
+# Using a preset (recommended):
+BACKEND=vllm flox activate -s
+BACKEND=sglang flox activate -s
+
+# Or configure manually:
+OPENAI_API_KEY=sk-vllm-local-dev flox activate -s
+BACKEND_PORT=30000 flox activate -s
 ```
 
-### Model Management
+Open WebUI will be available at **http://localhost:8080**.
+
+The service waits for the backend health check to pass before starting,
+so it's safe to start both at the same time.
+
+## Configuration
+
+All settings are env vars with sensible defaults. Set them before `flox activate`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `BACKEND` | *(none)* | Preset: `vllm`, `sglang`, `triton`, `ollama`, `llamacpp` — sets defaults for the vars below |
+| `BACKEND_HOST` | `127.0.0.1` | Inference server host |
+| `BACKEND_PORT` | `8000` | Inference server port (preset: `sglang`→30000, `triton`→9000, `ollama`→11434, `llamacpp`→8080) |
+| `BACKEND_HEALTH` | `/health` | Health check endpoint path (preset: `triton`→`/v1/models`, `ollama`→`/`) |
+| `OPENAI_API_KEY` | `none` | API key (preset: `vllm`→`sk-vllm-local-dev`) |
+| `WEBUI_PORT` | `8080` | Open WebUI listen port (preset: `llamacpp`→8081) |
+| `DEFAULT_MODEL_PARAMS` | `{"stream_response": false, "max_tokens": 1024}` | Default model parameters (JSON); raise for large-context models, keep low for small ones (e.g. Phi 3.5 @ 4096 ctx) |
+| `CORS_ALLOW_ORIGIN` | `*` | Allowed CORS origins (`;`-separated for multiple) |
+| `WEBUI_AUTH` | `false` | Enable Open WebUI authentication |
+| `ENABLE_OLLAMA_API` | `false` | Enable Ollama native API (preset: `ollama`→`true`) |
+
+Preset values are applied as defaults — any explicit env var you set takes precedence.
+
+## Backend-specific examples
+
+### vLLM
 
 ```bash
-# Show running models
-ollama ps
+# Using preset (recommended)
+BACKEND=vllm flox activate -s
 
-# Remove a model
-ollama rm <model>
+# Remote GPU box
+BACKEND=vllm BACKEND_HOST=192.168.0.42 flox activate -s
 
-# Copy and customize
-ollama cp llama3.2:3b mycustom
+# Manual (equivalent to preset)
+OPENAI_API_KEY=sk-vllm-local-dev flox activate -s
 ```
 
-## 🛠️ Helper Commands
+vLLM defaults to requiring an API key (`sk-vllm-local-dev` in the standard vllm-flox-runtime).
 
-Once activated, these commands are available:
-
-| Command | Description |
-|---------|-------------|
-| `webui_info` | Display configuration and URLs |
-| `webui_status` | Check service status |
-| `webui_logs` | Tail Open WebUI logs |
-| `ollama_status` | Test Ollama connectivity |
-| `ollama list` | List downloaded models |
-| `ollama pull <model>` | Download a model |
-| `ollama ps` | Show running models |
-| `flox services status` | Show all services |
-| `flox services logs <service>` | View service logs |
-
-## ⚙️ Configuration
-
-### Default Settings
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `HOST` | `0.0.0.0` | Open WebUI bind address |
-| `PORT` | `8080` | Open WebUI port |
-| `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama API endpoint |
-| `DATA_DIR` | `$FLOX_ENV_CACHE/openwebui/data` | Database and uploads |
-| `CACHE_DIR` | `$FLOX_ENV_CACHE/openwebui/cache` | Model cache |
-
-### Runtime Overrides
-
-Override any setting at runtime:
+### SGLang
 
 ```bash
-# Different port
-PORT=3000 flox activate -s
+# Using preset (recommended)
+BACKEND=sglang flox activate -s
 
-# Remote Ollama server
-OLLAMA_BASE_URL=http://192.168.1.100:11434 flox activate -s
+# Remote GPU box
+BACKEND=sglang BACKEND_HOST=192.168.0.42 flox activate -s
 
-# Project-local models
-OLLAMA_MODELS=$FLOX_ENV_CACHE/models flox activate -s
-
-# Custom data directory
-DATA_DIR=~/.open-webui/data flox activate -s
-
-# Multiple overrides
-PORT=8081 OLLAMA_HOST=0.0.0.0:11435 flox activate -s
+# Manual (equivalent to preset)
+BACKEND_PORT=30000 flox activate -s
 ```
 
-## 📁 Data Persistence
+SGLang serves on port 30000 by default and does not require an API key.
 
-All data is stored in `$FLOX_ENV_CACHE/openwebui/`:
-
-```
-openwebui/
-├── data/                    # SQLite database, user uploads
-│   ├── webui.db            # Chat history, settings
-│   └── uploads/            # Uploaded files
-├── cache/                   # Model caches
-│   ├── huggingface/        # HF models
-│   ├── sentence_transformers/
-│   ├── tiktoken/
-│   └── whisper/            # Speech models
-└── webui_secret_key        # Auto-generated security key
-```
-
-### Backup & Restore
+### Triton Inference Server
 
 ```bash
-# Backup entire environment data
-tar -czf openwebui-backup.tar.gz $FLOX_ENV_CACHE/openwebui/
+# Using preset (recommended)
+BACKEND=triton BACKEND_HOST=triton-server.local flox activate -s
 
-# Restore
-tar -xzf openwebui-backup.tar.gz -C $FLOX_ENV_CACHE/
+# Manual (equivalent to preset)
+BACKEND_HOST=triton-server.local BACKEND_PORT=9000 BACKEND_HEALTH=/v1/models flox activate -s
 ```
 
-## 🎮 GPU Support
+Triton uses `/v1/models` as its health endpoint (not `/health`).
 
-### NVIDIA GPUs (Linux)
-
-GPU acceleration is automatic if:
-1. NVIDIA drivers are installed
-2. GPU is CUDA-capable
-3. `nvidia-smi` is available
-
-Check GPU status:
-```bash
-nvidia-smi                    # Should show your GPU
-ollama ps                     # Shows "GPU" under PROCESSOR when running
-```
-
-### macOS
-
-Uses Metal acceleration automatically on Apple Silicon.
-
-### Disable GPU
-
-Force CPU-only mode:
-```bash
-CUDA_VISIBLE_DEVICES="" flox activate -s
-```
-
-## 🔧 Troubleshooting
-
-### Services Won't Start
+### Ollama
 
 ```bash
-# Check service status
-flox services status
+# Using preset (recommended)
+BACKEND=ollama flox activate -s
 
-# View detailed logs
-flox services logs openwebui
-flox services logs ollama
+# Ollama + vLLM (both model sources in one UI)
+BACKEND_PORT=8000 OPENAI_API_KEY=sk-vllm-local-dev ENABLE_OLLAMA_API=true flox activate -s
 
-# Restart services
-flox services restart openwebui
-flox services restart ollama
+# Manual (equivalent to preset)
+BACKEND_PORT=11434 BACKEND_HEALTH=/ ENABLE_OLLAMA_API=true flox activate -s
 ```
 
-### Port Already in Use
+With `ENABLE_OLLAMA_API=true`, Open WebUI connects to Ollama's native API
+(at `http://localhost:11434` by default) in addition to the OpenAI-compatible
+backend. Models from both sources appear in the same interface.
+
+### llama.cpp
 
 ```bash
-# Check what's using the port
-lsof -i :8080
+# Using preset (recommended)
+BACKEND=llamacpp flox activate -s
 
-# Use different port
-PORT=8081 flox activate -s
+# Manual (equivalent to preset)
+BACKEND_PORT=8080 WEBUI_PORT=8081 flox activate -s
 ```
 
-### GPU Not Detected
+llama.cpp defaults to port 8080, which conflicts with Open WebUI's default.
+The preset automatically sets `WEBUI_PORT=8081` to avoid the collision.
 
-```bash
-# Verify GPU is visible
-nvidia-smi
+## How it works
 
-# Check Ollama GPU detection
-ollama ps  # Should show GPU when model is loaded
+The Flox environment installs the `open-webui-frontend` package (built from
+Open WebUI v0.8.5 with patches for configurable model params and streaming).
 
-# View Ollama debug info
-OLLAMA_DEBUG=1 flox activate -s
-```
+On activation, the hook:
+1. Applies `BACKEND` preset defaults (if set), using `: "${VAR:=value}"` so
+   explicit env vars always win
+2. Sets `BACKEND_HOST`/`BACKEND_PORT` from env vars (with defaults)
+3. Sources the package's `setup.sh`, which configures Open WebUI env vars
+   and creates a Python venv with `uv` (cached, idempotent)
+4. Generates a secret key for Open WebUI sessions
 
-### Connection Issues
+The `open-webui` service polls the backend health endpoint, then starts
+the Open WebUI uvicorn server.
 
-```bash
-# Test Ollama connectivity
-ollama_status
-curl http://localhost:11434/api/tags
+## First run
 
-# Check if services are running
-flox services status
+The first activation takes longer (~30s) because `uv` creates a Python
+venv and installs Open WebUI's dependencies. Subsequent activations
+skip this step (cached via requirements hash).
 
-# Ensure Ollama is accessible
-OLLAMA_HOST=0.0.0.0:11434 flox activate -s
-```
+## Troubleshooting
 
-### Reset Environment
-
-```bash
-# Stop all services
-flox services stop
-
-# Clear all data (WARNING: deletes chats and settings)
-rm -rf $FLOX_ENV_CACHE/openwebui/
-
-# Restart fresh
-flox activate -s
-```
-
-## 🚀 Advanced Usage
-
-### Multiple Instances
-
-Run multiple environments with different configs:
-
-```bash
-# Development instance
-PORT=8080 DATA_DIR=~/.openwebui-dev flox activate -s
-
-# Production instance (in another terminal)
-PORT=8081 DATA_DIR=~/.openwebui-prod flox activate -s
-```
-
-### Remote Access
-
-Allow access from other devices on your network:
-
-```bash
-# Listen on all interfaces
-HOST=0.0.0.0 PORT=8080 flox activate -s
-
-# Access from another device
-# http://<your-ip>:8080
-
-# Security: Use reverse proxy with SSL for production
-```
-
-### Custom Models
-
-Create and use custom Ollama models:
-
-```bash
-# Create Modelfile
-cat > Modelfile << 'EOF'
-FROM llama3.2:3b
-SYSTEM "You are a helpful coding assistant specialized in Python."
-TEMPERATURE 0.7
-TOP_P 0.9
-EOF
-
-# Create custom model
-ollama create myassistant -f Modelfile
-
-# Use in Open WebUI
-# Select "myassistant" from the model dropdown
-```
-
-### API Access
-
-Open WebUI and Ollama both provide APIs:
-
-```bash
-# Ollama API
-curl http://localhost:11434/api/generate -d '{
-  "model": "llama3.2:3b",
-  "prompt": "Hello!"
-}'
-
-# Open WebUI API (requires API key from settings)
-curl http://localhost:8080/api/chat/completions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{"model": "llama3.2:3b", "messages": [{"role": "user", "content": "Hello!"}]}'
-```
-
-## 🎯 Features
-
-- ✅ **Composable** - Includes `barstoolbluz/ollama` environment
-- ✅ **Cross-platform** - Linux (with CUDA) and macOS support
-- ✅ **Persistent** - Chat history and settings preserved
-- ✅ **Secure** - Secret key auto-generated, telemetry disabled
-- ✅ **Flexible** - All settings configurable via environment variables
-- ✅ **Service Management** - Automatic startup and monitoring
-- ✅ **Model Caching** - Efficient model storage and loading
-
-## 🔒 Security Notes
-
-- **Secret Key**: Auto-generated on first run, stored in `webui_secret_key`
-- **Telemetry**: All analytics and tracking disabled by default
-- **Network**: Binds to all interfaces by default - restrict with `HOST=127.0.0.1` for local-only
-- **Data**: All data stored locally, nothing sent to external servers
-- **Authentication**: Open WebUI supports user accounts and API keys
-
-## 📋 Environment Details
-
-### Included Packages
-- `open-webui` v0.6.40 (pinned version)
-- `ollama-cuda` (Linux) / `ollama` (macOS) - latest from Flox catalog
-- Ollama environment from `barstoolbluz/ollama`
-- Additional utilities: `bat`, `curl`
-
-### Supported Platforms
-- Linux x86_64 (with CUDA support)
-- Linux ARM64 (with CUDA support)
-- macOS x86_64
-- macOS ARM64 (Apple Silicon)
-
-### Service Configuration
-
-Both services run as Flox-managed services:
-- **Open WebUI**: Logs to `$FLOX_ENV_CACHE/logs/openwebui.log`
-- **Ollama**: Inherits configuration from composed environment
-
-## 🤝 Contributing
-
-This environment is managed in Git. To contribute:
-
-1. Fork/clone the repository
-2. Make changes to `.flox/env/manifest.toml`
-3. Test thoroughly: `flox activate -s`
-4. Submit changes
-
-### Development Tips
-
-```bash
-# Test manifest changes
-flox edit  # Opens in $EDITOR
-
-# Check service definitions
-flox list -c
-
-# View complete manifest
-cat .flox/env/manifest.toml
-```
-
-## 📚 Links
-
-- [Open WebUI Documentation](https://docs.openwebui.com/)
-- [Open WebUI GitHub](https://github.com/open-webui/open-webui)
-- [Ollama Documentation](https://ollama.ai/)
-- [Ollama Model Library](https://ollama.ai/library)
-- [Flox Documentation](https://flox.dev/docs)
-- [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
-
-## 📝 License
-
-This Flox environment configuration is open source. Open WebUI and Ollama have their own respective licenses.
+- **Health check never passes** — verify the backend is running and `BACKEND_HEALTH` points to the correct endpoint (e.g. `/v1/models` for Triton instead of the default `/health`)
+- **Port conflict** — set `WEBUI_PORT` to an available port (e.g. `WEBUI_PORT=8081`)
+- **First run is slow** — expected; the Python venv is being created with `uv` (~30s). Subsequent activations are cached
