@@ -1,12 +1,4 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##               https://flox.dev/docs/concepts/manifest
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Included: Local Ollama Service -----------------------------------
@@ -29,9 +21,6 @@ version = 1
 ##   Option B: Use 'flox activate' then 'flox services start ccr'
 ##            (this starts only the router service, not Ollama)
 ##
-[include]
-ollama = "barstoolbluz/ollama-headless"
-
 
 ## Install Packages --------------------------------------------------
 [install]
@@ -39,7 +28,9 @@ claude-code-router.pkg-path = "claude-code-router"
 claude-code.pkg-path = "claude-code"
 gum.pkg-path = "gum"
 curl.pkg-path = "curl"
+curl.outputs = "all"
 jq.pkg-path = "jq"
+jq.outputs = "all"
 bat.pkg-path = "bat"
 
 
@@ -834,6 +825,10 @@ fi
 exec ccr start
 '''
 
+[include]
+environments = [
+  { remote = "flox/ollama" },
+]
 
 ## Other Environment Options -----------------------------------------
 [options]

@@ -1,22 +1,25 @@
 {
   "lockfile-version": 1,
   "manifest": {
-    "version": 1,
+    "schema-version": "1.11.0",
     "install": {
       "amp-cli": {
-        "pkg-path": "amp-cli"
+        "pkg-path": "amp-cli",
+        "pkg-group": "amp"
       },
       "bat": {
         "pkg-path": "bat"
       },
       "curl": {
-        "pkg-path": "curl"
+        "pkg-path": "curl",
+        "outputs": "all"
       },
       "gum": {
         "pkg-path": "gum"
       },
       "jq": {
-        "pkg-path": "jq"
+        "pkg-path": "jq",
+        "outputs": "all"
       }
     },
     "vars": {
@@ -42,122 +45,6 @@
     }
   },
   "packages": [
-    {
-      "attr_path": "amp-cli",
-      "broken": false,
-      "derivation": "/nix/store/jfngzvl9413212ak130c1szgas1xiw15-amp-cli-0.0.1762056193-g37ad2e.drv",
-      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
-      "install_id": "amp-cli",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "amp-cli-0.0.1762056193-g37ad2e",
-      "pname": "amp-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-04T00:35:17.894796Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": true,
-      "version": "0.0.1762056193-g37ad2e",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/j0raz0d8cpf7js8184m3pbl326lpfxv2-amp-cli-0.0.1762056193-g37ad2e"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "amp-cli",
-      "broken": false,
-      "derivation": "/nix/store/d0z2ni6g57gb5jb9rxsfzvk5mbk5h2dp-amp-cli-0.0.1762056193-g37ad2e.drv",
-      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
-      "install_id": "amp-cli",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "amp-cli-0.0.1762056193-g37ad2e",
-      "pname": "amp-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:28:57.165005Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": true,
-      "version": "0.0.1762056193-g37ad2e",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/4fq6a5wk0g129qs6l135dkr50bq72l7m-amp-cli-0.0.1762056193-g37ad2e"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "amp-cli",
-      "broken": false,
-      "derivation": "/nix/store/n2rg09fzqmgdhjz89srg1x8ahr0s4rp6-amp-cli-0.0.1762056193-g37ad2e.drv",
-      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
-      "install_id": "amp-cli",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "amp-cli-0.0.1762056193-g37ad2e",
-      "pname": "amp-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T16:54:57.003981Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": true,
-      "version": "0.0.1762056193-g37ad2e",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/4sgp017gnr1as7kb8cvidsv03cd5b304-amp-cli-0.0.1762056193-g37ad2e"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "amp-cli",
-      "broken": false,
-      "derivation": "/nix/store/n27hbzlpsb0n35vkln5hyj7fmd88c734-amp-cli-0.0.1762056193-g37ad2e.drv",
-      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
-      "install_id": "amp-cli",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "name": "amp-cli-0.0.1762056193-g37ad2e",
-      "pname": "amp-cli",
-      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
-      "rev_count": 888552,
-      "rev_date": "2025-11-02T19:18:41Z",
-      "scrape_date": "2025-11-05T17:20:46.413300Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": true,
-      "version": "0.0.1762056193-g37ad2e",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/jp0sk60ivplzdigc5ccgi4cz7b71bfz8-amp-cli-0.0.1762056193-g37ad2e"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
     {
       "attr_path": "bat",
       "broken": false,
@@ -662,6 +549,126 @@
       },
       "system": "x86_64-linux",
       "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/94p1cb0d7mnx8qz6wz1c9iz3xn8kjjkm-amp-cli-0.0.1774699422-ga16517.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "amp-cli-0.0.1774699422-ga16517",
+      "pname": "amp-cli",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:01:03.168685Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1774699422-ga16517",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/z9xwsfqaikg1fli6n6cs4ws5ccs22bhs-amp-cli-0.0.1774699422-ga16517"
+      },
+      "system": "aarch64-darwin",
+      "group": "amp",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/dalq59h5b5qgn9a7kcm4sgip2g9k3srz-amp-cli-0.0.1774699422-ga16517.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "amp-cli-0.0.1774699422-ga16517",
+      "pname": "amp-cli",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:32:34.977830Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1774699422-ga16517",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/a4q9k6nfx8glc3549qwrz14d2dgjh3ic-amp-cli-0.0.1774699422-ga16517"
+      },
+      "system": "aarch64-linux",
+      "group": "amp",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/5w6skcvr890r21zvgfy9kczgpcjrqypp-amp-cli-0.0.1774699422-ga16517.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "amp-cli-0.0.1774699422-ga16517",
+      "pname": "amp-cli",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:02:18.038243Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1774699422-ga16517",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/rwa7ai8gj40294lz2x78p2h19xrr0zgp-amp-cli-0.0.1774699422-ga16517"
+      },
+      "system": "x86_64-darwin",
+      "group": "amp",
+      "priority": 5
+    },
+    {
+      "attr_path": "amp-cli",
+      "broken": false,
+      "derivation": "/nix/store/zr3pswjyjj1825hag0iin94ifgzi6axb-amp-cli-0.0.1774699422-ga16517.drv",
+      "description": "CLI for Amp, an agentic coding agent in research preview from Sourcegraph",
+      "install_id": "amp-cli",
+      "license": "Unfree",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "amp-cli-0.0.1774699422-ga16517",
+      "pname": "amp-cli",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:36:31.105515Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": true,
+      "version": "0.0.1774699422-ga16517",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/w4p28lbqxgnlh5lp0xcbh52gad2mdgfs-amp-cli-0.0.1774699422-ga16517"
+      },
+      "system": "x86_64-linux",
+      "group": "amp",
       "priority": 5
     }
   ]

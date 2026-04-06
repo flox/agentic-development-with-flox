@@ -1,20 +1,15 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##               https://flox.dev/docs/concepts/manifest
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
 [install]
 amp-cli.pkg-path = "amp-cli"
+amp-cli.pkg-group = "amp"
 gum.pkg-path = "gum"
 curl.pkg-path = "curl"
+curl.outputs = "all"
 jq.pkg-path = "jq"
+jq.outputs = "all"
 bat.pkg-path = "bat"
 
 
