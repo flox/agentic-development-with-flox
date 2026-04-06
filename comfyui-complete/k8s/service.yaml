@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: comfyui
+  namespace: comfyui
+  labels:
+    app.kubernetes.io/name: comfyui
+spec:
+  type: ClusterIP  # Change to LoadBalancer or NodePort for external access, or add an Ingress.
+  selector:
+    app.kubernetes.io/name: comfyui
+  ports:
+    - name: http
+      port: 8188
+      targetPort: http
+      protocol: TCP

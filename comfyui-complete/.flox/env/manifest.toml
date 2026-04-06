@@ -1,0 +1,200 @@
+version = 1
+
+## DESIGN PHILOSOPHY -------------------------------------------------
+##
+## ComfyFlox: Complete ComfyUI environment with automatic model setup.
+##
+## Uses comfyui-complete which bundles:
+##   - ComfyUI core application
+##   - All Python dependencies (torch, transformers, etc.)
+##   - All custom nodes (Impact Pack, WAS, rgthree, etc.)
+##   - Setup script that creates runtime directory and installs pip packages
+##
+## RUNTIME DIRECTORY PATTERN:
+##   Since the Nix store is read-only, comfyui-setup creates a runtime
+##   directory at $FLOX_ENV_CACHE/comfyui-runtime that mirrors the store
+##   with writable parts:
+##     - custom_nodes: Copied to ~/comfyui-work/custom_nodes, symlinked back
+##     - web: Copied for writable extensions (rgthree, Custom-Scripts)
+##     - models: Symlinked to ~/comfyui-work/models
+##   ComfyUI runs from this runtime directory with --base-directory.
+##
+## STORE-PATH TESTING:
+##   When testing local builds via store-path, the bundled pythonEnv uses
+##   nixpkgs packages (CPU torch, scipy, numpy). The manifest provides CUDA
+##   torch via flox-cuda, but must NOT provide scipy/numpy/torchvision from
+##   flox-cuda — those collide with the bundled nixpkgs versions in the Flox
+##   profile merge, creating Frankenstein packages with mixed .py/.so files.
+##   The comfyui-start script handles CUDA torch priority via PYTHONPATH.
+##
+## Models must be downloaded manually by the user (not redistributable).
+##
+## --------------------------------------------------------------------
+
+[install]
+# Local build testing via store-path:
+# Build with: cd /home/daedalus/dev/builds/build-comfyui && flox build comfyui-complete
+# Then update the store-path below with: readlink -f result-comfyui-complete
+#
+# To switch to local build for testing, comment out pkg-path and use store-path:
+# comfyui.store-path = "/nix/store/<hash>-comfyui-complete-<version>"
+comfyui.pkg-path = "flox/comfyui-complete"
+comfyui.pkg-group = "comfyui"
+comfyui.priority = 0
+comfyui.version = "0.15.0+f04d744"
+
+# Core Python environment
+python.pkg-path = "python313Full"
+python.pkg-group = "runtime"
+python.priority = 5
+
+# Tools
+uv.pkg-path = "uv"
+uv.pkg-group = "tools"
+uv.priority = 5
+
+curl.pkg-path = "curl"
+curl.pkg-group = "tools"
+
+# System libraries
+gcc-unwrapped.pkg-path = "gcc-unwrapped"
+gcc-unwrapped.priority = 6
+gcc-unwrapped.pkg-group = "libraries"
+
+# CUDA torch packages
+# These provide CUDA-enabled torch as a dependency. The comfyui-start script
+# uses PYTHONPATH to prioritize these over the bundled CPU torch.
+#
+# IMPORTANT: Only torch/torchvision/torchaudio from flox-cuda. Do NOT add
+# cuda-scipy or cuda-numpy here — they collide with the bundled nixpkgs
+# versions and create broken merged directories in the Flox profile.
+cuda-torchvision.pkg-path = "flox-cuda/python3Packages.torchvision"
+cuda-torchvision.version = "0.25.0"
+cuda-torchvision.systems = ["x86_64-linux", "aarch64-linux"]
+cuda-torchvision.priority = 0
+cuda-torchvision.pkg-group = "torchvision"
+
+cuda-torchaudio.pkg-path = "flox-cuda/python3Packages.torchaudio"
+cuda-torchaudio.version = "2.10.0"
+cuda-torchaudio.systems = ["x86_64-linux", "aarch64-linux"]
+cuda-torchaudio.priority = 3
+cuda-torchaudio.pkg-group = "torchaudio"
+
+# fallback for other platforms
+torchvision.pkg-path = "python313Packages.torchvision"
+torchvision.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
+torchvision.priority = 6
+torchvision.pkg-group = "torchvision"
+
+torchaudio.pkg-path = "python313Packages.torchaudio"
+torchaudio.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
+torchaudio.priority = 7
+torchaudio.pkg-group = "torchaudio"
+
+# torchsde - not in nixpkgs, required by ComfyUI samplers
+# Using local build with scipy/numpy removed from deps to prevent profile merge conflicts
+# To switch back to published: torchsde.pkg-path = "flox/torchsde-python313"
+torchsde.store-path = "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879"
+
+# Scientific packages: use bundled nixpkgs versions from comfyui-complete.
+# Do NOT add flox-cuda scipy/numpy here when using store-path — version
+# differences between nixpkgs and flox-cuda create Frankenstein merges.
+# (The published flox/comfyui-complete is built within flox-cuda so it matches.)
+
+# kornia - CUDA computer vision (no nixpkgs equivalent, safe to add)
+kornia.pkg-path = "flox-cuda/python3Packages.kornia"
+kornia.systems = ["x86_64-linux"]
+kornia.priority = 33
+kornia.pkg-group = "kornia"
+
+awscli2.pkg-path = "awscli2"
+
+
+[vars]
+# Virtual environment configuration
+VIRTUAL_ENV = "$FLOX_ENV_CACHE/venv"
+VIRTUAL_ENV_DISABLE_PROMPT = "1"
+
+# ComfyUI source location (from Flox store package)
+COMFYUI_SOURCE = "$FLOX_ENV/share/comfyui"
+
+# ComfyUI runtime directory (mirrors store with writable custom_nodes)
+# Created by comfyui-setup, used as --base-directory for ComfyUI
+COMFYUI_RUNTIME = "$FLOX_ENV_CACHE/comfyui-runtime"
+COMFYUI_BASE_DIR = "$FLOX_ENV_CACHE/comfyui-runtime"
+
+# ComfyUI directory structure (mutable data)
+COMFYUI_WORK_DIR = "$HOME/comfyui-work"
+COMFYUI_MODELS_DIR = "$HOME/comfyui-work/models"
+COMFYUI_OUTPUT_DIR = "$HOME/comfyui-work/output"
+COMFYUI_INPUT_DIR = "$HOME/comfyui-work/input"
+COMFYUI_USER_DIR = "$HOME/comfyui-work/user"
+COMFYUI_TEMP_DIR = "$FLOX_ENV_CACHE/temp"
+COMFYUI_VENV_DIR = "$FLOX_ENV_CACHE/venv"
+COMFYUI_EXTRA_MODEL_PATHS = "$HOME/comfyui-work/extra_model_paths.yaml"
+COMFYUI_DATABASE_URL = "sqlite:///$HOME/comfyui-work/user/comfyui.db"
+COMFYUI_LISTEN = "0.0.0.0"
+COMFYUI_PORT = "8188"
+
+# Python environment caching
+UV_CACHE_DIR = "$FLOX_ENV_CACHE/uv"
+PIP_CACHE_DIR = "$FLOX_ENV_CACHE/pip"
+
+# Suppress warning pending update by upstream maintainers
+PYTHONWARNINGS = "ignore::requests.exceptions.RequestsDependencyWarning"
+
+[hook]
+on-activate = '''
+# Increase file descriptor limit (macOS defaults to 256, too low for ComfyUI)
+ulimit -n 10240
+
+# Download models if get-models is available (Flox internal only)
+# External users must download models manually
+if [[ -x "$FLOX_ENV/bin/get-models" ]]; then
+  # Check if models are already installed
+  models_installed() {
+    [[ -f "$HOME/comfyui-work/models/checkpoints/sd_xl_base_1.0.safetensors" ]] && \
+    [[ -f "$HOME/comfyui-work/models/unet/flux1-dev.safetensors" ]] && \
+    [[ -f "$HOME/comfyui-work/models/clip/t5xxl_fp16.safetensors" ]]
+  }
+
+  if ! models_installed; then
+    echo ""
+    echo "Models not found. Downloading from Flox R2 bucket..."
+    echo "This is a one-time download (~59GB) and may take a while."
+    echo ""
+    "$FLOX_ENV/bin/get-models"
+  fi
+fi
+
+# Setup ComfyUI (creates venv, installs pip packages)
+"$FLOX_ENV/bin/comfyui-setup"
+'''
+
+
+[profile]
+bash = '''
+if [ -d "$FLOX_ENV_CACHE/venv/bin" ]; then
+  export PATH="$FLOX_ENV_CACHE/venv/bin:$PATH"
+fi
+'''
+zsh = '''
+if [ -d "$FLOX_ENV_CACHE/venv/bin" ]; then
+  export PATH="$FLOX_ENV_CACHE/venv/bin:$PATH"
+fi
+'''
+fish = '''
+if test -d "$FLOX_ENV_CACHE/venv/bin"
+    set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
+end
+'''
+
+
+[services]
+[services.comfyui]
+command = "comfyui-start"
+
+
+[options]
+systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux", "x86_64-darwin"]
+cuda-detection = true

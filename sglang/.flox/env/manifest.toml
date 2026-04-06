@@ -1,0 +1,79 @@
+schema-version = "1.10.0"
+
+[install]
+sglang.pkg-path = "flox/sglang-python312-cuda12_8-all-avx2"
+sglang.systems = ["x86_64-linux"]
+sglang.pkg-group = "sglang"
+sglang.outputs = "all"
+
+sglang-flox-runtime.pkg-path = "flox/sglang-flox-runtime"
+sglang-flox-runtime.systems = ["x86_64-linux"]
+
+phi-4-mini-instruct-fp8-sglang.pkg-path = "flox/phi-4-mini-instruct-fp8-sglang"
+phi-4-mini-instruct-fp8-sglang.systems = ["x86_64-linux"]
+
+## Phi-3.5-mini-instruct AWQ 4-bit (~2.2 GB) — T4-compatible
+## To use: SGLANG_MODEL=microsoft/Phi-3.5-mini-instruct-AWQ \
+##         SGLANG_ATTENTION_BACKEND=triton SGLANG_DISABLE_CUDA_GRAPH=1 \
+##         SGLANG_DTYPE=float16 flox activate -s
+# phi-3-5-mini-instruct-awq.pkg-path = "flox/phi-3-5-mini-instruct-awq"
+# phi-3-5-mini-instruct-awq.systems = ["x86_64-linux"]
+
+[vars]
+SGLANG_PORT = "30000"
+SGLANG_HOST = "0.0.0.0"
+SGLANG_SERVED_NAME = ""
+
+[hook]
+on-activate = '''
+  # ── Model selection (allow override via env var) ──────────────────
+  export SGLANG_MODEL="${SGLANG_MODEL:-microsoft/Phi-4-mini-instruct-FP8-TORCHAO}"
+
+  # Default sampling params
+  export SGLANG_PREFERRED_SAMPLING_PARAMS="${SGLANG_PREFERRED_SAMPLING_PARAMS:-{\"max_new_tokens\": 512, \"frequency_penalty\": 0.5, \"presence_penalty\": 0.3}}"
+
+  # ── Python/CUDA env setup (for interactive python3.12 access) ─────
+  unset PYTHONPATH PYTHONHOME
+  _sglang_store="$(dirname "$(dirname "$(readlink -f "$(which sglang)")")")"
+  _sglang_python="$(nix-store -qR "$_sglang_store" | grep -F 'python3-3.12' | head -1)"
+  export PATH="$_sglang_python/bin:$PATH"
+  _pp=""
+  for dep in $(nix-store -qR "$_sglang_store"); do
+    sp="$dep/lib/python3.12/site-packages"
+    [ -d "$sp" ] && _pp="${_pp:+$_pp:}$sp"
+  done
+  export PYTHONPATH="$_pp"
+  export CUDA_HOME="$(nix-store -qR "$_sglang_store" | grep -F 'cuda_nvcc' | head -1)"
+  _cpath="" _lpath=""
+  for dep in $(nix-store -qR "$_sglang_store"); do
+    case "$dep" in *cuda12.8-*)
+      [ -d "$dep/include" ] && _cpath="${_cpath:+$_cpath:}$dep/include"
+      for _ld in "$dep/lib" "$dep/lib64"; do
+        [ -d "$_ld" ] && _lpath="${_lpath:+$_lpath:}$_ld"
+      done ;;
+    esac
+  done
+  export CPATH="${_cpath}${CPATH:+:$CPATH}"
+  export LIBRARY_PATH="${_lpath}${LIBRARY_PATH:+:$LIBRARY_PATH}"
+  unset _sglang_store _sglang_python _pp _cpath _lpath _ld
+
+  # FlashInfer JIT needs a writable cache dir (nix store is read-only)
+  export FLASHINFER_JIT_DIR="${FLOX_ENV_CACHE:-$HOME/.cache/flox}/flashinfer-jit"
+  mkdir -p "$FLASHINFER_JIT_DIR"
+
+  # ── Info banner ───────────────────────────────────────────────────
+  echo "SGLang 0.5.9 runtime (all GPUs SM75-SM120, AVX2, CUDA 12.8)"
+  echo "  model: $SGLANG_MODEL"
+  echo "  sglang serve: flox activate -s  (set SGLANG_MODEL to choose model)"
+  echo "  interactive:  python3.12"
+'''
+
+[services.sglang]
+command = "sglang-resolve-model && sglang-serve"
+is-daemon = false
+
+[profile]
+
+[options]
+systems = ["x86_64-linux"]
+cuda-detection = false

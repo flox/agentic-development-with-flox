@@ -1,0 +1,162 @@
+version = 1
+
+
+## Install Packages --------------------------------------------------
+[install]
+llama-cpp.pkg-path = "flox-cuda/llama-cpp"
+llama-cpp.systems = ["x86_64-linux"]
+llamacpp-flox-runtime.pkg-path = "flox/llamacpp-flox-runtime"
+llamacpp-flox-runtime.pkg-group = "llamacpp-flox-runtime"
+llamacpp-flox-runtime.version = "0.9.2"
+llamacpp-flox-runtime.systems = ["x86_64-linux"]
+huggingface-hub.pkg-path = "python312Packages.huggingface-hub"
+#huggingface-hub.outputs = "all"
+
+## Environment Variables ---------------------------------------------
+[vars]
+# All user-tunable vars live in [hook.on-activate] with ${VAR:-default}
+# fallbacks so they can be overridden via environment variables at
+# activation time (e.g., LLAMACPP_MODEL=MyModel flox activate).
+
+
+## Activation Hook ---------------------------------------------------
+[hook]
+on-activate = '''
+  # Model
+  export LLAMACPP_MODEL="${LLAMACPP_MODEL:-Phi-4-mini-instruct-Q8_0}"
+  export LLAMACPP_MODEL_ORG="${LLAMACPP_MODEL_ORG:-microsoft}"
+  export LLAMACPP_MODEL_ID="${LLAMACPP_MODEL_ID:-microsoft/Phi-4-mini-instruct-GGUF}"
+  export LLAMACPP_MODEL_FILE="${LLAMACPP_MODEL_FILE:-Phi-4-mini-instruct-Q8_0.gguf}"
+  export LLAMACPP_QUANT="${LLAMACPP_QUANT:-Q8_0}"
+  export LLAMACPP_MODEL_SOURCES="${LLAMACPP_MODEL_SOURCES:-local,hf-cache,hf-hub}"
+  export LLAMACPP_MODELS_DIR="${LLAMACPP_MODELS_DIR:-$FLOX_ENV_PROJECT/models}"
+
+  # Server
+  export LLAMACPP_HOST="${LLAMACPP_HOST:-0.0.0.0}"
+  export LLAMACPP_PORT="${LLAMACPP_PORT:-8080}"
+
+  # Engine tuning
+  export LLAMACPP_N_GPU_LAYERS="${LLAMACPP_N_GPU_LAYERS:-99}"
+  export LLAMACPP_CTX_SIZE="${LLAMACPP_CTX_SIZE:-0}"
+  export LLAMACPP_PARALLEL="${LLAMACPP_PARALLEL:-4}"
+  export LLAMACPP_BATCH_SIZE="${LLAMACPP_BATCH_SIZE:-}"
+  export LLAMACPP_UBATCH_SIZE="${LLAMACPP_UBATCH_SIZE:-}"
+  export LLAMACPP_FLASH_ATTN="${LLAMACPP_FLASH_ATTN:-true}"
+  export LLAMACPP_CONT_BATCHING="${LLAMACPP_CONT_BATCHING:-true}"
+
+  # KV cache
+  export LLAMACPP_CACHE_TYPE_K="${LLAMACPP_CACHE_TYPE_K:-}"
+  export LLAMACPP_CACHE_TYPE_V="${LLAMACPP_CACHE_TYPE_V:-}"
+
+  # Multi-GPU
+  export LLAMACPP_SPLIT_MODE="${LLAMACPP_SPLIT_MODE:-}"
+  export LLAMACPP_TENSOR_SPLIT="${LLAMACPP_TENSOR_SPLIT:-}"
+  export LLAMACPP_MAIN_GPU="${LLAMACPP_MAIN_GPU:-}"
+
+  # Serving
+  export LLAMACPP_ALIAS="${LLAMACPP_ALIAS:-}"
+  export LLAMACPP_API_KEY="${LLAMACPP_API_KEY:-}"
+  export LLAMACPP_METRICS="${LLAMACPP_METRICS:-true}"
+  export LLAMACPP_JINJA="${LLAMACPP_JINJA:-true}"
+  export LLAMACPP_CHAT_TEMPLATE="${LLAMACPP_CHAT_TEMPLATE:-}"
+  export LLAMACPP_EMBEDDING="${LLAMACPP_EMBEDDING:-}"
+  export LLAMACPP_WEBUI="${LLAMACPP_WEBUI:-false}"
+  export LLAMACPP_REASONING_FORMAT="${LLAMACPP_REASONING_FORMAT:-}"
+
+  # Misc
+  export LLAMACPP_THREADS="${LLAMACPP_THREADS:-}"
+  export LLAMACPP_TIMEOUT="${LLAMACPP_TIMEOUT:-}"
+
+  mkdir -p "$LLAMACPP_MODELS_DIR"
+
+  # ── Download default model from GitHub Releases (first activation) ──
+  _gh_release_model_download() {
+    local _default_model="Phi-4-mini-instruct-Q8_0"
+    # Only run for the default model; user overrides skip this entirely
+    if [[ "$LLAMACPP_MODEL" != "$_default_model" ]]; then
+      return 0
+    fi
+
+    local _model_dir="$LLAMACPP_MODELS_DIR/${_default_model}"
+    local _model_file="Phi-4-mini-instruct-Q8_0.gguf"
+
+    # Idempotent: skip if already downloaded
+    if [[ -f "$_model_dir/$_model_file" ]]; then
+      return 0
+    fi
+
+    echo "══════════════════════════════════════════════════════════════"
+    echo "  Downloading ${_default_model} model weights …"
+    echo "  (one-time download, ~3.9 GB from GitHub Releases)"
+    echo "══════════════════════════════════════════════════════════════"
+
+    local _gh_tag="phi-4-mini-instruct-gguf-q8_0-v1.0"
+    local _gh_repo="barstoolbluz/build-hf-models"
+    local _base_url="https://github.com/${_gh_repo}/releases/download/${_gh_tag}"
+    local _parts=( "phi-4-mini-instruct-gguf-q8_0.tar.part-aa"
+                   "phi-4-mini-instruct-gguf-q8_0.tar.part-ab"
+                   "phi-4-mini-instruct-gguf-q8_0.tar.part-ac" )
+    local _checksums_file="phi-4-mini-instruct-gguf-q8_0.sha256sums"
+    local _tmp_dir
+    _tmp_dir="$(mktemp -d "${LLAMACPP_MODELS_DIR}/.dl-${_default_model}.XXXXXX")"
+
+    # Clean up on any failure
+    trap 'rm -rf "$_tmp_dir" "${_staging_dir:-}"; echo "ERROR: model download failed — cleaned up temp files." >&2' ERR
+
+    # Download checksums
+    echo "  Fetching checksums …"
+    curl -fSL --retry 3 -o "$_tmp_dir/$_checksums_file" "$_base_url/$_checksums_file"
+
+    # Download parts sequentially
+    for _part in "${_parts[@]}"; do
+      echo "  Downloading $_part …"
+      curl -fSL --retry 3 -o "$_tmp_dir/$_part" "$_base_url/$_part"
+    done
+
+    # Verify checksums
+    echo "  Verifying checksums …"
+    (cd "$_tmp_dir" && sha256sum -c "$_checksums_file")
+
+    # Extract into staging directory
+    local _staging_dir
+    _staging_dir="$(mktemp -d "${LLAMACPP_MODELS_DIR}/.staging-${_default_model}.XXXXXX")"
+    echo "  Extracting model …"
+    cat "$_tmp_dir"/phi-4-mini-instruct-gguf-q8_0.tar.part-* | tar xf - -C "$_staging_dir"
+
+    # Remove downloaded parts immediately to free disk
+    rm -f "$_tmp_dir"/phi-4-mini-instruct-gguf-q8_0.tar.part-*
+    rm -f "$_tmp_dir/$_checksums_file"
+    rmdir "$_tmp_dir"
+
+    # Atomic swap into final location
+    mv "$_staging_dir" "$_model_dir"
+
+    trap - ERR
+    echo "══════════════════════════════════════════════════════════════"
+    echo "  Model downloaded and verified successfully."
+    echo "  Location: $_model_dir"
+    echo "══════════════════════════════════════════════════════════════"
+  }
+  _gh_release_model_download
+'''
+
+
+## Profile script ----------------------------------------------------
+[profile]
+
+
+## Services ---------------------------------------------------------
+[services]
+llamacpp.command = "llamacpp-preflight && llamacpp-resolve-model && llamacpp-serve"
+
+
+## Include ----------------------------------------------------------
+[include]
+
+
+## Build and publish your own packages ------------------------------
+[build]
+
+
+## Other Environment Options -----------------------------------------
+[options]

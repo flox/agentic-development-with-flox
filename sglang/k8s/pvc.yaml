@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sglang-models
+  namespace: sglang
+  labels:
+    app.kubernetes.io/name: sglang
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi  # Bundled model ~2 GB; sized for non-bundled overrides (e.g. Llama-3.1-8B ~16 GB)
+  # storageClassName: <your-storage-class>  # Set to match your cluster (e.g. gp3, standard-rwo)

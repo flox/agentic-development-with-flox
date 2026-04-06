@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llamacpp
+  namespace: llamacpp
+  labels:
+    app.kubernetes.io/name: llamacpp
+spec:
+  # Single replica: llama-server holds GPU memory exclusively and model
+  # cache is node-local (PVC is ReadWriteOnce). Scale by adding
+  # Deployments on separate nodes, not by increasing replicas.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llamacpp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: llamacpp
+      annotations:
+        flox.dev/environment: "flox/llamacpp-runtime"
+        # Activate mode "run" (the default) is correct here — the on-activate
+        # hook only sets env vars, creates directories, and downloads the
+        # model archive. No build tools required.
+    spec:
+      runtimeClassName: flox
+
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      volumes:
+        - name: llamacpp-models
+          persistentVolumeClaim:
+            claimName: llamacpp-models
+
+      containers:
+        - name: llamacpp
+          image: flox/empty:1.0.0
+          command: ["sh", "-c", "llamacpp-preflight && llamacpp-resolve-model && llamacpp-serve"]
+
+          env:
+            # Override the default models directory to use the PVC mount path.
+            # Without this, LLAMACPP_MODELS_DIR defaults to
+            # $FLOX_ENV_PROJECT/models which is ephemeral in Kubernetes.
+            - name: LLAMACPP_MODELS_DIR
+              value: "/models"
+
+            # ── Secrets ──
+            # Uncomment and create the referenced Secret to enable:
+            #
+            # - name: LLAMACPP_API_KEY
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: llamacpp-secrets
+            #       key: api-key
+            #
+            # - name: HF_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: llamacpp-secrets
+            #       key: hf-token
+
+            # ── Optional tuning overrides ──
+            # Uncomment any of these to override on-activate defaults:
+            #
+            # - name: LLAMACPP_MODEL
+            #   value: "Phi-4-mini-instruct-Q8_0"
+            # - name: LLAMACPP_MODEL_ORG
+            #   value: "microsoft"
+            # - name: LLAMACPP_MODEL_ID
+            #   value: "microsoft/Phi-4-mini-instruct-GGUF"
+            # - name: LLAMACPP_MODEL_FILE
+            #   value: "Phi-4-mini-instruct-Q8_0.gguf"
+            # - name: LLAMACPP_N_GPU_LAYERS
+            #   value: "99"
+            # - name: LLAMACPP_CTX_SIZE
+            #   value: "0"
+            # - name: LLAMACPP_PARALLEL
+            #   value: "4"
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              # cpu: "8"
+              # memory: "32Gi"
+            # requests:
+            #   cpu: "2"
+            #   memory: "8Gi"
+
+          volumeMounts:
+            - name: llamacpp-models
+              mountPath: /models
+
+          # ── Probes ──
+          # startupProbe gates liveness/readiness until the pod is ready.
+          # Budget: 30 failures * 10s = 300s (5 min) covers warm starts
+          # with a cached model on PVC. For cold starts (first-time model
+          # download of ~3.9 GB), increase failureThreshold to 60 (10 min).
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3

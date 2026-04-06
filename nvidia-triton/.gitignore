@@ -1,0 +1,11 @@
+__pycache__/
+result-*
+.staging/
+.published/
+*.pyc
+
+# Dynamic backend symlinks created by triton-setup-backends
+backends/python
+backends/onnxruntime
+backends/tensorrt
+

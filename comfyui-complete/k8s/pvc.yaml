@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: comfyui-data
+  namespace: comfyui
+  labels:
+    app.kubernetes.io/name: comfyui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Models alone can be 60+ GB. Adjust as needed.
+      storage: 100Gi
+  # Set this to your cluster's storage class (e.g. gp3, local-path, nfs-client).
+  # storageClassName: gp3

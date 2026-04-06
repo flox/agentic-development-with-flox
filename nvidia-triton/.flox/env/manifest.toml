@@ -1,0 +1,188 @@
+schema-version = "1.10.0"
+
+
+[install]
+# triton-specific packages
+triton-server.pkg-path = "flox/triton-server"
+triton-server.systems = ["x86_64-linux"]
+triton-server.version = "2.66.0+ae26af8"
+triton-server.pkg-group = "triton-server"
+triton-server.priority = 0
+triton-python-backend.pkg-path = "flox/triton-python-backend"
+triton-python-backend.systems = ["x86_64-linux"]
+triton-python-backend.priority = 4
+triton-onnxruntime-backend.pkg-path = "flox/triton-onnxruntime-backend"
+triton-onnxruntime-backend.systems = ["x86_64-linux"]
+triton-onnxruntime-backend.priority = 5
+triton-tensorrt-backend.pkg-path = "flox/triton-tensorrt-backend"
+triton-tensorrt-backend.systems = ["x86_64-linux"]
+triton-tensorrt-backend.priority = 6
+triton-vllm-backend.pkg-path = "flox/triton-vllm-backend"
+triton-vllm-backend.systems = ["x86_64-linux"]
+triton-vllm-backend.pkg-group = "vllm-backend"
+triton-vllm-backend.priority = 7
+
+## other required deps
+shellcheck.pkg-path = "shellcheck"
+shellcheck.outputs = "all"
+bats.pkg-path = "bats"
+numpy.pkg-path = "flox-cuda/python3Packages.numpy"
+numpy.systems = ["aarch64-linux", "x86_64-linux"]
+numpy.pkg-group = "numpy"
+numpy.outputs = "all"
+torch.pkg-path = "flox-cuda/python3Packages.torch"
+torch.systems = ["aarch64-linux", "x86_64-linux"]
+torch.pkg-group = "torch"
+torch.outputs = "all"
+transformers.pkg-path = "flox-cuda/python3Packages.transformers"
+transformers.systems = ["aarch64-linux", "x86_64-linux"]
+transformers.pkg-group = "transformers"
+transformers.outputs = "all"
+vllm.pkg-path = "flox-cuda/python3Packages.vllm"
+vllm.systems = ["x86_64-linux"]
+vllm.pkg-group = "vllm"
+vllm.outputs = "all"
+util-linux.pkg-path = "util-linux"
+util-linux.systems = ["x86_64-linux"]
+util-linux.outputs = "all"
+iproute2.pkg-path = "iproute2"
+iproute2.systems = ["x86_64-linux"]
+iproute2.outputs = "all"
+uv.pkg-path = "uv"
+coreutils.pkg-path = "coreutils"
+coreutils.priority = 7
+gnutar.pkg-path = "gnutar"
+gawk.pkg-path = "gawk"
+python3.pkg-path = "python3"
+
+# example model for model serving; delete or uncomment not to use
+vllm-phi-3-5-mini-instruct-awq.pkg-path = "flox/vllm-phi-3-5-mini-instruct-awq"
+vllm-phi-3-5-mini-instruct-awq.pkg-group = "vllm-phi-3-5-mini-instruct-awq"
+vllm-phi-3-5-mini-instruct-awq.systems = ["x86_64-linux"]
+
+
+[hook]
+on-activate = '''
+  # Runtime defaults — override at activation time, e.g.:
+  #   TRITON_MODEL=my_model flox activate --start-services
+  export TRITON_MODEL="${TRITON_MODEL:-phi3_5_mini_instruct_awq}"
+  export TRITON_OPENAI_FRONTEND="${TRITON_OPENAI_FRONTEND:-true}"
+  export TRITON_DEFAULT_MAX_TOKENS="${TRITON_DEFAULT_MAX_TOKENS:-1024}"
+  export TRITON_MAX_TOKENS="${TRITON_MAX_TOKENS:-1024}"
+
+  # Suppress .pyc bytecode writes — Tier 1 Python backends (e.g. vllm) have
+  # subdirectories symlinked to the read-only Nix store; writing __pycache__
+  # there would silently fail. One-time source interpretation at Triton startup
+  # is negligible for a long-running inference server.
+  export PYTHONDONTWRITEBYTECODE=1
+
+  triton-setup-backends
+  export TRITON_BACKEND_DIR="$FLOX_ENV_CACHE/backends"
+
+  # CUDA driver stub — isolated dir to avoid host libc conflicts
+  _cuda_stub_dir="$FLOX_ENV_CACHE/cuda-driver-stub"
+  if [[ ! -d "$_cuda_stub_dir" ]]; then
+    mkdir -p "$_cuda_stub_dir"
+    for _lib in libcuda.so.1 libnvidia-ml.so.1 libnvidia-ptxjitcompiler.so.1; do
+      for _dir in /usr/lib/x86_64-linux-gnu /usr/lib64; do
+        if [[ -e "$_dir/$_lib" ]]; then
+          ln -sf "$_dir/$_lib" "$_cuda_stub_dir/$_lib"
+          break
+        fi
+      done
+    done
+    # PTX JIT compiler — needed for flash attention on older GPUs (e.g. T4/sm75)
+    _nvjit="/nix/store/7pj5iv9www8s4jg41q7lmmiiq907z1k3-cuda12.8-libnvjitlink-12.8.93-lib/lib/libnvJitLink.so.12"
+    if [[ -e "$_nvjit" ]]; then
+      ln -sf "$_nvjit" "$_cuda_stub_dir/libnvJitLink.so.12"
+    fi
+  fi
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$_cuda_stub_dir"
+
+  # HF model cache (disabled — using Flox-packaged model via store-path)
+  # export HF_HUB_CACHE="${HF_HUB_CACHE:-$FLOX_ENV_CACHE/hf-hub}"
+
+  triton-setup-models
+  export TRITON_MODEL_REPOSITORY="${TRITON_MODEL_REPOSITORY:-$FLOX_ENV_CACHE/models}"
+
+  # Generate model.json for Flox-packaged vLLM models
+  triton-generate-vllm-config
+
+  # Auto-resolve tokenizer for OpenAI chat templates
+  if [[ -n "${TRITON_MODEL:-}" ]] && [[ -z "${TRITON_OPENAI_TOKENIZER:-}" ]]; then
+    _model_json="$TRITON_MODEL_REPOSITORY/$TRITON_MODEL/1/model.json"
+    if [[ -f "$_model_json" ]]; then
+      _hf_model_id="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('model',''))" "$_model_json" 2>/dev/null || true)"
+      if [[ -n "$_hf_model_id" ]]; then
+        export TRITON_OPENAI_TOKENIZER="$_hf_model_id"
+      fi
+    fi
+    if [[ -z "${TRITON_OPENAI_TOKENIZER:-}" ]]; then
+      _tokenizer_dir="$TRITON_MODEL_REPOSITORY/$TRITON_MODEL/tokenizer"
+      if [[ -d "$_tokenizer_dir" ]]; then
+        export TRITON_OPENAI_TOKENIZER="$(readlink -f "$_tokenizer_dir")"
+      fi
+    fi
+  fi
+
+  # OpenAI frontend dependencies
+  _ts_prefix="$(dirname "$(command -v tritonserver)")/.."
+  _openai_main="$_ts_prefix/python/openai/main.py"
+  if [[ -f "$_openai_main" ]]; then
+    _openai_reqs="$_ts_prefix/python/openai/requirements.txt"
+    _openai_deps="$FLOX_ENV_CACHE/openai-deps"
+    _openai_sentinel="$_openai_deps/.installed-v2"
+    if [[ ! -f "$_openai_sentinel" ]]; then
+      echo "Installing OpenAI frontend dependencies..."
+      mkdir -p "$_openai_deps"
+      uv pip install --target "$_openai_deps" \
+        -r "$_openai_reqs" \
+        "$_ts_prefix"/python/tritonserver-*.whl \
+        "$_ts_prefix"/python/tritonfrontend-*.whl \
+        2>&1 | tail -1
+      # Remove pip numpy — it shadows the Nix-provided one which has
+      # proper RPATH for libstdc++ (pip manylinux wheel does not).
+      rm -rf "$_openai_deps"/numpy{,.libs,*.dist-info}
+      # Remove pip certifi — uv --target doesn't install cacert.pem
+      # properly, so certifi.where() returns an invalid path. The
+      # Nix-provided certifi (from the vllm closure) has it.
+      rm -rf "$_openai_deps"/certifi{,*.dist-info}
+      touch "$_openai_sentinel"
+    fi
+    export PYTHONPATH="${_openai_deps}${PYTHONPATH:+:$PYTHONPATH}"
+
+    # Patch transformers 5.x compat (all_special_tokens_extended removed)
+    _compat_dir="$FLOX_ENV_CACHE/python-compat"
+    if [[ ! -f "$_compat_dir/sitecustomize.py" ]]; then
+      mkdir -p "$_compat_dir"
+      cat > "$_compat_dir/sitecustomize.py" << 'COMPATEOF'
+import transformers.tokenization_utils_base as _tub
+if not hasattr(_tub.PreTrainedTokenizerBase, 'all_special_tokens_extended'):
+    @property
+    def _all_special_tokens_extended(self):
+        return list(self.all_special_tokens)
+    _tub.PreTrainedTokenizerBase.all_special_tokens_extended = _all_special_tokens_extended
+COMPATEOF
+    fi
+    export PYTHONPATH="${_compat_dir}:$PYTHONPATH"
+  fi
+'''
+
+
+[profile]
+
+
+[services]
+tritonserver.command = "triton-preflight && triton-resolve-model && triton-serve"
+
+
+[options]
+# Systems that environment is compatible with
+# systems = [
+#   "aarch64-darwin",
+#   "aarch64-linux",
+#   "x86_64-darwin",
+#   "x86_64-linux",
+# ]
+# Uncomment to disable CUDA detection.
+# cuda-detection = false

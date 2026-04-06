@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llamacpp-models
+  namespace: llamacpp
+  labels:
+    app.kubernetes.io/name: llamacpp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi  # Default model ~3.9 GB; sized for multiple GGUF variants
+  # storageClassName: <your-storage-class>  # Set to match your cluster (e.g. gp3, standard-rwo)

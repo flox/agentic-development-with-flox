@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sglang
+  namespace: sglang
+  labels:
+    app.kubernetes.io/name: sglang
+spec:
+  # Single replica: SGLang holds GPU memory exclusively and model cache is
+  # node-local (PVC is ReadWriteOnce). Scale by adding Deployments on
+  # separate nodes, not by increasing replicas.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sglang
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sglang
+      annotations:
+        flox.dev/environment: "flox/sglang-runtime"
+    spec:
+      runtimeClassName: flox
+
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      volumes:
+        - name: sglang-models
+          persistentVolumeClaim:
+            claimName: sglang-models
+
+      containers:
+        - name: sglang
+          image: flox/empty:1.0.0
+          command:
+            - "sh"
+            - "-c"
+            - "sglang-resolve-model && exec sglang-serve"
+
+          env:
+            # Point HuggingFace Hub cache to the PVC mount path.
+            # Optional for the bundled default model (Phi-4-mini-instruct-FP8-TORCHAO,
+            # installed from the Flox catalog). Required when overriding SGLANG_MODEL
+            # to a non-bundled HuggingFace model that needs downloading.
+            - name: HF_HUB_CACHE
+              value: "/models"
+
+            # ── Secrets ──
+            # Uncomment and create the referenced Secret for gated model downloads:
+            #
+            # - name: HF_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: sglang-secrets
+            #       key: hf-token
+
+            # ── Optional tuning overrides ──
+            # Uncomment any of these to override manifest defaults:
+            #
+            # - name: SGLANG_MODEL
+            #   value: "microsoft/Phi-4-mini-instruct-FP8-TORCHAO"
+            # - name: SGLANG_PORT
+            #   value: "30000"
+            # - name: SGLANG_TP_SIZE
+            #   value: "4"
+            # - name: SGLANG_ATTENTION_BACKEND
+            #   value: "triton"
+            # - name: SGLANG_DTYPE
+            #   value: "float16"
+            #
+            # For multi-GPU tensor parallelism, set SGLANG_TP_SIZE and
+            # request additional GPUs in resources.limits below.
+
+          ports:
+            - name: http
+              containerPort: 30000
+              protocol: TCP
+
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              # cpu: "8"
+              # memory: "32Gi"
+            # requests:
+            #   cpu: "2"
+            #   memory: "16Gi"
+
+          volumeMounts:
+            - name: sglang-models
+              mountPath: /models
+
+          # ── Probes ──
+          # startupProbe gates liveness/readiness until the pod is ready.
+          # Budget: 60 failures * 10s = 600s (10 min) covers warm starts with
+          # the bundled model (FlashInfer JIT compilation + CUDA warmup).
+          # For cold starts (non-bundled model download), increase
+          # failureThreshold to 120 (20 min).
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3

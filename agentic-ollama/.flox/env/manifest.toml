@@ -1,14 +1,22 @@
 schema-version = "1.11.0"
 
 [install]
+# ollama for linux and/or cuda
 ollama-cuda.pkg-path = "flox/ollama-cuda"
 ollama-cuda.systems = ["x86_64-linux", "aarch64-linux"]
 ollama-cuda.priority = 1
+ollama-cuda.pkg-group = "cuda"
+
+# ollama for darwin
 ollama.pkg-path = "ollama"
 ollama.systems = ["x86_64-darwin", "aarch64-darwin"]
 ollama.priority = 1
+
+# general-purpose tools
 bat.pkg-path = "bat"
+bat.pkg-group = "tools"
 curl.pkg-path = "curl"
+curl.pkg-group = "tools"
 curl.outputs = "all"
 
 # agentic cli tools

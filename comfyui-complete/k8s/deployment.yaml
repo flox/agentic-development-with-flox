@@ -1,0 +1,112 @@
+# ComfyUI Deployment using Flox Imageless Kubernetes (uncontained).
+#
+# Prerequisites:
+#   - Flox containerd shim installed on nodes (see https://flox.dev/docs/kubernetes/)
+#   - RuntimeClass "flox" applied to the cluster
+#   - NVIDIA GPU device plugin installed (e.g. nvidia-device-plugin DaemonSet)
+#
+# The Flox runtime pulls the environment from FloxHub at pod startup.
+# No container image build is needed -- flox/empty is a dummy image.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comfyui
+  namespace: comfyui
+  labels:
+    app.kubernetes.io/name: comfyui
+spec:
+  replicas: 1  # ComfyUI is stateful (SQLite, in-memory model cache). Scale requires separate PVCs.
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: comfyui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: comfyui
+      annotations:
+        # Required: the FloxHub environment activated inside the pod.
+        flox.dev/environment: "flox/comfyui-complete"
+        # Dev mode exposes build deps (gcc, Python headers) needed by comfyui-setup's pip installs.
+        flox.dev/activate-mode: "dev"
+    spec:
+      # Required: directs containerd to use the Flox runtime shim.
+      runtimeClassName: flox
+
+      # Tolerate GPU-tainted nodes. Adjust the key/value to match your cluster's GPU taint.
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      volumes:
+        - name: comfyui-data
+          persistentVolumeClaim:
+            claimName: comfyui-data
+
+      containers:
+        - name: comfyui
+          # Dummy image -- the Flox environment replaces the container filesystem.
+          image: flox/empty:1.0.0
+
+          # comfyui-start builds PYTHONPATH, detects GPU, and launches main.py.
+          # The Flox on-activate hook runs comfyui-setup (venv, pip deps, runtime dir)
+          # automatically before this command executes.
+          command: ["comfyui-start"]
+
+          ports:
+            - name: http
+              containerPort: 8188
+              protocol: TCP
+
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+            # Adjust CPU/memory requests to your workload and node size.
+            # requests:
+            #   cpu: "2"
+            #   memory: "8Gi"
+
+          volumeMounts:
+            - name: comfyui-data
+              # HOME=/root in standard k8s pods running as root.
+              # The manifest.toml sets COMFYUI_WORK_DIR=$HOME/comfyui-work.
+              # If running as a non-root user, change this to match that user's HOME.
+              mountPath: /root/comfyui-work
+
+          # First activation runs comfyui-setup (venv creation, pip installs, runtime dir)
+          # on every pod start since FLOX_ENV_CACHE is ephemeral. This can take several
+          # minutes. The startupProbe gates liveness/readiness until the server responds,
+          # allowing up to 10 minutes for setup without risking a restart loop.
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60  # 60 * 10s = 10 minutes max startup time.
+
+          # Once the startup probe succeeds, these take over.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Optional: pass HF_TOKEN for gated model downloads (SD 3.5, FLUX).
+          # Create the secret: kubectl -n comfyui create secret generic hf-token --from-literal=HF_TOKEN=hf_...
+          # env:
+          #   - name: HF_TOKEN
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: hf-token
+          #         key: HF_TOKEN

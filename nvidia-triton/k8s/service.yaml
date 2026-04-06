@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton
+  namespace: triton
+  labels:
+    app.kubernetes.io/name: triton
+spec:
+  # ClusterIP for internal access. Change to LoadBalancer or NodePort for
+  # external access, or front with an Ingress resource.
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: triton
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 8001
+      targetPort: grpc
+      protocol: TCP
+    - name: metrics
+      port: 8002
+      targetPort: metrics
+      protocol: TCP
+    - name: openai
+      port: 9000
+      targetPort: openai
+      protocol: TCP

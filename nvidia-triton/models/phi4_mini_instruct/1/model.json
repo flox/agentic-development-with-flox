@@ -1,0 +1,7 @@
+{
+  "model": "microsoft/Phi-4-mini-instruct",
+  "gpu_memory_utilization": 0.85,
+  "enable_log_requests": false,
+  "max_model_len": 4096,
+  "dtype": "auto"
+}

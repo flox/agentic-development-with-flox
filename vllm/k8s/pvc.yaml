@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-models
+  namespace: vllm
+  labels:
+    app.kubernetes.io/name: vllm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi  # Default FP8 model ~5 GB; sized for multiple models
+  # storageClassName: <your-storage-class>  # Set to match your cluster (e.g. gp3, standard-rwo)

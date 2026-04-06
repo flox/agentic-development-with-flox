@@ -31,11 +31,11 @@ AI agents should consult FLOX.md when performing environment management tasks.
 ### LLM CLI Interfaces
 
 - [**aichat**](./aichat) - Multi-provider LLM CLI (OpenAI, Claude, Gemini, Ollama, Groq, Azure, Bedrock, etc.)
-- [**gemini-cli**](./gemini-cli) - Google Gemini CLI interface
 - [**gpt4all**](./gpt4all) - GPT4All local LLM interface
 
 ### AI Coding Tools
 
+- [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
@@ -53,10 +53,15 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ### Local AI/ML Infrastructure
 
+- [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**agentic-ollama**](./agentic-ollama) - Ollama for agentic development: local LLM server with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw\*) via `ollama launch` (\*OpenClaw commented out by default in manifest)
-- [**open-webui**](./open-webui) - Feature-rich web UI for LLMs (Ollama, OpenAI)
-- [**comfyui**](./comfyui) - Node-based UI for Stable Diffusion workflows
-- [**vllm**](./vllm) - High-throughput LLM serving engine
+- [**vllm**](./vllm) - Production vLLM inference server (v0.15.1) with CUDA, OpenAI-compatible API
+- [**sglang**](./sglang) - Production SGLang inference server (v0.5.9) with CUDA, multi-GPU tensor parallelism
+- [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
+- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server (v2.66.0) with Python, ONNX, vLLM, and TensorRT backends
+- [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
+- [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
+- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.15.0) image generation with 22 custom nodes, CUDA/MPS support
 
 ### Supporting Tools
 
@@ -143,13 +148,18 @@ AI coding tools frequently generate code requiring backend infrastructure. This 
 ### Included Infrastructure Environments
 
 **Local LLM Serving**
+- **ollama** - Headless Ollama for local LLM inference with CUDA/GPU support
 - **agentic-ollama** - Ollama for agentic development with integrated CLI coding tools and GPU acceleration
-- **vllm** - Production-grade LLM serving with optimized throughput
+- **vllm** - Production vLLM inference server with CUDA and OpenAI-compatible API
+- **sglang** - Production SGLang inference server with multi-GPU tensor parallelism
+- **llamacpp** - Production llama.cpp server for GGUF models with GPU offload
+- **nvidia-triton** - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends
 - **gpt4all** - CPU-optimized local LLM inference
 
 **Web Interfaces**
-- **open-webui** - Full-featured chat interface for local and remote LLMs
-- **comfyui** - Visual workflow builder for Stable Diffusion and image generation
+- **open-webui** - Backend-agnostic Open WebUI frontend (vLLM, SGLang, Triton, llama.cpp, Ollama)
+- **open-webui-with-ollama** - Open WebUI bundled with Ollama for turnkey local LLM chat
+- **comfyui-complete** - ComfyUI image generation with 22 custom nodes, CUDA/MPS support
 
 **MCP Infrastructure**
 - **mcphost** - Model Context Protocol host for AI agent communication
