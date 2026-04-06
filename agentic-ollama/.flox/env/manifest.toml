@@ -1,4 +1,4 @@
-version = 1
+schema-version = "1.11.0"
 
 [install]
 ollama-cuda.pkg-path = "flox/ollama-cuda"
@@ -9,6 +9,25 @@ ollama.systems = ["x86_64-darwin", "aarch64-darwin"]
 ollama.priority = 1
 bat.pkg-path = "bat"
 curl.pkg-path = "curl"
+curl.outputs = "all"
+
+# agentic cli tools
+claude-code.pkg-path = "claude-code"
+claude-code.pkg-group = "agentic"
+claude-code.outputs = "all"
+codex.pkg-path = "codex"
+codex.pkg-group = "agentic"
+codex.outputs = "all"
+opencode.pkg-path = "opencode"
+opencode.pkg-group = "agentic"
+opencode.outputs = "all"
+#openclaw.flake = "github:barstoolbluz/openclaw-nix"	# uncomment to use openclaw
+
+# flox mcp server
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+flox-mcp-server.pkg-group = "mcp"
+flox-mcp-server.outputs = "all"
 
 [vars]
 # Model storage - defaults to Ollama's standard location

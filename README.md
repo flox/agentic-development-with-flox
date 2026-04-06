@@ -53,7 +53,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ### Local AI/ML Infrastructure
 
-- [**ollama**](./ollama) - Local LLM inference server with GPU/CUDA support
+- [**agentic-ollama**](./agentic-ollama) - Ollama for agentic development: local LLM server with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw\*) via `ollama launch` (\*OpenClaw commented out by default in manifest)
 - [**open-webui**](./open-webui) - Feature-rich web UI for LLMs (Ollama, OpenAI)
 - [**comfyui**](./comfyui) - Node-based UI for Stable Diffusion workflows
 - [**vllm**](./vllm) - High-throughput LLM serving engine
@@ -143,7 +143,7 @@ AI coding tools frequently generate code requiring backend infrastructure. This 
 ### Included Infrastructure Environments
 
 **Local LLM Serving**
-- **ollama** - Run Llama, Mistral, CodeLlama and other models locally with GPU acceleration
+- **agentic-ollama** - Ollama for agentic development with integrated CLI coding tools and GPU acceleration
 - **vllm** - Production-grade LLM serving with optimized throughput
 - **gpt4all** - CPU-optimized local LLM inference
 
@@ -157,12 +157,12 @@ AI coding tools frequently generate code requiring backend infrastructure. This 
 These can be activated directly or composed with coding environments:
 
 ```bash
-# Run Ollama for local inference
-cd ollama && flox activate -s
+# Run Ollama for local inference with agentic tools
+cd agentic-ollama && flox activate -s
 
 # Layer with AI coding tools
 cd ../aichat
-flox activate -- cd ../ollama && flox activate
+flox activate -- cd ../agentic-ollama && flox activate
 ```
 
 ### Additional environments from floxrox catalog
