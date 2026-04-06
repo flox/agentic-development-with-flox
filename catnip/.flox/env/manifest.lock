@@ -1,29 +1,30 @@
 {
   "lockfile-version": 1,
   "manifest": {
-    "version": 1,
+    "schema-version": "1.11.0",
     "install": {
       "catnip": {
         "pkg-path": "flox/catnip",
-        "systems": [
-          "x86_64-linux",
-          "x86_64-darwin"
-        ]
+        "pkg-group": "catnip"
       },
       "colima": {
-        "pkg-path": "colima"
+        "pkg-path": "colima",
+        "outputs": "all"
       },
       "docker": {
-        "pkg-path": "docker-client"
+        "pkg-path": "docker-client",
+        "outputs": "all"
       },
       "gh": {
         "pkg-path": "gh"
       },
       "git": {
-        "pkg-path": "gitFull"
+        "pkg-path": "gitFull",
+        "outputs": "all"
       },
       "kubectl": {
-        "pkg-path": "kubectl"
+        "pkg-path": "kubectl",
+        "outputs": "all"
       }
     },
     "vars": {
@@ -64,68 +65,6 @@
     }
   },
   "packages": [
-    {
-      "attr_path": "catnip",
-      "broken": false,
-      "derivation": "/nix/store/hn0q24abkhlm5m1k8hh34q024xagkags-catnip-0.11.2.drv",
-      "description": "Developer environment that's like catnip for agentic programming",
-      "install_id": "catnip",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=0ab380827d0f2a3348f4145f40ccf7070421be33",
-      "name": "catnip-0.11.2",
-      "pname": "catnip",
-      "rev": "0ab380827d0f2a3348f4145f40ccf7070421be33",
-      "rev_count": 8,
-      "rev_date": "2025-11-19T02:25:47Z",
-      "scrape_date": "2025-11-19T19:23:16.685793309Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.11.2",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/6afyj647craln8hgi1vv98w537agy4a7-catnip-0.11.2"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "catnip",
-      "broken": false,
-      "derivation": "/nix/store/cvxinc776y08zlj82kbrsvi8xsh9sav4-catnip-0.11.2.drv",
-      "description": "Developer environment that's like catnip for agentic programming",
-      "install_id": "catnip",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/barstoolbluz/nix-ai-tools.git?rev=df069d31000e34d4d001c2d7786caaebfcee9129",
-      "name": "catnip-0.11.2",
-      "pname": "catnip",
-      "rev": "df069d31000e34d4d001c2d7786caaebfcee9129",
-      "rev_count": 10,
-      "rev_date": "2025-11-19T15:23:13Z",
-      "scrape_date": "2025-11-19T19:23:16.685797324Z",
-      "stabilities": [
-        "stable",
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.11.2",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/w3308n3y8ab97zsizb7q0cryhg7vkhjs-catnip-0.11.2"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
     {
       "attr_path": "colima",
       "broken": false,
@@ -444,24 +383,84 @@
       "system": "x86_64-linux",
       "group": "toplevel",
       "priority": 5
+    },
+    {
+      "attr_path": "catnip",
+      "broken": false,
+      "derivation": "/nix/store/wimjs6xn8qn70j5f90wgr6a4lpbimb4h-catnip-0.12.1.drv",
+      "description": "Developer environment for agentic programming",
+      "install_id": "catnip",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=33fd8effa0bb01e5be880827c1a7d071530e9a83",
+      "name": "catnip-0.12.1",
+      "pname": "catnip",
+      "rev": "33fd8effa0bb01e5be880827c1a7d071530e9a83",
+      "rev_count": 74,
+      "rev_date": "2026-04-06T20:39:48Z",
+      "scrape_date": "2026-04-06T20:43:39.796894997Z",
+      "stabilities": [
+        "staging",
+        "unstable",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.12.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/18rrx12ww17v034bf39jcpdi44mrhn75-catnip-0.12.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "catnip",
+      "priority": 5
+    },
+    {
+      "attr_path": "catnip",
+      "broken": false,
+      "derivation": "/nix/store/j4djbfrgg5mfr0jxpmzkvyxqszf4v7yh-catnip-0.12.1.drv",
+      "description": "Developer environment for agentic programming",
+      "install_id": "catnip",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=013b58510e6832371b4daf246e399829c17ba4d3",
+      "name": "catnip-0.12.1",
+      "pname": "catnip",
+      "rev": "013b58510e6832371b4daf246e399829c17ba4d3",
+      "rev_count": 73,
+      "rev_date": "2026-04-06T09:03:41Z",
+      "scrape_date": "2026-04-06T20:43:39.796904073Z",
+      "stabilities": [
+        "staging",
+        "unstable",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.12.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/qy3m7i1ywz7myy00lj620jb0jxq3ghp7-catnip-0.12.1"
+      },
+      "system": "x86_64-linux",
+      "group": "catnip",
+      "priority": 5
     }
   ],
   "compose": {
     "composer": {
-      "version": 1,
+      "schema-version": "1.11.0",
       "install": {
         "catnip": {
           "pkg-path": "flox/catnip",
-          "systems": [
-            "x86_64-linux",
-            "x86_64-darwin"
-          ]
+          "pkg-group": "catnip"
         },
         "gh": {
           "pkg-path": "gh"
         },
         "git": {
-          "pkg-path": "gitFull"
+          "pkg-path": "gitFull",
+          "outputs": "all"
         }
       },
       "vars": {

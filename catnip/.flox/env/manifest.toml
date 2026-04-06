@@ -1,22 +1,15 @@
-## Flox Environment Manifest -----------------------------------------
-##
-## Catnip - Multi-Agent Agentic Development Environment
-##
-## This environment provides Catnip for running multiple Claude Code
-## sessions in parallel with git worktree management, web UI, and
-## container isolation.
-##
-## -------------------------------------------------------------------
-version = 1
+schema-version = "1.11.0"
 
 ## Install Packages --------------------------------------------------
 [install]
 # Core: Catnip for multi-agent orchestration
 catnip.pkg-path = "flox/catnip"
-catnip.systems = ["x86_64-linux", "x86_64-darwin"]
+#catnip.systems = ["x86_64-linux", "x86_64-darwin"]
+catnip.pkg-group = "catnip"
 
 # Git tools
 git.pkg-path = "gitFull"  # Full git with all features
+git.outputs = "all"
 gh.pkg-path = "gh"        # GitHub CLI for authentication and repo access
 
 ## Environment Variables ---------------------------------------------

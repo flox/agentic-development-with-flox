@@ -15,7 +15,7 @@ version = 1
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-goose-cli.pkg-path = "flox/goose-cli"
+goose-cli.pkg-path = "goose-cli"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 

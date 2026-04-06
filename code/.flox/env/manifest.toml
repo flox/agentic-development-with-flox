@@ -1,7 +1,7 @@
 version = 1
 
 [install]
-code.pkg-path = "flox/code"
+code.pkg-path = "code"
 
 [vars]
 CODE_HOME = "$FLOX_ENV_CACHE/code"

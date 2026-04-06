@@ -1,7 +1,7 @@
 version = 1
 
 [install]
-codex-acp.pkg-path = "flox/codex-acp"
+codex-acp.pkg-path = "codex-acp"
 
 [hook]
 on-activate = '''

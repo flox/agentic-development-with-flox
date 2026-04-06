@@ -1,13 +1,16 @@
 {
   "lockfile-version": 1,
   "manifest": {
-    "version": 1,
+    "schema-version": "1.11.0",
     "install": {
       "qwen-code": {
-        "pkg-path": "qwen-code"
+        "pkg-path": "qwen-code",
+        "outputs": "all"
       }
     },
-    "hook": {},
+    "hook": {
+      "on-activate": "echo \"\"\necho \"🤖 Qwen Code - AI-Powered CLI for Developers\"\necho \"\"\necho \"Quick start:\"\necho \"  qwen                         # Start interactive session\"\necho \"  qwen --yolo                  # Enable 'yes to all' mode\"\necho \"\"\necho \"Session commands:\"\necho \"  /help                        # Show available commands\"\necho \"  /clear                       # Clear conversation history\"\necho \"  /compress                    # Reduce context size\"\necho \"  /stats                       # View session info\"\necho \"  /exit                        # Close session\"\necho \"\"\necho \"Configuration:\"\necho \"  ~/.qwen/settings.json        # Settings file (secrets go here)\"\necho \"  OPENAI_API_KEY               # Set via environment variable\"\necho \"  OPENAI_BASE_URL              # Provider endpoint\"\necho \"\"\necho \"Documentation: https://github.com/QwenLM/qwen-code\"\necho \"\"\n"
+    },
     "profile": {},
     "options": {}
   },
