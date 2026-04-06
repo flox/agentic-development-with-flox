@@ -4,7 +4,6 @@ schema-version = "1.11.0"
 [install]
 # Core: Catnip for multi-agent orchestration
 catnip.pkg-path = "flox/catnip"
-#catnip.systems = ["x86_64-linux", "x86_64-darwin"]
 catnip.pkg-group = "catnip"
 
 # Git tools

@@ -66,6 +66,68 @@
   },
   "packages": [
     {
+      "attr_path": "catnip",
+      "broken": false,
+      "derivation": "/nix/store/wimjs6xn8qn70j5f90wgr6a4lpbimb4h-catnip-0.12.1.drv",
+      "description": "Developer environment for agentic programming",
+      "install_id": "catnip",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=33fd8effa0bb01e5be880827c1a7d071530e9a83",
+      "name": "catnip-0.12.1",
+      "pname": "catnip",
+      "rev": "33fd8effa0bb01e5be880827c1a7d071530e9a83",
+      "rev_count": 74,
+      "rev_date": "2026-04-06T20:39:48Z",
+      "scrape_date": "2026-04-06T20:43:39.796894997Z",
+      "stabilities": [
+        "staging",
+        "unstable",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.12.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/18rrx12ww17v034bf39jcpdi44mrhn75-catnip-0.12.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "catnip",
+      "priority": 5
+    },
+    {
+      "attr_path": "catnip",
+      "broken": false,
+      "derivation": "/nix/store/j4djbfrgg5mfr0jxpmzkvyxqszf4v7yh-catnip-0.12.1.drv",
+      "description": "Developer environment for agentic programming",
+      "install_id": "catnip",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=013b58510e6832371b4daf246e399829c17ba4d3",
+      "name": "catnip-0.12.1",
+      "pname": "catnip",
+      "rev": "013b58510e6832371b4daf246e399829c17ba4d3",
+      "rev_count": 73,
+      "rev_date": "2026-04-06T09:03:41Z",
+      "scrape_date": "2026-04-06T20:43:39.796904073Z",
+      "stabilities": [
+        "staging",
+        "unstable",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.12.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/qy3m7i1ywz7myy00lj620jb0jxq3ghp7-catnip-0.12.1"
+      },
+      "system": "x86_64-linux",
+      "group": "catnip",
+      "priority": 5
+    },
+    {
       "attr_path": "colima",
       "broken": false,
       "derivation": "/nix/store/sipmkd62bazn93vv3s7bqz5ny28ia4fr-colima-0.9.1.drv",
@@ -382,68 +444,6 @@
       },
       "system": "x86_64-linux",
       "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "catnip",
-      "broken": false,
-      "derivation": "/nix/store/wimjs6xn8qn70j5f90wgr6a4lpbimb4h-catnip-0.12.1.drv",
-      "description": "Developer environment for agentic programming",
-      "install_id": "catnip",
-      "license": "Apache-2.0",
-      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=33fd8effa0bb01e5be880827c1a7d071530e9a83",
-      "name": "catnip-0.12.1",
-      "pname": "catnip",
-      "rev": "33fd8effa0bb01e5be880827c1a7d071530e9a83",
-      "rev_count": 74,
-      "rev_date": "2026-04-06T20:39:48Z",
-      "scrape_date": "2026-04-06T20:43:39.796894997Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "unfree": false,
-      "version": "0.12.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/18rrx12ww17v034bf39jcpdi44mrhn75-catnip-0.12.1"
-      },
-      "system": "x86_64-darwin",
-      "group": "catnip",
-      "priority": 5
-    },
-    {
-      "attr_path": "catnip",
-      "broken": false,
-      "derivation": "/nix/store/j4djbfrgg5mfr0jxpmzkvyxqszf4v7yh-catnip-0.12.1.drv",
-      "description": "Developer environment for agentic programming",
-      "install_id": "catnip",
-      "license": "Apache-2.0",
-      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=013b58510e6832371b4daf246e399829c17ba4d3",
-      "name": "catnip-0.12.1",
-      "pname": "catnip",
-      "rev": "013b58510e6832371b4daf246e399829c17ba4d3",
-      "rev_count": 73,
-      "rev_date": "2026-04-06T09:03:41Z",
-      "scrape_date": "2026-04-06T20:43:39.796904073Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "unfree": false,
-      "version": "0.12.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/qy3m7i1ywz7myy00lj620jb0jxq3ghp7-catnip-0.12.1"
-      },
-      "system": "x86_64-linux",
-      "group": "catnip",
       "priority": 5
     }
   ],
