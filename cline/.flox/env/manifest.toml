@@ -1,0 +1,177 @@
+schema-version = "1.11.0"
+
+[install]
+nodejs_22.pkg-path = "nodejs_22"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Cline is installed globally via npm into $FLOX_ENV_CACHE/npm-global
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+
+[hook]
+on-activate = '''
+# === CLINE INSTALLATION ===
+export NPM_GLOBAL_DIR="$FLOX_ENV_CACHE/npm-global"
+export PATH="$NPM_GLOBAL_DIR/bin:$PATH"
+
+# Install cline globally if not present or outdated
+if ! command -v cline >/dev/null 2>&1; then
+  echo "Installing cline CLI..."
+  npm install -g --prefix "$NPM_GLOBAL_DIR" cline 2>/dev/null
+  echo ""
+fi
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Cline environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Configure a provider:"
+  echo "    cline auth"
+  echo "    cline auth -p anthropic -k sk-ant-..."
+  echo ""
+fi
+
+echo "Commands:"
+echo "  cline \"<prompt>\"             Run an agent task"
+echo "  cline -m ask \"<prompt>\"      Ask without editing"
+echo "  cline auth                   Configure provider/API key"
+echo "  cline config                 View/edit configuration"
+echo "  cline -acp                   ACP mode (Zed, Neovim, JetBrains)"
+echo "  cline-info                   Show configuration"
+echo ""
+echo "Examples:"
+echo "  cline \"Add unit tests for the auth module\""
+echo "  cline -y \"Fix all linting errors\"    # Auto-approve (headless)"
+echo "  cline --json \"Refactor utils\"        # NDJSON output for scripting"
+echo ""
+
+unset _has_key
+'''
+
+[profile]
+bash = '''
+export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
+
+cline-info() {
+    echo "Cline Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  cline \"<prompt>\"             Run agent task"
+    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
+    echo "  cline -m edit \"<prompt>\"     Edit mode"
+    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
+    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
+    echo "  cline auth                   Configure provider/API key"
+    echo "  cline config                 View/edit configuration"
+    echo "  cline -acp                   ACP mode (editor integration)"
+    echo ""
+    echo "Providers:"
+    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
+    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
+    echo ""
+    echo "Update cline:"
+    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
+}
+export -f cline-info
+'''
+
+zsh = '''
+export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
+
+cline-info() {
+    echo "Cline Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  cline \"<prompt>\"             Run agent task"
+    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
+    echo "  cline -m edit \"<prompt>\"     Edit mode"
+    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
+    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
+    echo "  cline auth                   Configure provider/API key"
+    echo "  cline config                 View/edit configuration"
+    echo "  cline -acp                   ACP mode (editor integration)"
+    echo ""
+    echo "Providers:"
+    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
+    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
+    echo ""
+    echo "Update cline:"
+    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
+}
+'''
+
+fish = '''
+set -gx PATH "$FLOX_ENV_CACHE/npm-global/bin" $PATH
+
+function cline-info
+    echo "Cline Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  cline \"<prompt>\"             Run agent task"
+    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
+    echo "  cline -m edit \"<prompt>\"     Edit mode"
+    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
+    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
+    echo "  cline auth                   Configure provider/API key"
+    echo "  cline config                 View/edit configuration"
+    echo "  cline -acp                   ACP mode (editor integration)"
+    echo ""
+    echo "Providers:"
+    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
+    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
+    echo ""
+    echo "Update cline:"
+    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
