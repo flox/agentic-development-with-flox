@@ -14,7 +14,7 @@ Each environment:
 
 ## Working with Flox Environments
 
-This repository includes [FLOX.md](./floxenvs/FLOX.md) - a reference guide for AI agents and developers working with Flox environments. Similar to CLAUDE.md or other agent-specific instruction files, FLOX.md provides structured guidance for:
+This repository includes [FLOX.md](./FLOX.md) - a reference guide for AI agents and developers working with Flox environments. Similar to CLAUDE.md or other agent-specific instruction files, FLOX.md provides structured guidance for:
 
 - Creating and modifying manifest files
 - Installing packages and resolving conflicts
@@ -28,62 +28,64 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ## Available Environments
 
+### AI Coding Agents
+
+- [**aider**](./aider) - Aider AI pair programming with multi-provider support (Anthropic, OpenAI, Ollama, etc.)
+- [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
+- [**amp**](./amp) - Amp frontier coding agent for the terminal
+- [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
+- [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent
+- [**code**](./code) - CODE fast local coding agent with multi-agent orchestration
+- [**codex**](./codex) - OpenAI Codex CLI coding agent
+- [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
+- [**crush**](./crush) - Crush AI coding agent for the terminal by Charm
+- [**cursor-agent**](./cursor-agent) - Cursor Agent CLI
+- [**droid**](./droid) - Factory Droid AI software development agent
+- [**eca**](./eca) - Emerge Cognitive Architecture AI pair programming assistant
+- [**forge**](./forge) - Forge AI coding agent by Antinomy
+- [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
+- [**goose-cli**](./goose-cli) - Goose AI coding agent
+- [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
+- [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
+- [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces
+- [**nanocoder**](./nanocoder) - Nanocoder local-first CLI coding agent with multi-provider support
+- [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
+- [**opencode**](./opencode) - OpenCode AI coding agent with TUI
+- [**qwen-code**](./qwen-code) - Qwen code model CLI
+
 ### LLM CLI Interfaces
 
 - [**aichat**](./aichat) - Multi-provider LLM CLI (OpenAI, Claude, Gemini, Ollama, Groq, Azure, Bedrock, etc.)
 - [**gpt4all**](./gpt4all) - GPT4All local LLM interface
 
-### AI Coding Tools
-
-- [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
-- [**aider**](./aider) - Aider AI pair programming with multi-provider support (Anthropic, OpenAI, Ollama, etc.)
-- [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
-- [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
-- [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
-- [**opencode**](./opencode) - OpenCode AI coding agent with TUI
-- [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
-- [**goose-cli**](./goose-cli) - Goose AI coding agent
-- [**cursor-agent**](./cursor-agent) - Cursor Agent CLI
-- [**kilocode-cli**](./kilocode-cli) - Kilocode CLI
-- [**nanocoder**](./nanocoder) - Nanocoder tool
-- [**qwen-code**](./qwen-code) - Qwen code model CLI
-- [**eca**](./eca) - Emerge Cognitive Architecture
-- [**groq-code-cli**](./groq-code-cli) - Groq-powered coding CLI
-- [**forge**](./forge) - Forge development tool
-- [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
-- [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces
-- [**coderabbit-cli**](./coderabbit-cli) - CodeRabbit code review tool
-
 ### Local AI/ML Infrastructure
 
-- [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**agentic-ollama**](./agentic-ollama) - Ollama for agentic development: local LLM server with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw\*) via `ollama launch` (\*OpenClaw commented out by default in manifest)
-- [**vllm**](./vllm) - Production vLLM inference server (v0.15.1) with CUDA, OpenAI-compatible API
-- [**sglang**](./sglang) - Production SGLang inference server (v0.5.9) with CUDA, multi-GPU tensor parallelism
+- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.18.3) image generation with 22 custom nodes, CUDA/MPS support
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
-- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server (v2.66.0) with Python, ONNX, vLLM, and TensorRT backends
 - [**lm-studio**](./lm-studio) - LM Studio (v0.4.9) local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
+- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server (v2.66.0) with Python, ONNX, vLLM, and TensorRT backends
+- [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
-- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.18.3) image generation with 22 custom nodes, CUDA/MPS support
+- [**sglang**](./sglang) - Production SGLang inference server (v0.5.9) with CUDA, multi-GPU tensor parallelism
+- [**vllm**](./vllm) - Production vLLM inference server (v0.15.1) with CUDA, OpenAI-compatible API
 
-### Supporting Tools
+### Developer Tools
 
+- [**backlog-md**](./backlog-md) - Markdown-native task manager and Kanban board with MCP integration
+- [**catnip**](./catnip) - Multi-agent orchestration for running multiple Claude Code sessions in parallel
+- [**claudebox**](./claudebox) - Lightweight sandbox wrapper for Claude Code with command transparency
+- [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
+- [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
+
+### MCP and Integration
+
+- [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
+- [**claude-code-router**](./claude-code-router) - Middleware proxy routing Claude Code requests to multiple AI providers
+- [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
 - [**flox-mcp-server**](./flox-mcp-server) - MCP server enabling AI assistants to manage Flox environments
-- [**mcphost**](./mcphost) - MCP host environment
-- [**claude-code**](./claude-code) - Claude Code environment
-- [**claude-code-router**](./claude-code-router) - Claude Code router
-- [**claude-code-acp**](./claude-code-acp) - Claude Code with ACP
-- [**codex**](./codex) - OpenAI Codex environment
-- [**codex-acp**](./codex-acp) - Codex with ACP
-- [**spec-kit**](./spec-kit) - GitHub Spec Kit
-- [**amp**](./amp) - Amp environment
-- [**crush**](./crush) - Crush tool
-- [**droid**](./droid) - Droid assistant
-- [**catnip**](./catnip) - Catnip utility
-- [**code**](./code) - Code environment
-- [**claudebox**](./claudebox) - Claude sandbox
-- [**backlog-md**](./backlog-md) - Markdown backlog tool
+- [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
 
 ## Usage
 
