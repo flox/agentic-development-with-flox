@@ -47,4 +47,4 @@ is-daemon = true
 shutdown = { command = "pkill -f 'backlog mcp start'" }
 
 [options]
-systems = ["x86_64-linux"]
+#systems = ["x86_64-linux"]

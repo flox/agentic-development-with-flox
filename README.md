@@ -62,7 +62,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**lm-studio**](./lm-studio) - LM Studio (v0.4.9) local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
-- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.15.0) image generation with 22 custom nodes, CUDA/MPS support
+- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.18.3) image generation with 22 custom nodes, CUDA/MPS support
 
 ### Supporting Tools
 

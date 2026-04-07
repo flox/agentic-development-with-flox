@@ -1,8 +1,8 @@
 # ComfyUI Runtime
 
-ComfyUI 0.15.0 image generation as a Flox environment. Automated setup, CUDA GPU acceleration, and managed service lifecycle.
+ComfyUI 0.18.3 image generation as a Flox environment. Automated setup, CUDA GPU acceleration, and managed service lifecycle.
 
-- **ComfyUI 0.15.0** with 22 custom nodes and 40+ Python packages
+- **ComfyUI 0.18.3** with 22 custom nodes and 40+ Python packages
 - **Platform**: Linux (CUDA GPU), macOS (MPS/CPU)
 - **Automated setup** on first activation (venv, pip packages, runtime directory, workflows)
 - **Managed as a Flox service** with health checks and browser launch
@@ -222,7 +222,7 @@ All variables are defined in `[vars]` unless noted otherwise.
 
 | Name | Source | Details | Purpose |
 |---|---|---|---|
-| comfyui | flox/comfyui-complete | 0.15.0+f04d744 | ComfyUI + all deps + custom nodes + scripts |
+| comfyui | flox/comfyui-complete | 0.18.3+f04d744 | ComfyUI + all deps + custom nodes + scripts |
 | python | python313Full | priority 5 | Python 3.13 runtime |
 | uv | uv | priority 5 | Fast Python package installer |
 | curl | curl | -- | HTTP utility |
@@ -289,7 +289,7 @@ cd ~/dev/builds/build-comfyui && flox build comfyui-complete
 readlink -f result-comfyui-complete
 
 # 3. Edit manifest.toml: update the store-path
-comfyui.store-path = "/nix/store/<hash>-comfyui-complete-0.15.0+<rev>"
+comfyui.store-path = "/nix/store/<hash>-comfyui-complete-0.18.3+<rev>"
 
 # 4. Test
 flox activate
@@ -304,7 +304,7 @@ If you switched to a store-path for testing, revert to the published package:
 comfyui.pkg-path = "flox/comfyui-complete"
 comfyui.pkg-group = "comfyui"
 comfyui.priority = 0
-comfyui.version = "0.15.0+f04d744"
+comfyui.version = "0.18.3+f04d744"
 ```
 
 ## Kubernetes (Imageless / Uncontained)

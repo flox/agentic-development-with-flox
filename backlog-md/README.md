@@ -184,12 +184,10 @@ Ensure you've initialized backlog in the current repository:
 backlog init
 ```
 
-## 💻 System Support
+## System Support
 
-This Flox environment currently supports:
-- Linux (x86_64)
-
-**Note**: While [Backlog.md](https://github.com/MrLesk/Backlog.md) itself is cross-platform (macOS, Linux, Windows), the `flox/backlog-md` package is currently only available for x86_64-linux. For other platforms, install backlog-md via npm/bun: `npm i -g backlog.md`
+- Linux (x86_64, aarch64)
+- macOS (Intel, Apple Silicon)
 
 ## 🔍 Power User Tips
 
