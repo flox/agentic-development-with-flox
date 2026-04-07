@@ -1,6 +1,6 @@
 # LM Studio
 
-Desktop application and local inference server for discovering, downloading, and running large language models on your own hardware. Version 0.4.9.
+Desktop application and local inference server for discovering, downloading, and running large language models on your own hardware.
 
 Runs as a Flox-managed headless service by default. The GUI can be optionally launched via `LMS_GUI=true`.
 

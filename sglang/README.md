@@ -2,7 +2,7 @@
 
 Production SGLang inference server as a Flox environment.
 
-- **SGLang 0.5.9** with Python 3.12
+- **SGLang** with Python 3.12
 - **CUDA 12.8** (driver 550+)
 - **SM75–SM120** (T4, A10, A100, L40, H100, B200, RTX 3090/4090/5090)
 - **AVX2** CPU instructions, x86_64-linux only

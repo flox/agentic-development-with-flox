@@ -1,6 +1,6 @@
 # Open WebUI Frontend
 
-Backend-agnostic [Open WebUI](https://github.com/open-webui/open-webui) v0.8.5 runtime.
+Backend-agnostic [Open WebUI](https://github.com/open-webui/open-webui) runtime.
 Works with any OpenAI-compatible inference server — vLLM, SGLang, Triton, llama.cpp, etc.
 Runs on Linux (x86_64) and macOS (Intel & Apple Silicon).
 
@@ -132,7 +132,7 @@ The preset automatically sets `WEBUI_PORT=8081` to avoid the collision.
 ## How it works
 
 The Flox environment installs the `open-webui-frontend` package (built from
-Open WebUI v0.8.5 with patches for configurable model params and streaming).
+Open WebUI with patches for configurable model params and streaming).
 
 On activation, the hook:
 1. Applies `BACKEND` preset defaults (if set), using `: "${VAR:=value}"` so

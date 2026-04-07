@@ -308,7 +308,7 @@ curl http://localhost:8080/api/chat/completions \
 ## Environment Details
 
 ### Included Packages
-- `open-webui` v0.6.40 (pinned version)
+- `open-webui` (pinned version)
 - `ollama-cuda` (Linux) / `ollama` (macOS) - latest from Flox catalog
 - Ollama environment from `barstoolbluz/ollama`
 - Additional utilities: `bat`, `curl`

@@ -62,15 +62,15 @@ AI agents should consult FLOX.md when performing environment management tasks.
 ### Local AI/ML Infrastructure
 
 - [**agentic-ollama**](./agentic-ollama) - Ollama for agentic development: local LLM server with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw\*) via `ollama launch` (\*OpenClaw commented out by default in manifest)
-- [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.18.3) image generation with 22 custom nodes, CUDA/MPS support
+- [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
-- [**lm-studio**](./lm-studio) - LM Studio (v0.4.9) local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
-- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server (v2.66.0) with Python, ONNX, vLLM, and TensorRT backends
+- [**lm-studio**](./lm-studio) - LM Studio local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
+- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends
 - [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
-- [**sglang**](./sglang) - Production SGLang inference server (v0.5.9) with CUDA, multi-GPU tensor parallelism
-- [**vllm**](./vllm) - Production vLLM inference server (v0.15.1) with CUDA, OpenAI-compatible API
+- [**sglang**](./sglang) - Production SGLang inference server with CUDA, multi-GPU tensor parallelism
+- [**vllm**](./vllm) - Production vLLM inference server with CUDA, OpenAI-compatible API
 
 ### Developer Tools
 

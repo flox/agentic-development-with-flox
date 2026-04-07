@@ -2,7 +2,7 @@
 
 Production NVIDIA Triton Inference Server deployment as a Flox environment. Ships with four backends: **Python**, **ONNX Runtime**, **vLLM**, and **TensorRT**. GPU-accelerated multi-port serving (HTTP, gRPC, metrics).
 
-- **Triton Inference Server**: v2.66.0 (built from source via Nix)
+- **Triton Inference Server** (built from source via Nix)
 - **CUDA**: requires NVIDIA driver with CUDA support
 - **Platform**: Linux only (`/proc` required for preflight)
 

@@ -1,0 +1,575 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "schema-version": "1.11.0",
+    "install": {
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "git": {
+        "pkg-path": "gitFull",
+        "outputs": "all"
+      },
+      "nodejs_22": {
+        "pkg-path": "nodejs_22"
+      }
+    },
+    "hook": {
+      "on-activate": "# === CLINE INSTALLATION ===\nexport NPM_GLOBAL_DIR=\"$FLOX_ENV_CACHE/npm-global\"\nexport PATH=\"$NPM_GLOBAL_DIR/bin:$PATH\"\n\n# Install cline globally if not present or outdated\nif ! command -v cline >/dev/null 2>&1; then\n  echo \"Installing cline CLI...\"\n  npm install -g --prefix \"$NPM_GLOBAL_DIR\" cline 2>/dev/null\n  echo \"\"\nfi\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"Cline environment ready\"\necho \"\"\n\n# Show API key status\n_has_key=0\nif [ -n \"$ANTHROPIC_API_KEY\" ]; then\n  echo \"  Anthropic API key: set\"\n  _has_key=1\nelse\n  echo \"  Anthropic API key: not set\"\nfi\nif [ -n \"$OPENAI_API_KEY\" ]; then\n  echo \"  OpenAI API key: set\"\n  _has_key=1\nelse\n  echo \"  OpenAI API key: not set\"\nfi\necho \"\"\n\nif [ \"$_has_key\" = \"0\" ]; then\n  echo \"  Configure a provider:\"\n  echo \"    cline auth\"\n  echo \"    cline auth -p anthropic -k sk-ant-...\"\n  echo \"\"\nfi\n\necho \"Commands:\"\necho \"  cline \\\"<prompt>\\\"             Run an agent task\"\necho \"  cline -m ask \\\"<prompt>\\\"      Ask without editing\"\necho \"  cline auth                   Configure provider/API key\"\necho \"  cline config                 View/edit configuration\"\necho \"  cline -acp                   ACP mode (Zed, Neovim, JetBrains)\"\necho \"  cline-info                   Show configuration\"\necho \"\"\necho \"Examples:\"\necho \"  cline \\\"Add unit tests for the auth module\\\"\"\necho \"  cline -y \\\"Fix all linting errors\\\"    # Auto-approve (headless)\"\necho \"  cline --json \\\"Refactor utils\\\"        # NDJSON output for scripting\"\necho \"\"\n\nunset _has_key\n"
+    },
+    "profile": {
+      "bash": "export PATH=\"$FLOX_ENV_CACHE/npm-global/bin:$PATH\"\n\ncline-info() {\n    echo \"Cline Environment Configuration\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  cline \\\"<prompt>\\\"             Run agent task\"\n    echo \"  cline -m ask \\\"<prompt>\\\"      Ask mode (no edits)\"\n    echo \"  cline -m edit \\\"<prompt>\\\"     Edit mode\"\n    echo \"  cline -y \\\"<prompt>\\\"          Auto-approve (headless/CI)\"\n    echo \"  cline --json \\\"<prompt>\\\"      NDJSON output for scripting\"\n    echo \"  cline auth                   Configure provider/API key\"\n    echo \"  cline config                 View/edit configuration\"\n    echo \"  cline -acp                   ACP mode (editor integration)\"\n    echo \"\"\n    echo \"Providers:\"\n    echo \"  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,\"\n    echo \"  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more\"\n    echo \"\"\n    echo \"Update cline:\"\n    echo \"  npm install -g --prefix \\\"\\$FLOX_ENV_CACHE/npm-global\\\" cline\"\n}\nexport -f cline-info\n",
+      "zsh": "export PATH=\"$FLOX_ENV_CACHE/npm-global/bin:$PATH\"\n\ncline-info() {\n    echo \"Cline Environment Configuration\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  cline \\\"<prompt>\\\"             Run agent task\"\n    echo \"  cline -m ask \\\"<prompt>\\\"      Ask mode (no edits)\"\n    echo \"  cline -m edit \\\"<prompt>\\\"     Edit mode\"\n    echo \"  cline -y \\\"<prompt>\\\"          Auto-approve (headless/CI)\"\n    echo \"  cline --json \\\"<prompt>\\\"      NDJSON output for scripting\"\n    echo \"  cline auth                   Configure provider/API key\"\n    echo \"  cline config                 View/edit configuration\"\n    echo \"  cline -acp                   ACP mode (editor integration)\"\n    echo \"\"\n    echo \"Providers:\"\n    echo \"  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,\"\n    echo \"  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more\"\n    echo \"\"\n    echo \"Update cline:\"\n    echo \"  npm install -g --prefix \\\"\\$FLOX_ENV_CACHE/npm-global\\\" cline\"\n}\n",
+      "fish": "set -gx PATH \"$FLOX_ENV_CACHE/npm-global/bin\" $PATH\n\nfunction cline-info\n    echo \"Cline Environment Configuration\"\n    echo \"\"\n    echo \"API Keys:\"\n    if test -n \"$ANTHROPIC_API_KEY\"\n        echo \"  Anthropic: set\"\n    else\n        echo \"  Anthropic: not set\"\n    end\n    if test -n \"$OPENAI_API_KEY\"\n        echo \"  OpenAI: set\"\n    else\n        echo \"  OpenAI: not set\"\n    end\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  cline \\\"<prompt>\\\"             Run agent task\"\n    echo \"  cline -m ask \\\"<prompt>\\\"      Ask mode (no edits)\"\n    echo \"  cline -m edit \\\"<prompt>\\\"     Edit mode\"\n    echo \"  cline -y \\\"<prompt>\\\"          Auto-approve (headless/CI)\"\n    echo \"  cline --json \\\"<prompt>\\\"      NDJSON output for scripting\"\n    echo \"  cline auth                   Configure provider/API key\"\n    echo \"  cline config                 View/edit configuration\"\n    echo \"  cline -acp                   ACP mode (editor integration)\"\n    echo \"\"\n    echo \"Providers:\"\n    echo \"  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,\"\n    echo \"  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more\"\n    echo \"\"\n    echo \"Update cline:\"\n    echo \"  npm install -g --prefix \\\"\\$FLOX_ENV_CACHE/npm-global\\\" cline\"\nend\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/0rz5012a1mncwvhjxmlxmd1sbl3098qn-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T03:38:23.164195Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ccd4fyjaa0hmvic3a0x0lak1akm1wbf9-bat-0.26.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/gb3ci4ykq5avscr3n9f7xfpj33xdsw4c-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:13:46.648761Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g11dl0f63i53kaw2ki0kk8bycy99ax1v-bat-0.26.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/clmnmqx3ibq8n46m6q6p79q71w7idv5f-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:46:26.068974Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/mysappv2jzlb7q13scn0836jwpaf6gc4-bat-0.26.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/n8vbndgcm30iy5x1bapgi89xn0vbwsd4-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T05:24:54.488951Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1n63v53bzw0j9qkivrqcmgx53kng3l7z-bat-0.26.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/9f2i20yq3jp4yhaxk3qnxhazp7syqmvn-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T03:38:23.592102Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/gki71gmvlp9d86rqh8b4b6wp7wg396qg-curl-8.18.0-bin",
+        "dev": "/nix/store/2xrq7swcyjrvsbp5wk4qivwbzrqxasxr-curl-8.18.0-dev",
+        "devdoc": "/nix/store/vrff2ib15qhdig8ich94visj28x9m931-curl-8.18.0-devdoc",
+        "man": "/nix/store/wd2w49jdql1n3c6cg4qimqbq5k6m6j4f-curl-8.18.0-man",
+        "out": "/nix/store/7bxrgix4f88r6xvidyl035vxdbn2rnyk-curl-8.18.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/g29rj5wpfqyckm3f1b3jrrslqgaw9rzm-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:13:47.284220Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/asrq77x05br50nmmv7akp0ry2n1xxrb4-curl-8.18.0-bin",
+        "debug": "/nix/store/b4mmgwziiqa4jirsrw162r794zi48fz6-curl-8.18.0-debug",
+        "dev": "/nix/store/nxarksm7m9ll9p3r87issf0389hwdz3l-curl-8.18.0-dev",
+        "devdoc": "/nix/store/canqrd4xwygamx7qw3j7dd923l7bmg9n-curl-8.18.0-devdoc",
+        "man": "/nix/store/8z4wa6lizr4gzfpmj3928c2wjk1ldslf-curl-8.18.0-man",
+        "out": "/nix/store/qxkiwf9mg5x9jijpmk0hmz9nkd4xlzph-curl-8.18.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/gkm06vy5lkp1n6wlgrr7vvfirf2zgs0g-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:46:26.502812Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/0h4avs7960hxfgmlayshci76pdd7j1zp-curl-8.18.0-bin",
+        "dev": "/nix/store/rpw29w7jmwrp32bp72s805rh0rchp7fh-curl-8.18.0-dev",
+        "devdoc": "/nix/store/4sbv3g3n1nxlq5nfasd194h893k5nkm9-curl-8.18.0-devdoc",
+        "man": "/nix/store/lb59x8lcbiqjph4gfl5a99l8wh1ckvfy-curl-8.18.0-man",
+        "out": "/nix/store/sdf4br1wm1s10y67yz062mc1vmkykm0f-curl-8.18.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/1wrll60slxlmvb56g6zk7amw3pwylcng-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T05:24:55.157837Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/6j3b51rypymg5inhr27rcc7in5cxbvjz-curl-8.18.0-bin",
+        "debug": "/nix/store/9gvh3ymdh38n7lkbjd61cwx6ff510wpb-curl-8.18.0-debug",
+        "dev": "/nix/store/m2b7j4s1jlhlnpxhpf2sjwvd2nn0x8hx-curl-8.18.0-dev",
+        "devdoc": "/nix/store/r2xswgdxf2z7h9vnirhzkzj4k721nbhh-curl-8.18.0-devdoc",
+        "man": "/nix/store/gxspg74jdwaxdb80giixl4517nw6q139-curl-8.18.0-man",
+        "out": "/nix/store/dhdysbgmgqp936mvkf5f9s8fh2mk68k5-curl-8.18.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/ahg9ydap0brb8kdmy9b62rwgr0xx8qm0-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T03:38:24.405164Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/9h82rkslybd153w7rz4ld5vxqz82jf3s-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/g4hra7xls04bs78rmbacvrkjzigs19b0-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/kmhccbchascywfqvimy9m6p2skr4h7nh-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:13:48.446952Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/vzzil4z2363pzav0mgxqyllkpxmk3jry-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/a79mwy2j4i15i2kmvm7j23jn89rrph8m-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/99y3ds3lbh9ymfvcbxdsddd91x6dwcy1-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/jx4bdzj3vfhj27isz1whxgzpkz2wpa6j-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:46:27.278049Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/cfmh4xaba4n924k88a25agll7fivwbbm-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/blfmq8dj9108wlqpi9cibvm7qrp5abqx-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/dk9c3ichl9cgbgk7l0w7dfqf6jvghcyq-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T05:24:56.454241Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/44ypzal8ivxpgv03icvf4pkbfyhrsw3i-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/5dda4wgpms0xyc7ml8imp07a9zb9kyfb-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/s7f41ijzn16w4c3rw219sxflc7j6pz66-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs_22",
+      "broken": false,
+      "derivation": "/nix/store/vgmwnpa8w1pwjnz6cbfjzf2vfiiv7b73-nodejs-22.22.1.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs_22",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "nodejs-22.22.1",
+      "pname": "nodejs_22",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T03:38:48.632597Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "22.22.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c5rhp8fwf3zhrwqs1hg3x23346al7g1a-nodejs-22.22.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs_22",
+      "broken": false,
+      "derivation": "/nix/store/6dcy01vg86f4c13gki0d4rwwn1cfr338-nodejs-22.22.1.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs_22",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "nodejs-22.22.1",
+      "pname": "nodejs_22",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:14:26.646171Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "22.22.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/gvb9pgbsrsrr2cf14hbwb9cpl8qhv1kv-nodejs-22.22.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs_22",
+      "broken": false,
+      "derivation": "/nix/store/ys0xdwq1bnf0dh62vfl990ymyixykm9q-nodejs-22.22.1.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs_22",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "nodejs-22.22.1",
+      "pname": "nodejs_22",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T04:46:51.736780Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "22.22.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/fd5fsgjv5lmp1qzms41f6bf1gkk4pb82-nodejs-22.22.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs_22",
+      "broken": false,
+      "derivation": "/nix/store/s0w3p19gixvlbh4r3wc0y7gvjkz037jv-nodejs-22.22.1.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs_22",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "name": "nodejs-22.22.1",
+      "pname": "nodejs_22",
+      "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
+      "rev_count": 969196,
+      "rev_date": "2026-03-24T21:09:33Z",
+      "scrape_date": "2026-03-27T05:25:37.214109Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "22.22.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/q04hinixx2jzv5ap76zv61c8fyx9ajbv-nodejs-22.22.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

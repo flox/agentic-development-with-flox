@@ -2,7 +2,7 @@
 
 Production vLLM inference server as a Flox environment. Installs `flox/vllm-flox-runtime` (model provisioning and serving scripts) and `flox-cuda/python3Packages.vllm` (vLLM + CUDA + Python) from the Flox catalog.
 
-- **vLLM**: 0.15.1
+- **vLLM**
 - **CUDA**: requires NVIDIA driver with CUDA support
 - **Platform**: Linux only (`x86_64-linux`)
 

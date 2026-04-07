@@ -2,7 +2,7 @@
 
 AI pair programming in your terminal. Aider lets you collaborate with LLMs to edit code in your local git repository, with automatic commits, multi-file editing, and support for 100+ languages.
 
-- **aider-chat-full** v0.86.1 (includes voice and browser UI dependencies)
+- **aider-chat-full** (includes voice and browser UI dependencies)
 - **Multi-provider** - Anthropic, OpenAI, DeepSeek, Google Gemini, Ollama, and more
 - **Git-native** - Automatic commits with descriptive messages, easy undo
 - **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)

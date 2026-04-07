@@ -1,8 +1,8 @@
 # ComfyUI Runtime
 
-ComfyUI 0.18.3 image generation as a Flox environment. Automated setup, CUDA GPU acceleration, and managed service lifecycle.
+ComfyUI image generation as a Flox environment. Automated setup, CUDA GPU acceleration, and managed service lifecycle.
 
-- **ComfyUI 0.18.3** with 22 custom nodes and 40+ Python packages
+- **ComfyUI** with 22 custom nodes and 40+ Python packages
 - **Platform**: Linux (CUDA GPU), macOS (MPS/CPU)
 - **Automated setup** on first activation (venv, pip packages, runtime directory, workflows)
 - **Managed as a Flox service** with health checks and browser launch
