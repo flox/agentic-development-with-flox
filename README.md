@@ -35,6 +35,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**amp**](./amp) - Amp frontier coding agent for the terminal
 - [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
 - [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent
+- [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
 - [**code**](./code) - CODE fast local coding agent with multi-agent orchestration
 - [**codex**](./codex) - OpenAI Codex CLI coding agent

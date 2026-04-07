@@ -1,0 +1,157 @@
+schema-version = "1.11.0"
+
+[install]
+claurst.pkg-path = "flox/claurst"
+claurst.pkg-group = "claurst"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+
+# Or use /connect inside claurst to configure providers interactively
+
+[hook]
+on-activate = '''
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Claurst environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Set an API key or configure interactively:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo "    export OPENAI_API_KEY=sk-..."
+  echo "    claurst  then  /connect"
+  echo ""
+fi
+
+echo "Commands:"
+echo "  claurst                      Start interactive TUI"
+echo "  claurst -p \"<prompt>\"        Headless single query"
+echo "  claurst-info                 Show configuration"
+echo ""
+echo "In-app commands:"
+echo "  /connect                     Configure an LLM provider"
+echo "  /compact                     Compact conversation context"
+echo "  /diff                        Show changes"
+echo ""
+
+unset _has_key
+'''
+
+[profile]
+bash = '''
+claurst-info() {
+    echo "Claurst Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  claurst                      Start interactive TUI"
+    echo "  claurst -p \"<prompt>\"        Headless single query"
+    echo ""
+    echo "In-app commands:"
+    echo "  /connect       Configure an LLM provider"
+    echo "  /compact       Compact conversation context"
+    echo "  /diff          Show changes"
+    echo "  /plan          Plan mode"
+    echo "  /mcp           MCP server management"
+    echo ""
+    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
+    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
+    echo ""
+    echo "Docs: https://claurst.kuber.studio/docs"
+}
+export -f claurst-info
+'''
+
+zsh = '''
+claurst-info() {
+    echo "Claurst Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  claurst                      Start interactive TUI"
+    echo "  claurst -p \"<prompt>\"        Headless single query"
+    echo ""
+    echo "In-app commands:"
+    echo "  /connect       Configure an LLM provider"
+    echo "  /compact       Compact conversation context"
+    echo "  /diff          Show changes"
+    echo "  /plan          Plan mode"
+    echo "  /mcp           MCP server management"
+    echo ""
+    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
+    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
+    echo ""
+    echo "Docs: https://claurst.kuber.studio/docs"
+}
+'''
+
+fish = '''
+function claurst-info
+    echo "Claurst Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  claurst                      Start interactive TUI"
+    echo "  claurst -p \"<prompt>\"        Headless single query"
+    echo ""
+    echo "In-app commands:"
+    echo "  /connect       Configure an LLM provider"
+    echo "  /compact       Compact conversation context"
+    echo "  /diff          Show changes"
+    echo "  /plan          Plan mode"
+    echo "  /mcp           MCP server management"
+    echo ""
+    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
+    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
+    echo ""
+    echo "Docs: https://claurst.kuber.studio/docs"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
