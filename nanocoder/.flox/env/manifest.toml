@@ -44,10 +44,10 @@ echo ""
 gum style \
   --foreground 99 --border-foreground 99 --border double \
   --align center --width 60 --margin "1 2" --padding "2 4" \
-  "🔬 Nanocoder - Local-First CLI Coding Agent
+  "Nanocoder - Local-First CLI Coding Agent
 
 A community-driven, privacy-focused coding agent
-built by the community, for the community ⚒"
+built by the community, for the community"
 
 echo ""
 echo "Usage:"
@@ -63,12 +63,12 @@ echo "  /custom-commands            # Show custom commands"
 echo "  /clear                      # Clear session history"
 echo "  /export                     # Export conversation"
 echo ""
-echo "$(gum style --foreground 208 "⚠️  Important:") For Ollama users, ensure you have tool-capable models:"
+echo "$(gum style --foreground 208 "Important:") For Ollama users, ensure you have tool-capable models:"
 echo "  ollama pull qwen2.5-coder:7b    # Recommended (tools + coding)"
 echo "  ollama pull llama3.1:8b         # Reliable tool support"
 echo "  ollama pull mistral:7b          # Alternative option"
 echo ""
-echo "$(gum style --foreground 241 "💡 Note:") Models like phi3:latest do NOT support tools and won't work."
+echo "$(gum style --foreground 241 "Note:") Models like phi3:latest do NOT support tools and won't work."
 echo ""
 '''
 

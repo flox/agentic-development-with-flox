@@ -53,7 +53,7 @@ command = "flox-mcp"
 args = []
 description = "MCP server for managing Flox environments and packages"
 EOF
-        echo "✅ Created MCP configuration with Flox server at ~/.codex/config.toml"
+        echo "Created MCP configuration with Flox server at ~/.codex/config.toml"
     else
         # Check if Flox MCP server is already configured
         if ! grep -q '\[mcp_servers\.flox\]' "$config_file" 2>/dev/null; then
@@ -65,7 +65,7 @@ command = "flox-mcp"
 args = []
 description = "MCP server for managing Flox environments and packages"
 EOF
-            echo "✅ Added Flox MCP server to existing ~/.codex/config.toml"
+            echo "Added Flox MCP server to existing ~/.codex/config.toml"
         fi
     fi
 }
@@ -74,7 +74,7 @@ EOF
 setup_mcp_config
 
 echo ""
-echo "🤖 Codex CLI - Local AI Coding Agent from OpenAI"
+echo "Codex CLI - Local AI Coding Agent from OpenAI"
 echo ""
 echo "Codex is a lightweight coding agent that runs locally on your computer."
 echo ""
@@ -92,7 +92,7 @@ echo "  codex-config                # Edit ~/.codex/config.toml"
 echo "  codex-policy                # Manage execution policies"
 echo ""
 echo "MCP Server:"
-echo "  🔧 Flox MCP server configured in ~/.codex/config.toml"
+echo "  Flox MCP server configured in ~/.codex/config.toml"
 echo "  Use Flox tools in your prompts to manage environments and packages"
 echo ""
 echo "Features:"

@@ -76,7 +76,7 @@ export OLLAMA_AUTH="${OLLAMA_AUTH:-}"  # Experimental authentication
 
 # === DISPLAY CONFIGURATION ===
 echo ""
-echo "✅ Ollama environment ready (headless mode)"
+echo "Ollama environment ready (headless mode)"
 echo ""
 echo "Server:"
 echo "  Host: ${OLLAMA_HOST}"
@@ -86,9 +86,9 @@ else
   echo "  Models: ${OLLAMA_MODELS} (custom)"
 fi
 if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
-  echo "  GPU: ✅ Available (CUDA detected)"
+  echo "  GPU: Available (CUDA detected)"
 else
-  echo "  GPU: ❌ Not detected (CPU mode)"
+  echo "  GPU: Not detected (CPU mode)"
 fi
 echo ""
 echo "Commands:"
@@ -109,7 +109,7 @@ echo ""
   README_FILE="$FLOX_ENV_PROJECT/README.md"
   if [ ! -f "$README_FILE" ]; then
     if curl -fsSL https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/ollama-headless/README.md -o "$README_FILE" 2>/dev/null; then
-      echo "✓ Downloaded README.md (use 'helpf' to view)"
+      echo "Downloaded README.md (use 'helpf' to view)"
     fi
   fi
 '''
@@ -201,10 +201,10 @@ ollama-health() {
     HOST="${HOST#https://}"
 
     if curl -s "http://${HOST}/" | grep -q "Ollama is running"; then
-        echo "✅ Ollama API is healthy at http://${HOST}"
+        echo "Ollama API is healthy at http://${HOST}"
         return 0
     else
-        echo "❌ Ollama API is not responding at http://${HOST}"
+        echo "Ollama API is not responding at http://${HOST}"
         echo "   Try: flox services status"
         return 1
     fi
@@ -231,17 +231,17 @@ export -f ollama-health
     if [ "$1" = "--force" ]; then
       echo "Fetching latest README.md from GitHub..."
       if curl -fsSL "$README_URL" -o "$README_FILE"; then
-        echo "✓ Downloaded README.md"
+        echo "Downloaded README.md"
       else
-        echo "✗ Failed to download README.md"
+        echo "Failed to download README.md"
         return 1
       fi
     elif [ ! -f "$README_FILE" ]; then
       echo "README.md not found, downloading..."
       if curl -fsSL "$README_URL" -o "$README_FILE"; then
-        echo "✓ Downloaded README.md"
+        echo "Downloaded README.md"
       else
-        echo "✗ Failed to download README.md"
+        echo "Failed to download README.md"
         return 1
       fi
     fi
@@ -249,7 +249,7 @@ export -f ollama-health
     if [ -f "$README_FILE" ]; then
       bat --style=auto --paging=always "$README_FILE"
     else
-      echo "✗ README.md not found at $README_FILE"
+      echo "README.md not found at $README_FILE"
       return 1
     fi
   }
@@ -336,10 +336,10 @@ ollama-health() {
     HOST="${HOST#https://}"
 
     if curl -s "http://${HOST}/" | grep -q "Ollama is running"; then
-        echo "✅ Ollama API is healthy at http://${HOST}"
+        echo "Ollama API is healthy at http://${HOST}"
         return 0
     else
-        echo "❌ Ollama API is not responding at http://${HOST}"
+        echo "Ollama API is not responding at http://${HOST}"
         echo "   Try: flox services status"
         return 1
     fi
@@ -365,17 +365,17 @@ ollama-health() {
     if [ "$1" = "--force" ]; then
       echo "Fetching latest README.md from GitHub..."
       if curl -fsSL "$README_URL" -o "$README_FILE"; then
-        echo "✓ Downloaded README.md"
+        echo "Downloaded README.md"
       else
-        echo "✗ Failed to download README.md"
+        echo "Failed to download README.md"
         return 1
       fi
     elif [ ! -f "$README_FILE" ]; then
       echo "README.md not found, downloading..."
       if curl -fsSL "$README_URL" -o "$README_FILE"; then
-        echo "✓ Downloaded README.md"
+        echo "Downloaded README.md"
       else
-        echo "✗ Failed to download README.md"
+        echo "Failed to download README.md"
         return 1
       fi
     fi
@@ -383,7 +383,7 @@ ollama-health() {
     if [ -f "$README_FILE" ]; then
       bat --style=auto --paging=always "$README_FILE"
     else
-      echo "✗ README.md not found at $README_FILE"
+      echo "README.md not found at $README_FILE"
       return 1
     fi
   }
@@ -466,10 +466,10 @@ function ollama-health
     set -l HOST (string replace -r '^https?://' '' $OLLAMA_HOST)
 
     if curl -s "http://$HOST/" | grep -q "Ollama is running"
-        echo "✅ Ollama API is healthy at http://$HOST"
+        echo "Ollama API is healthy at http://$HOST"
         return 0
     else
-        echo "❌ Ollama API is not responding at http://$HOST"
+        echo "Ollama API is not responding at http://$HOST"
         echo "   Try: flox services status"
         return 1
     end
@@ -495,17 +495,17 @@ function helpf
     if test "$argv[1]" = "--force"
         echo "Fetching latest README.md from GitHub..."
         if curl -fsSL "$README_URL" -o "$README_FILE"
-            echo "✓ Downloaded README.md"
+            echo "Downloaded README.md"
         else
-            echo "✗ Failed to download README.md"
+            echo "Failed to download README.md"
             return 1
         end
     else if not test -f "$README_FILE"
         echo "README.md not found, downloading..."
         if curl -fsSL "$README_URL" -o "$README_FILE"
-            echo "✓ Downloaded README.md"
+            echo "Downloaded README.md"
         else
-            echo "✗ Failed to download README.md"
+            echo "Failed to download README.md"
             return 1
         end
     end
@@ -513,7 +513,7 @@ function helpf
     if test -f "$README_FILE"
         bat --style=auto --paging=always "$README_FILE"
     else
-        echo "✗ README.md not found at $README_FILE"
+        echo "README.md not found at $README_FILE"
         return 1
     end
 end

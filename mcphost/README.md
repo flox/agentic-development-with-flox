@@ -1,8 +1,8 @@
-# 🌐 Flox Environment for MCPHost
+# Flox Environment for MCPHost
 
 A Flox environment for [MCPHost](https://github.com/mark3labs/mcphost), a CLI host application that enables Large Language Models (LLMs) to interact with external tools through the Model Context Protocol (MCP). MCPHost supports 20+ LLM providers (Claude, OpenAI, Gemini, Ollama) and provides a unified interface for tool-augmented AI conversations.
 
-## ✨ Features
+## Features
 
 - **20+ LLM providers**: Anthropic Claude, OpenAI GPT, Google Gemini, Ollama, and any OpenAI-compatible endpoint
 - **MCP server orchestration**: Connect multiple MCP servers for extended capabilities
@@ -16,22 +16,22 @@ A Flox environment for [MCPHost](https://github.com/mark3labs/mcphost), a CLI ho
 - **Session management**: Save and resume conversations
 - **Environment variables**: Flexible configuration with ${env://VAR} syntax
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `mcphost` - MCPHost CLI application
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API key for at least one LLM provider (OpenAI, Anthropic, Google, or Ollama installed)
 - Go 1.23 or later (for building from source)
 - Internet connection for API access
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -43,13 +43,13 @@ git clone https://github.com/yourusername/agentic-development-with-flox && cd ag
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Configuration Location:**
 
 MCPHost stores configuration in `~/.mcphost.yml` or `~/.mcphost.json` in your home directory.
 
-**⚠️ CRITICAL - Flox Security Convention:**
+** CRITICAL - Flox Security Convention:**
 Config files with API keys MUST be in `$HOME` (`~/.mcphost.yml`), **NEVER in project directories**.
 
 **Initial Configuration:**
@@ -127,7 +127,7 @@ EOF
 mcphost -p "Hello from Ollama!"
 ```
 
-## 📝 Usage
+## Usage
 
 ### Interactive Mode
 
@@ -138,11 +138,11 @@ Start an interactive conversation session:
 mcphost
 
 # Available commands in REPL:
-/help      # Show available commands
-/tools     # List all available tools
-/servers   # List configured MCP servers
-/history   # Display conversation history
-/quit      # Exit the application
+/help # Show available commands
+/tools # List all available tools
+/servers # List configured MCP servers
+/history # Display conversation history
+/quit # Exit the application
 ```
 
 ### Non-Interactive Mode
@@ -184,7 +184,7 @@ mcphost script deploy.sh --args:env production --args:region us-west
 #!/usr/bin/env -S mcphost script
 ---
 mcpServers:
-  filesystem:
+ filesystem:
     type: "builtin"
     name: "fs"
 model: "anthropic:claude-3-5-sonnet-latest"
@@ -200,21 +200,21 @@ MCPHost supports three types of MCP servers:
 
 ```yaml
 mcpServers:
-  filesystem:
+ filesystem:
     type: "builtin"
     name: "fs"
     options:
       allowed_directories: ["/tmp", "${env://HOME}/documents"]
 
-  bash:
+ bash:
     type: "builtin"
     name: "bash"
 
-  todo:
+ todo:
     type: "builtin"
     name: "todo"
 
-  http:
+ http:
     type: "builtin"
     name: "http"
 ```
@@ -223,13 +223,13 @@ mcpServers:
 
 ```yaml
 mcpServers:
-  github:
+ github:
     type: "local"
     command: ["npx", "-y", "@modelcontextprotocol/server-github"]
     environment:
       GITHUB_TOKEN: "${env://GITHUB_TOKEN}"
 
-  sqlite:
+ sqlite:
     type: "local"
     command: ["uvx", "mcp-server-sqlite", "--db-path", "/tmp/data.db"]
 ```
@@ -238,7 +238,7 @@ mcpServers:
 
 ```yaml
 mcpServers:
-  api-server:
+ api-server:
     type: "remote"
     url: "https://api.example.com/mcp"
     headers: ["Authorization: Bearer ${env://API_TOKEN}"]
@@ -250,18 +250,18 @@ Control which tools are available from each server:
 
 ```yaml
 mcpServers:
-  filesystem-readonly:
+ filesystem-readonly:
     type: "builtin"
     name: "fs"
     allowedTools: ["read_file", "list_directory"]  # Whitelist
 
-  bash-safe:
+ bash-safe:
     type: "builtin"
     name: "bash"
     excludedTools: ["rm", "sudo"]  # Blacklist
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Files
 
@@ -284,19 +284,19 @@ top-k: 40
 
 # MCP Servers
 mcpServers:
-  # Builtin servers (no installation required)
-  filesystem:
+ # Builtin servers (no installation required)
+ filesystem:
     type: "builtin"
     name: "fs"
     options:
       allowed_directories: ["/tmp", "${env://HOME}/projects"]
 
-  bash:
+ bash:
     type: "builtin"
     name: "bash"
 
-  # Local MCP servers
-  github:
+ # Local MCP servers
+ github:
     type: "local"
     command: ["npx", "-y", "@modelcontextprotocol/server-github"]
     environment:
@@ -304,14 +304,14 @@ mcpServers:
 
 # API configuration
 provider-api-key: "${env://ANTHROPIC_API_KEY}"
-# provider-url: "https://api.anthropic.com"  # For custom endpoints
+# provider-url: "https://api.anthropic.com" # For custom endpoints
 
 # Streaming
 stream: true
 
 # Hooks configuration (optional)
 hooks:
-  PreToolUse:
+ PreToolUse:
     - matcher: "bash"
       hooks:
         - type: command
@@ -333,7 +333,7 @@ export HOME_DIR="/home/user"
 # ${env://VAR:-default} - Optional with default
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Tool-Augmented Conversations
 
@@ -362,7 +362,7 @@ Create `deploy.sh`:
 #!/usr/bin/env -S mcphost script
 ---
 mcpServers:
-  bash:
+ bash:
     type: "builtin"
     name: "bash"
 model: "anthropic:claude-3-5-sonnet-latest"
@@ -399,7 +399,7 @@ Configure hooks in `~/.mcphost.yml`:
 
 ```yaml
 hooks:
-  PreToolUse:
+ PreToolUse:
     - matcher: "bash"
       hooks:
         - type: command
@@ -407,7 +407,7 @@ hooks:
           timeout: 5
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### API Key Issues
 
@@ -446,7 +446,7 @@ mcphost -m google:gemini-2.0-flash -p "test"
 mcphost -m ollama:llama3.2 -p "test"
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
@@ -454,9 +454,9 @@ This environment works on:
 - macOS x86_64 (Intel)
 - macOS ARM64 (Apple Silicon)
 
-## 🔒 Security Considerations
+## Security Considerations
 
-**⚠️ CRITICAL SECURITY RULES:**
+** CRITICAL SECURITY RULES:**
 
 - **API keys location**: MUST be in `~/.mcphost.yml` or environment variables
 - **NEVER commit secrets**: Don't commit config files with API keys
@@ -480,20 +480,20 @@ mcphost --no-hooks
 # Review tool capabilities
 ```
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **MCPHost Repository**: [github.com/mark3labs/mcphost](https://github.com/mark3labs/mcphost)
 - **MCP Protocol**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
 - **MCP Servers**: [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Mark3Labs Team**: For creating MCPHost and making it open source
 - **Anthropic**: For developing the Model Context Protocol
 - **MCP Community**: For building the ecosystem of MCP servers
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -503,6 +503,6 @@ mcphost --no-hooks
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. MCPHost is open source - see the [MCPHost repository](https://github.com/mark3labs/mcphost) for license details.

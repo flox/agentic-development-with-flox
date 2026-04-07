@@ -33,7 +33,7 @@ eca.pkg-group = "eca"
 [hook]
 on-activate = '''
 echo ""
-echo "🤖 ECA - Editor Code Assistant"
+echo "ECA - Editor Code Assistant"
 echo ""
 echo "Free, open-source AI pair programming for your favorite editor."
 echo ""
@@ -69,7 +69,7 @@ bash = '''
 # Helper: Create project context template
 eca-init-context() {
     if [[ -f .eca/context.md ]]; then
-        echo "⚠️  .eca/context.md already exists"
+        echo ".eca/context.md already exists"
         echo "Edit it directly or remove it first"
         return 1
     fi
@@ -93,7 +93,7 @@ eca-init-context() {
 ## Notes
 [Additional context for AI assistance]
 EOF
-    echo "✅ Created .eca/context.md"
+    echo "Created .eca/context.md"
     echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
 }
 
@@ -160,7 +160,7 @@ eca-config() {
   }
 }
 EOF
-        echo "✅ Created config template at $config_file"
+        echo "Created config template at $config_file"
         echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
         echo "   See template comments for examples"
     fi
@@ -175,7 +175,7 @@ zsh = '''
 # Helper: Create project context template
 eca-init-context() {
     if [[ -f .eca/context.md ]]; then
-        echo "⚠️  .eca/context.md already exists"
+        echo ".eca/context.md already exists"
         echo "Edit it directly or remove it first"
         return 1
     fi
@@ -199,7 +199,7 @@ eca-init-context() {
 ## Notes
 [Additional context for AI assistance]
 EOF
-    echo "✅ Created .eca/context.md"
+    echo "Created .eca/context.md"
     echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
 }
 
@@ -266,7 +266,7 @@ eca-config() {
   }
 }
 EOF
-        echo "✅ Created config template at $config_file"
+        echo "Created config template at $config_file"
         echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
         echo "   See template comments for examples"
     fi
@@ -279,7 +279,7 @@ fish = '''
 # Helper: Create project context template
 function eca-init-context
     if test -f .eca/context.md
-        echo "⚠️  .eca/context.md already exists"
+        echo ".eca/context.md already exists"
         echo "Edit it directly or remove it first"
         return 1
     end
@@ -301,7 +301,7 @@ function eca-init-context
 
 ## Notes
 [Additional context for AI assistance]" > .eca/context.md
-    echo "✅ Created .eca/context.md"
+    echo "Created .eca/context.md"
     echo "   Edit with: "(set -q EDITOR; and echo $EDITOR; or echo "nano")" .eca/context.md"
 end
 
@@ -366,7 +366,7 @@ function eca-config
     }
   }
 }' > "$config_file"
-        echo "✅ Created config template at $config_file"
+        echo "Created config template at $config_file"
         echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
         echo "   See template comments for examples"
     end

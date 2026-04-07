@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Gemini CLI
+# Flox Environment for Gemini CLI
 
 A Flox environment for [Gemini CLI](https://github.com/google-gemini/gemini-cli), an open-source AI agent that brings the power of Google's Gemini models directly into your terminal. This environment includes both the CLI tool and the VS Code extension for a complete development experience.
 
-## ✨ Features
+## Features
 
 - **Dual-mode operation**: Interactive sessions or non-interactive automation
 - **Built-in tools**: File system operations, shell command execution, web fetching, Google Search
@@ -16,7 +16,7 @@ A Flox environment for [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 - **Free and open source**: Apache-2.0 license
 - **Cross-platform**: Linux and macOS support
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
@@ -24,15 +24,15 @@ The environment includes:
 - VS Code Gemini CLI IDE Companion extension
 - `flox-mcp` - Flox MCP server for package and environment management
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - Node.js 20+ (included in environment)
 - Google account for OAuth OR Gemini API key OR Vertex AI access
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -44,7 +44,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/gemini-cli
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Authenticate with Gemini on first use:
 
@@ -61,7 +61,7 @@ gemini
 gemini auth
 ```
 
-### 🔌 VS Code Integration
+### VS Code Integration
 
 The VS Code extension is already installed in this environment:
 
@@ -69,7 +69,7 @@ The VS Code extension is already installed in this environment:
 2. The Gemini CLI IDE Companion extension will be available
 3. Use Gemini features directly in your editor
 
-## 📝 Usage
+## Usage
 
 ### Interactive Mode
 
@@ -113,17 +113,17 @@ gemini --include-directories ../lib,../docs -p "Document the API"
 ### Command-Line Options
 
 ```bash
-gemini                           # Interactive mode
-gemini -p "prompt"               # Non-interactive mode
-gemini --output-format json      # JSON output
-gemini --output-format stream-json  # Streaming JSON
-gemini -m gemini-2.5-flash       # Specify model
+gemini # Interactive mode
+gemini -p "prompt" # Non-interactive mode
+gemini --output-format json # JSON output
+gemini --output-format stream-json # Streaming JSON
+gemini -m gemini-2.5-flash # Specify model
 gemini --include-directories DIR # Include additional context
-gemini auth                      # Authenticate or re-authenticate
-gemini --help                    # Show all options
+gemini auth # Authenticate or re-authenticate
+gemini --help # Show all options
 ```
 
-## 🎯 Optional Enhancements
+## Optional Enhancements
 
 ### Project Context (GEMINI.md)
 
@@ -205,7 +205,7 @@ nano ~/.gemini/settings.json
 
 ```json
 {
-  "mcpServers": {
+ "mcpServers": {
     "flox": {
       "command": "flox-mcp",
       "args": [],
@@ -232,7 +232,7 @@ nano ~/.gemini/settings.json
       "httpUrl": "http://localhost:3000/mcp",
       "timeout": 5000
     }
-  }
+ }
 }
 ```
 
@@ -259,7 +259,7 @@ gemini -p "@github List my open pull requests"
 gemini -p "@database Query user table for recent signups"
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Review Session
 
@@ -311,7 +311,7 @@ echo "$quality" | jq '.qualityScore'
 
 # Generate issue tickets
 gemini --output-format json -p "Find all TODO and FIXME comments, return as JSON array" | \
-  jq -r '.[] | "Issue: \(.description) in \(.file):\(.line)"'
+ jq -r '.[] | "Issue: \(.description) in \(.file):\(.line)"'
 ```
 
 ### Multi-Directory Context
@@ -334,7 +334,7 @@ gemini -m gemini-2.5-flash -p "What does this function do?"
 gemini -m gemini-2.5-pro -p "Perform comprehensive security audit of authentication system"
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -390,11 +390,11 @@ nano ~/.gemini/settings.json
 cat ~/.gemini/settings.json | jq .
 
 # Verify Flox MCP server is available
-which flox-mcp  # Should be available in the environment
+which flox-mcp # Should be available in the environment
 
 # Verify other MCP servers are executable
-which npx  # For npx-based servers
-python -m my_mcp_server --help  # For Python servers
+which npx # For npx-based servers
+python -m my_mcp_server --help # For Python servers
 
 # Check environment variables are set
 echo $GITHUB_TOKEN
@@ -430,14 +430,14 @@ code --list-extensions | grep gemini
 # Restart VS Code
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64 (full support including Flox MCP server)
 - macOS ARM64 / Apple Silicon (full support including Flox MCP server)
 - macOS x86_64 / Intel (Gemini CLI and VS Code extension only; Flox MCP server not available)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: OAuth tokens and API keys are stored by Gemini CLI
 - **Code access**: Gemini CLI can read files in and below the current directory
@@ -454,7 +454,7 @@ This environment works on:
 - Use OAuth for personal projects, Vertex AI for enterprise
 - Keep GEMINI.md out of version control if it contains secrets
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Gemini CLI Repository**: [github.com/google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli)
 - **Documentation**: [geminicli.com/docs](https://geminicli.com/docs)
@@ -464,11 +464,11 @@ This environment works on:
 - **Vertex AI**: [cloud.google.com/vertex-ai](https://cloud.google.com/vertex-ai)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Google Gemini Team**: Thanks to Google and the Gemini team for creating Gemini CLI and making it open source under the Apache-2.0 license
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -478,6 +478,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Gemini CLI is licensed under the Apache-2.0 license - see the [Gemini CLI repository](https://github.com/google-gemini/gemini-cli) for details.

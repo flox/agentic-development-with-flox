@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for ECA (Editor Code Assistant)
+# Flox Environment for ECA (Editor Code Assistant)
 
 A Flox environment for [ECA](https://github.com/editor-code-assistant/eca), a free and open-source AI pair programming assistant that brings intelligent code assistance to multiple editors through a unified protocol. This environment runs ECA as a managed service.
 
-## ✨ Features
+## Features
 
 - **Managed service**: ECA runs as a Flox service with automatic lifecycle management
 - **Multi-editor support**: Works with Emacs, VS Code, Vim, IntelliJ, and any editor with a plugin
@@ -16,26 +16,26 @@ A Flox environment for [ECA](https://github.com/editor-code-assistant/eca), a fr
 - **Free and open source**: Apache-2.0 license
 - **Cross-platform**: macOS ARM64 (Apple Silicon) and Linux x86_64
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `eca` - Editor Code Assistant server
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - macOS ARM64 (Apple Silicon) or Linux x86_64
 - API key for cloud AI providers (OpenAI, Anthropic, etc.) OR layer Ollama for local models
 - Editor plugin installed:
-  - **Emacs**: [eca.el](https://github.com/editor-code-assistant/eca)
-  - **VS Code**: ECA extension from marketplace
-  - **Vim/Neovim**: ECA plugin
-  - **IntelliJ**: ECA plugin
+ - **Emacs**: [eca.el](https://github.com/editor-code-assistant/eca)
+ - **VS Code**: ECA extension from marketplace
+ - **Vim/Neovim**: ECA plugin
+ - **IntelliJ**: ECA plugin
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -47,7 +47,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/eca
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Configure ECA and start services:
 
@@ -73,7 +73,7 @@ flox activate -s
 # Service is now running in the background
 ```
 
-### 🦙 Using Ollama (Optional)
+### Using Ollama (Optional)
 
 For free, private, offline AI models, layer Ollama:
 
@@ -88,9 +88,9 @@ flox activate -s
 ollama pull qwen2.5-coder:7b
 
 # Or download other coding models:
-# ollama pull qwen2.5-coder:32b      # Larger, more capable
-# ollama pull deepseek-coder-v2      # Alternative coding model
-# ollama pull codellama              # Meta's coding model
+# ollama pull qwen2.5-coder:32b # Larger, more capable
+# ollama pull deepseek-coder-v2 # Alternative coding model
+# ollama pull codellama # Meta's coding model
 
 # Configure ECA to use Ollama
 eca-config
@@ -102,7 +102,7 @@ flox services restart eca
 
 **Available at:** [ollama.com/library](https://ollama.com/library) - browse thousands of models
 
-### 🔌 Editor Integration
+### Editor Integration
 
 After starting ECA server, connect from your editor:
 
@@ -113,7 +113,7 @@ M-x eca-connect
 
 **VS Code:**
 ```
-Cmd/Ctrl+Shift+P → ECA: Connect to Server
+Cmd/Ctrl+Shift+P ECA: Connect to Server
 ```
 
 **Vim:**
@@ -123,10 +123,10 @@ Cmd/Ctrl+Shift+P → ECA: Connect to Server
 
 **IntelliJ:**
 ```
-Tools → ECA → Connect
+Tools ECA Connect
 ```
 
-## 📝 Usage
+## Usage
 
 ### Service Management
 
@@ -212,9 +212,9 @@ The `eca-init-context` helper creates `.eca/context.md`:
 
 Edit this file to add your project details - ECA automatically uses it for better AI responses.
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Server Architecture
+### Server Architecture
 
 **Communication Protocol:**
 - Uses stdin/stdout for editor communication (LSP-style)
@@ -228,7 +228,7 @@ Edit this file to add your project details - ECA automatically uses it for bette
 - Manages authentication and API calls
 - Streams responses back to editor in real-time
 
-### 🚀 Agentic Capabilities
+### Agentic Capabilities
 
 **Native Tools:**
 - File reading and writing
@@ -243,7 +243,7 @@ Edit this file to add your project details - ECA automatically uses it for bette
 - Add database access, API integrations, etc.
 - Configurable per-project
 
-### 📂 Multi-Editor Support
+### Multi-Editor Support
 
 **Unified Protocol:**
 - Single server works with all editors
@@ -258,7 +258,7 @@ Edit this file to add your project details - ECA automatically uses it for bette
 - **IntelliJ**: Java plugin
 - **Others**: Any editor can implement the protocol
 
-### 🎯 Context Awareness
+### Context Awareness
 
 **Project Understanding:**
 - Reads `.eca/context.md` for project standards
@@ -272,7 +272,7 @@ Edit this file to add your project details - ECA automatically uses it for bette
 - Cross-file references
 - Architecture comprehension
 
-### 🔧 Model Flexibility
+### Model Flexibility
 
 **Supported Providers:**
 - **OpenAI**: GPT-4, GPT-4 Turbo, GPT-5, etc.
@@ -296,7 +296,7 @@ Edit this file to add your project details - ECA automatically uses it for bette
 # Enter credentials/endpoints
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Review Session
 
@@ -393,15 +393,15 @@ eca-config
 
 # In config file, uncomment the ollama provider section:
 # {
-#   "providers": {
-#     "ollama": {
-#       "url": "http://localhost:11434",
-#       "models": {
-#         "qwen2.5-coder:32b": {}
-#       }
-#     }
-#   },
-#   "defaultModel": "ollama/qwen2.5-coder:32b"
+# "providers": {
+# "ollama": {
+# "url": "http://localhost:11434",
+# "models": {
+# "qwen2.5-coder:32b": {}
+# }
+# }
+# },
+# "defaultModel": "ollama/qwen2.5-coder:32b"
 # }
 
 # Restart ECA to apply changes
@@ -475,7 +475,7 @@ E-commerce platform built with Spring Boot and React
 flox activate -s
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Service Won't Start
 
@@ -508,13 +508,13 @@ which eca
 
 **Emacs specific:**
 ```elisp
-M-x eca-status  ; Check connection status
+M-x eca-status ; Check connection status
 M-x eca-restart ; Restart connection
 ```
 
 **VS Code specific:**
 ```
-Check Output panel: View → Output → ECA
+Check Output panel: View Output ECA
 ```
 
 ### Model Configuration Issues
@@ -576,13 +576,13 @@ cat ~/.config/eca/mcp.json
 # Test MCP independently
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - macOS ARM64 (Apple Silicon)
 - Linux x86_64
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API keys**: Stored in ECA configuration file - protect with file permissions
 - **Code access**: ECA has read/write access to project files
@@ -599,7 +599,7 @@ This environment works on:
 - Audit MCP server sources before adding
 - Keep ECA and editor plugins updated
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **ECA Repository**: [github.com/editor-code-assistant/eca](https://github.com/editor-code-assistant/eca)
 - **Documentation**: Available in GitHub repository
@@ -608,13 +608,13 @@ This environment works on:
 - **Discussions**: [github.com/editor-code-assistant/eca/discussions](https://github.com/editor-code-assistant/eca/discussions)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **ECA Contributors**: Huge thanks to all the contributors to the [Editor Code Assistant project](https://github.com/editor-code-assistant/eca)! This open-source tool democratizes AI pair programming by creating a unified protocol that works across multiple editors, making AI assistance accessible to developers regardless of their editor choice. By supporting multiple AI providers including local models via Ollama, ECA ensures developers can leverage AI assistance while maintaining control over their code and data. The agentic capabilities with MCP extensibility show a thoughtful approach to building a platform that grows with the community. Thank you for this excellent contribution to the open-source development tools ecosystem!
 
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like ECA in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -624,6 +624,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. ECA is licensed under the Apache-2.0 license - see the [ECA repository](https://github.com/editor-code-assistant/eca) for details.

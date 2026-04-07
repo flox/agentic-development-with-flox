@@ -33,12 +33,12 @@ aichat.pkg-path = "aichat"
 [hook]
 on-activate = '''
 echo ""
-echo "💬 AIChat - All-in-One LLM CLI Tool"
+echo "AIChat - All-in-One LLM CLI Tool"
 echo ""
 
 # First-time setup check
 if [ ! -f "$HOME/.config/aichat/config.yaml" ]; then
-  echo "⚡ First time? Run 'aichat' and follow the interactive setup."
+  echo "First time? Run 'aichat' and follow the interactive setup."
   echo ""
 fi
 

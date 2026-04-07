@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Codex CLI
+# Flox Environment for Codex CLI
 
 A Flox environment for [Codex CLI](https://github.com/openai/codex), a lightweight local AI coding agent from OpenAI that runs on your computer. Codex provides conversational assistance for coding tasks, executes shell commands with approval, and integrates with your development workflow through an intelligent terminal interface.
 
-## ✨ Features
+## Features
 
 - **Local AI coding agent**: Runs on your computer, not in the cloud
 - **Conversational interface**: Natural language interaction for coding tasks
@@ -15,21 +15,21 @@ A Flox environment for [Codex CLI](https://github.com/openai/codex), a lightweig
 - **Helper functions**: Easy config and policy management
 - **Cross-shell support**: Works with bash, zsh, and fish
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `codex` - OpenAI's local AI coding agent
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - ChatGPT account (Plus, Pro, Team, Edu, or Enterprise) or OpenAI API key
 - Git repository (optional, for project context)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -41,7 +41,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/codex
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Authenticate with OpenAI (required):
 
@@ -57,7 +57,7 @@ codex
 # (usage-based billing, requires separate setup)
 ```
 
-## 📝 Usage
+## Usage
 
 ### Basic Usage (Interactive Mode)
 
@@ -130,9 +130,9 @@ Within interactive mode, use slash commands for extended functionality:
 
 (See official documentation for complete slash command list)
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Configuration
+### Configuration
 
 **Config File:** `~/.codex/config.toml`
 
@@ -144,7 +144,7 @@ Optional configuration includes:
 
 **Helper:** Use `codex-config` to edit configuration
 
-### 🚀 Execution Policies
+### Execution Policies
 
 **Policy Directory:** `~/.codex/policy/`
 
@@ -176,7 +176,7 @@ def prefix_rule(cmd):
 
 **Helper:** Use `codex-policy` to manage policies
 
-### 📂 Memory System
+### Memory System
 
 **AGENTS.md Files:**
 - Provide persistent context across sessions
@@ -199,7 +199,7 @@ Example AGENTS.md:
 - Write unit tests for all business logic
 ```
 
-### 🔐 Authentication
+### Authentication
 
 **ChatGPT Account (Recommended):**
 - Includes Codex access with Plus/Pro/Team/Edu/Enterprise
@@ -211,7 +211,7 @@ Example AGENTS.md:
 - Requires separate configuration
 - See official docs for setup
 
-### 🎯 Approval System
+### Approval System
 
 When Codex wants to execute a command:
 1. Shows the command to be executed
@@ -222,7 +222,7 @@ When Codex wants to execute a command:
 
 This prevents accidental destructive operations while maintaining productivity.
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Generation
 
@@ -292,7 +292,7 @@ done
 codex exec "Create API documentation from source code"
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -364,13 +364,13 @@ flox activate
 flox list
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - macOS (Apple Silicon and Intel)
 - Linux (x86_64 and ARM64)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Execution approval**: Commands require approval unless explicitly allowed in policies
 - **Policy system**: Define rules to prevent dangerous operations
@@ -380,7 +380,7 @@ This environment works on:
 - **Command visibility**: All proposed commands shown before execution
 - **Audit trail**: Command history and approval decisions logged
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Codex Repository**: [github.com/openai/codex](https://github.com/openai/codex)
 - **ChatGPT Codex**: [chatgpt.com/codex](https://chatgpt.com/codex)
@@ -388,12 +388,12 @@ This environment works on:
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 - **OpenAI Documentation**: [platform.openai.com/docs](https://platform.openai.com/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **OpenAI Codex Team**: Huge thanks to OpenAI and all contributors to the [Codex project](https://github.com/openai/codex) for creating this excellent local AI coding agent
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like Codex in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -403,6 +403,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Codex and OpenAI services have their own terms of service - see the [OpenAI website](https://openai.com) for details.

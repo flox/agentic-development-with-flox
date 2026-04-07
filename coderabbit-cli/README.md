@@ -1,8 +1,8 @@
-# 🐰 Flox Environment for CodeRabbit CLI
+# Flox Environment for CodeRabbit CLI
 
 A Flox environment for [CodeRabbit CLI](https://docs.coderabbit.ai/cli/overview), an AI-powered code review tool that catches bugs, security issues, and code smells directly in your terminal. CodeRabbit provides context-aware reviews that learn from your team's patterns and enforce coding standards before code reaches production.
 
-## ✨ Features
+## Features
 
 - **AI-powered code reviews**: Senior-engineer level analysis in your terminal
 - **Context-aware detection**: Spots race conditions, memory leaks, security vulnerabilities
@@ -13,22 +13,22 @@ A Flox environment for [CodeRabbit CLI](https://docs.coderabbit.ai/cli/overview)
 - **Helper functions**: Convenient shortcuts for common workflows
 - **Cross-shell support**: Works with bash, zsh, and fish
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `coderabbit-cli` - AI code review tool (alias: `cr`)
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - x86_64 Linux system (currently Linux-only)
 - Git repository with code to review
 - CodeRabbit account (free tier available)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -40,7 +40,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/coderabbit-cli
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Authenticate with CodeRabbit (required):
 
@@ -54,7 +54,7 @@ cr auth login
 
 This opens your browser for authentication. Copy the access token back to the CLI to complete setup.
 
-## 📝 Usage
+## Usage
 
 ### Basic Usage
 
@@ -157,9 +157,9 @@ coderabbit --cwd /path/to/project
 coderabbit --no-color
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Code Analysis
+### Code Analysis
 
 **Pattern Recognition:**
 - Uses same AI engine as CodeRabbit's PR reviews
@@ -179,7 +179,7 @@ coderabbit --no-color
 - Catches issues that simple linters miss
 - Provides architectural-level insights
 
-### 🚀 Review Process
+### Review Process
 
 1. **Scan**: Analyzes changed files in your working directory
 2. **Detect**: Identifies issues using AI pattern recognition
@@ -187,7 +187,7 @@ coderabbit --no-color
 4. **Suggest**: Provides actionable fix recommendations
 5. **Learn**: Remembers patterns for future reviews
 
-### 📂 Configuration Files
+### Configuration Files
 
 CodeRabbit automatically reads:
 - `claude.md` - Claude-specific guidelines
@@ -200,7 +200,7 @@ Supply additional files with `--config`:
 coderabbit --config team-standards.md coding-guidelines.md
 ```
 
-### 🎯 Issue Detection
+### Issue Detection
 
 **Security:**
 - SQL injection vulnerabilities
@@ -229,7 +229,7 @@ coderabbit --config team-standards.md coding-guidelines.md
 - Inefficient algorithms
 - Resource exhaustion
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Quick Pre-Commit Review
 
@@ -287,7 +287,7 @@ coderabbit --config team-standards.md .cursorrules
 # Future reviews automatically enforce them
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -359,14 +359,14 @@ pwd
 coderabbit --cwd /correct/path
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment currently works on:
 - Linux x86_64
 
 **Note:** macOS and ARM64 support planned.
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API communication**: Reviews sent to CodeRabbit API (not fully local)
 - **Code privacy**: Free tier for public repos, paid for private repos
@@ -375,7 +375,7 @@ This environment currently works on:
 - **Enterprise option**: Self-hosted deployment available
 - **No code storage**: Reviews are ephemeral, not permanently stored
 
-## 📊 Pricing Tiers
+## Pricing Tiers
 
 **Free:**
 - 1 review/hour
@@ -399,7 +399,7 @@ This environment currently works on:
 - Self-hosted deployment
 - Contact: sales@coderabbit.ai
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **CodeRabbit CLI Documentation**: [docs.coderabbit.ai/cli/overview](https://docs.coderabbit.ai/cli/overview)
 - **CodeRabbit Website**: [coderabbit.ai](https://www.coderabbit.ai)
@@ -407,12 +407,12 @@ This environment currently works on:
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 - **GitHub Organization**: [github.com/coderabbitai](https://github.com/coderabbitai)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **CodeRabbit Team**: Huge thanks to [CodeRabbit](https://github.com/coderabbitai) and all contributors for creating this excellent AI-powered code review tool that brings senior-engineer level analysis to the terminal
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like CodeRabbit CLI in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -422,6 +422,6 @@ This environment currently works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. CodeRabbit and its CLI tool have their own terms of service - see the [CodeRabbit website](https://www.coderabbit.ai) for details.

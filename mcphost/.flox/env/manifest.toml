@@ -41,7 +41,7 @@ GITHUB_TOKEN = "${GITHUB_TOKEN:-}"
 [hook]
 on-activate = '''
 echo ""
-echo "🌐 MCPHost - LLM Host for Model Context Protocol"
+echo "MCPHost - LLM Host for Model Context Protocol"
 echo ""
 echo "Enables LLMs to interact with external tools through MCP servers."
 echo "Supports Claude, OpenAI, Google Gemini, and Ollama models."
@@ -116,7 +116,7 @@ max-tokens: 4096
 temperature: 0.7
 EOF
 
-    echo "✓ Created example config at: $config_file"
+    echo "Created example config at: $config_file"
     echo "  Edit it to add more MCP servers or change the model."
 }
 
@@ -171,7 +171,7 @@ max-tokens: 4096
 temperature: 0.7
 EOF
 
-    echo "✓ Created example config at: $config_file"
+    echo "Created example config at: $config_file"
     echo "  Edit it to add more MCP servers or change the model."
 }
 '''
@@ -224,7 +224,7 @@ max-tokens: 4096
 temperature: 0.7
 EOF
 
-    echo "✓ Created example config at: $config_file"
+    echo "Created example config at: $config_file"
     echo "  Edit it to add more MCP servers or change the model."
 end
 '''

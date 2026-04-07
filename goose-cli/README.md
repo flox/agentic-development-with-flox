@@ -1,8 +1,8 @@
-# 🪿 Flox Environment for Goose CLI
+# Flox Environment for Goose CLI
 
 A Flox environment for [Goose](https://github.com/block/goose), a local, extensible, open-source AI agent that automates engineering tasks. Goose goes beyond code suggestions to autonomously build projects, execute code, debug, orchestrate workflows, and interact with APIs.
 
-## ✨ Features
+## Features
 
 - **Autonomous task execution**: Build projects, write code, debug, and test end-to-end
 - **Interactive sessions**: Conversational interface for iterative development
@@ -15,22 +15,22 @@ A Flox environment for [Goose](https://github.com/block/goose), a local, extensi
 - **Local execution**: Runs on your machine for privacy and control
 - **Free and open source**: From Block (Square)
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `goose` - Goose CLI tool
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API key for your chosen LLM provider (OpenAI, Anthropic, Gemini, etc.)
 - Python 3.10+ (included in environment)
 - System keyring access OR environment variables configured (see Authentication below)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -42,7 +42,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/goose-cli
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Authentication Methods:**
 
@@ -55,7 +55,7 @@ Goose stores API credentials in your system keyring by default. If your keyring 
 goose configure
 
 # In the menu:
-# 1. Configure providers → Select provider → Enter API key
+# 1. Configure providers Select provider Enter API key
 # 2. Choose to save to keyring when prompted
 # 3. Add extensions (optional)
 # 4. Adjust settings
@@ -86,7 +86,7 @@ goose configure
 - Amazon Bedrock
 - Tetrate Agent Router Service (free $10 credit for first-time users)
 
-## 📝 Usage
+## Usage
 
 ### Interactive Session
 
@@ -158,7 +158,7 @@ goose configure
 # - Adjust goose settings
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### LLM Providers
 
@@ -202,7 +202,7 @@ Optimize for different tasks:
 
 ### Extensions
 
-Add capabilities through `goose configure → Add extensions`:
+Add capabilities through `goose configure Add extensions`:
 
 **Computer Controller Extension:**
 - Web scraping
@@ -215,7 +215,7 @@ Add capabilities through `goose configure → Add extensions`:
 - Integrate with databases, APIs, services
 - Extend goose's capabilities
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Building a Project from Scratch
 
@@ -362,11 +362,11 @@ You: Continue with the API implementation
 Goose: [picks up context, continues work]
 ```
 
-## 🎯 Extensions and MCP Servers
+## Extensions and MCP Servers
 
 ### Built-in Extensions
 
-Access via `goose configure → Add extensions`:
+Access via `goose configure Add extensions`:
 
 **Computer Controller:**
 - Web page scraping
@@ -389,7 +389,7 @@ Goose supports Model Context Protocol for extensibility:
 # - Custom domain-specific tools
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Configuration Issues
 
@@ -465,7 +465,7 @@ You: Hello
 **Solutions:**
 ```bash
 # Update API key
-goose configure → Configure providers
+goose configure Configure providers
 
 # Switch to different provider temporarily
 # Check provider status pages
@@ -478,7 +478,7 @@ goose configure → Configure providers
 
 ```bash
 # Check extension configuration
-goose configure → Toggle extensions
+goose configure Toggle extensions
 
 # Verify extension is enabled
 # Remove and re-add extension if needed
@@ -514,14 +514,14 @@ goose web
 - Configure multi-model setup for efficiency
 - Break large tasks into smaller steps
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 - macOS x86_64 (Intel)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in system keyring by default, or use environment variables
 - **Keyring requirement**: System keyring must be available/unlocked unless using env vars
@@ -541,7 +541,7 @@ This environment works on:
 - Keep goose and extensions updated
 - Use `.gitignore` to exclude sensitive files from context
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Goose Repository**: [github.com/block/goose](https://github.com/block/goose)
 - **Documentation**: [block.github.io/goose](https://block.github.io/goose)
@@ -550,11 +550,11 @@ This environment works on:
 - **Guides**: [block.github.io/goose/docs/category/guides](https://block.github.io/goose/docs/category/guides)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Block Team**: Thanks to Block (Square) for creating Goose and making it open source
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -564,6 +564,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Goose is open source from Block - see the [Goose repository](https://github.com/block/goose) for license details.

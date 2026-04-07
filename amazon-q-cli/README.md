@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Amazon Q Developer CLI
+# Flox Environment for Amazon Q Developer CLI
 
 A Flox environment for [Amazon Q Developer CLI](https://github.com/aws/amazon-q-developer-cli), AWS's AI-powered command line assistant. Amazon Q Developer enhances your terminal with intelligent chat, code generation, command translation, and autonomous agents powered by Claude Sonnet 4.
 
-## ✨ Features
+## Features
 
 - **AI-powered chat**: Interactive conversations with Claude Sonnet 4 in your terminal
 - **Command translation**: Convert natural language to shell commands with `q translate`
@@ -17,22 +17,22 @@ A Flox environment for [Amazon Q Developer CLI](https://github.com/aws/amazon-q-
 - **IDE integration**: Works with VS Code, JetBrains, Visual Studio, Eclipse
 - **Multi-language support**: Discuss architecture and build apps in your preferred language
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `q` - Amazon Q Developer CLI
 - `aws-cli` - AWS Command Line Interface (optional, for AWS integration)
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - AWS Builder ID (free) or IAM Identity Center account (Pro, $19/month)
 - Internet connection for AI model access
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -44,7 +44,7 @@ git clone https://github.com/yourusername/agentic-development-with-flox && cd ag
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Authentication:**
 
@@ -84,7 +84,7 @@ q doctor
 - **Free (Builder ID)**: Chat, code generation, command translation, basic agents
 - **Pro (IAM Identity Center)**: Advanced agents, priority support, team collaboration
 
-## 📝 Usage
+## Usage
 
 ### Interactive Chat
 
@@ -259,13 +259,13 @@ q doctor
 # - MCP server status
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Files
 
 Amazon Q CLI uses a hierarchical configuration system:
 
-**⚠️ IMPORTANT - Flox Security Convention:**
+**IMPORTANT - Flox Security Convention:**
 Config files containing secrets MUST be in `$HOME` (`~/.aws/amazonq/`), never in project directories.
 
 **Global config** (for credentials and defaults):
@@ -318,7 +318,7 @@ your-project/
 - `aws` - AWS API operations
 - `web` - Web scraping and fetching
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Building Features
 
@@ -434,7 +434,7 @@ Q: [analyzes codebase]
    [generates complete documentation]
 ```
 
-## 🧪 Local Development & Testing
+## Local Development & Testing
 
 ### Layering LocalStack for Local AWS Testing
 
@@ -492,7 +492,7 @@ Q: [Provides LocalStack-compatible Lambda deployment commands]
 
 LocalStack emulates major AWS services including S3, DynamoDB, Lambda, SQS, SNS, API Gateway, CloudFormation, and more. See the [LocalStack documentation](https://docs.localstack.cloud/) for a full list.
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -600,7 +600,7 @@ mv ~/.aws/amazonq/mcp.json ~/.aws/amazonq/mcp.json.bak
 - Break large tasks into smaller steps
 - Clear chat history: `/clear` in chat session
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
@@ -608,7 +608,7 @@ This environment works on:
 - macOS x86_64 (Intel)
 - macOS ARM64 (Apple Silicon)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in `~/.aws/amazonq/` or via AWS credentials
 - **Configuration location**: `~/.aws/amazonq/` in your home directory (**NEVER in project root**)
@@ -629,7 +629,7 @@ This environment works on:
 - Audit MCP servers before enabling
 - Use `.gitignore` to exclude `.amazonq/` if it contains sensitive data
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Official Documentation**: [docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html)
 - **GitHub Repository**: [github.com/aws/amazon-q-developer-cli](https://github.com/aws/amazon-q-developer-cli)
@@ -639,12 +639,12 @@ This environment works on:
 - **AWS Developer Center**: [aws.amazon.com/developer/learning/q-developer-cli/](https://aws.amazon.com/developer/learning/q-developer-cli/)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **AWS Team**: Thanks to AWS for creating Amazon Q Developer and making the CLI available
 - **Anthropic**: Powers Amazon Q with Claude Sonnet 4
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -654,6 +654,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Amazon Q Developer is a service from AWS - see the [AWS Service Terms](https://aws.amazon.com/service-terms/) for details.

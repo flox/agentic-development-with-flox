@@ -5,12 +5,12 @@ This Flox environment provides [Catnip](https://github.com/wandb/catnip) - a pow
 ## What is Catnip?
 
 Catnip is a web service that:
-- 🔒 **Isolates** Claude Code sessions in Docker containers
-- 🌳 **Manages** git worktrees automatically for parallel development
-- 📱 **Provides** web + mobile UI for monitoring sessions
-- 🔄 **Enables** multiple Claude agents working simultaneously
-- 🌐 **Forwards** ports automatically for service preview
-- 🔐 **Handles** SSH access for remote development
+- **Isolates** Claude Code sessions in Docker containers
+- **Manages** git worktrees automatically for parallel development
+- **Provides** web + mobile UI for monitoring sessions
+- **Enables** multiple Claude agents working simultaneously
+- **Forwards** ports automatically for service preview
+- **Handles** SSH access for remote development
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ flox activate
 The environment will check for a container runtime. If you don't have Docker installed:
 
 ```
-ℹ️  No container runtime detected
+No container runtime detected
 
    Catnip requires a container runtime (Docker/Colima/Podman)
 
@@ -46,8 +46,8 @@ flox activate
 
 You'll see:
 ```
-✅ Container runtime ready
-🐱 Catnip environment ready!
+Container runtime ready
+Catnip environment ready!
 
 Quick start:
   catnip-start              # Launch Catnip with API keys
@@ -199,8 +199,8 @@ Catnip Configuration:
   Rust: 1.75.0
 
 API Keys:
-  ✓ ANTHROPIC_API_KEY set
-  ✗ OPENAI_API_KEY missing
+  ANTHROPIC_API_KEY set
+  OPENAI_API_KEY missing
 ```
 
 ## Configuration
@@ -254,15 +254,15 @@ colima-info
 ```
 
 **When to use Colima**:
-- ✅ You don't have Docker Desktop
-- ✅ You want a free, lightweight alternative
-- ✅ You're on Linux without system Docker
-- ✅ You want isolated container runtime per project
+- You don't have Docker Desktop
+- You want a free, lightweight alternative
+- You're on Linux without system Docker
+- You want isolated container runtime per project
 
 **When to use existing Docker**:
-- ✅ You already have Docker Desktop running
-- ✅ You have system Docker installed
-- ✅ You share containers across multiple projects
+- You already have Docker Desktop running
+- You have system Docker installed
+- You share containers across multiple projects
 
 The environment auto-detects if Docker is already running and won't start Colima unnecessarily.
 
@@ -409,4 +409,4 @@ Once you're comfortable with Catnip:
 - Build custom environment compositions for your team
 - Publish reproducible ML/AI development stacks
 
-Happy multi-agent development! 🐱✨
+Happy multi-agent development!

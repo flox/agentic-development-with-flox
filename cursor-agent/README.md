@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Cursor Agent CLI
+# Flox Environment for Cursor Agent CLI
 
 A Flox environment for [Cursor Agent CLI](https://cursor.com/cli), the official command-line interface for Cursor's autonomous AI coding agent. Cursor Agent CLI brings the power of Cursor's AI agent directly to your terminal, allowing you to write, review, and modify code using natural language - whether you're using Neovim, JetBrains, VS Code, or any other development environment.
 
-## ✨ Features
+## Features
 
 - **Autonomous AI agent**: Plans and executes complex codebase changes independently
 - **Dual-mode operation**: Interactive TUI for hands-on work, non-interactive mode for automation
@@ -14,22 +14,22 @@ A Flox environment for [Cursor Agent CLI](https://cursor.com/cli), the official 
 - **CI/CD ready**: Non-interactive mode perfect for automated workflows
 - **Beta access**: Early access to Cursor's latest CLI capabilities
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `cursor-agent` - Cursor's autonomous AI coding agent for the terminal
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - x86_64 Linux system (currently Linux-only)
 - Active Cursor subscription (Individual, Business, or Enterprise)
 - Git repository (recommended, for project context)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -41,7 +41,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/cursor-agent
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Launch Cursor Agent and authenticate:
 
@@ -53,7 +53,7 @@ cursor-agent
 # Follow the authentication flow to link your subscription
 ```
 
-## 📝 Usage
+## Usage
 
 ### Interactive TUI Mode
 
@@ -130,9 +130,9 @@ cursor-agent --help           # Show available options
 cursor-agent --version        # Display version information
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Autonomous Agent Architecture
+### Autonomous Agent Architecture
 
 **Planning Phase:**
 - Analyzes your request and current codebase
@@ -153,7 +153,7 @@ cursor-agent --version        # Display version information
 - Attempts automatic fixes if needed
 - Summarizes modifications made
 
-### 🚀 Dual-Mode Operation
+### Dual-Mode Operation
 
 **Interactive TUI Mode:**
 - Visual terminal interface for hands-on work
@@ -169,7 +169,7 @@ cursor-agent --version        # Display version information
 - No user prompts (auto-approve or pre-configured)
 - Scriptable and reproducible
 
-### 📂 File System Operations
+### File System Operations
 
 **Read Capabilities:**
 - Access any file in your project
@@ -183,7 +183,7 @@ cursor-agent --version        # Display version information
 - Refactor with cross-file awareness
 - Generate boilerplate and scaffolding
 
-### 🎯 Shell Command Execution
+### Shell Command Execution
 
 **Permission-Based System:**
 - Commands presented before execution
@@ -199,7 +199,7 @@ cursor-agent --version        # Display version information
 - Git operations
 - Environment setup
 
-### 🔧 Multi-Model Support
+### Multi-Model Support
 
 **Flexible Model Selection:**
 - Use any model from your Cursor subscription
@@ -214,7 +214,7 @@ cursor-agent --version        # Display version information
 - Test generation
 - Security analysis
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Refactoring with Context
 
@@ -309,7 +309,7 @@ cursor-agent chat "review the last commit for potential issues"
 # Agent analyzes git diff and suggests improvements
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -419,14 +419,14 @@ echo $?
 cursor-agent "prompt" 2>&1 | tee output.log
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment currently works on:
 - Linux x86_64
 
 **Note:** macOS and ARM64 support planned for future releases.
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Authentication**: Secure token-based Cursor account authentication
 - **Shell command approval**: Explicit permission required by default
@@ -444,7 +444,7 @@ This environment currently works on:
 - Keep Cursor subscription and CLI updated
 - Don't auto-approve commands in CI without review
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Cursor Agent CLI**: [cursor.com/cli](https://cursor.com/cli)
 - **CLI Documentation**: [docs.cursor.com/cli](https://docs.cursor.com/cli/overview)
@@ -453,13 +453,13 @@ This environment currently works on:
 - **Cursor Blog**: [cursor.com/blog](https://cursor.com/blog)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Cursor Team**: Thanks to the team at [Cursor](https://cursor.com) for creating the Cursor Agent CLI and making autonomous AI coding agents accessible from the terminal
 
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like Cursor Agent CLI in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -469,6 +469,6 @@ This environment currently works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Cursor Agent CLI and the Cursor platform have their own terms of service - see the [Cursor website](https://cursor.com) for details.

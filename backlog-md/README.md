@@ -1,8 +1,8 @@
-# 📋 A Flox Environment for Backlog.md
+# A Flox Environment for Backlog.md
 
 This Flox environment gives you [Backlog.md](https://github.com/MrLesk/Backlog.md)—a markdown-native task manager and Kanban visualizer—preconfigured with shell completions, helpful aliases, and an optional MCP server for AI coding assistants.
 
-## ✨ What You Get
+## What You Get
 
 - **Markdown-native task management** - Every task is a plain `.md` file in your Git repo
 - **Interactive Kanban board** - Terminal-based board that updates in real-time
@@ -12,14 +12,14 @@ This Flox environment gives you [Backlog.md](https://github.com/MrLesk/Backlog.m
 - **Convenient aliases** - Quick access to common commands
 - **100% private & offline** - All data stays in your repository
 
-## 🧰 What's Inside
+## What's Inside
 
 - `backlog-md` - Task management CLI, Kanban board, and web UI
 - Shell completions for bash/zsh automatically installed
 - MCP service for AI coding assistant integration (optional)
 - Helpful aliases: `bb`, `bt`, `bw`, `bl`
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -38,7 +38,7 @@ backlog init "My Project"
 
 Follow the prompts to configure your task management setup and choose AI integration mode (MCP recommended).
 
-## 📝 Built-in Commands
+## Built-in Commands
 
 ### Quick Aliases
 
@@ -106,7 +106,7 @@ backlog board export --export-version "v1.2.0"
 backlog board export --readme
 ```
 
-## 🤖 MCP Service (AI Integration)
+## MCP Service (AI Integration)
 
 For AI coding assistants like Claude Code, Codex, and Gemini CLI:
 
@@ -127,7 +127,7 @@ The MCP server allows AI tools to:
 - Query task status and dependencies
 - Follow your project's task management patterns
 
-## 🔧 Configuration
+## Configuration
 
 Override defaults via environment variables:
 
@@ -151,7 +151,7 @@ backlog config list
 backlog config set defaultEditor "code --wait"
 ```
 
-## 🔥 Troubleshooting
+## Troubleshooting
 
 ### Shell completions not working
 
@@ -189,7 +189,7 @@ backlog init
 - Linux (x86_64, aarch64)
 - macOS (Intel, Apple Silicon)
 
-## 🔍 Power User Tips
+## Power User Tips
 
 - **Dependencies**: Link related tasks with `--dep task-1,task-2` to create execution sequences
 - **Drafts**: Create draft tasks with `--draft` and promote them when ready with `backlog draft promote`
@@ -197,7 +197,7 @@ backlog init
 - **Web + CLI sync**: All changes in the web UI sync with markdown files instantly
 - **Export automation**: Use `backlog board export` in CI to generate status reports
 
-## 🌟 Related Projects
+## Related Projects
 
 ### Upstream
 

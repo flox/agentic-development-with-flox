@@ -78,13 +78,13 @@ check_ccr_config() {
 show_ccr_info() {
     local config_status
     if check_ccr_config; then
-        config_status="✓ Configured"
+        config_status="Configured"
     else
-        config_status="⚠️  Not configured"
+        config_status="Not configured"
     fi
 
     echo ""
-    echo "✅ Claude Code Router environment ready (headless mode)"
+    echo "Claude Code Router environment ready (headless mode)"
     echo ""
     echo "Configuration:"
     echo "  Config: $CCR_CONFIG_FILE ($config_status)"
@@ -114,7 +114,7 @@ show_ccr_info() {
 
 # Main initialization
 if ! check_ccr_config; then
-    echo "ℹ️  No configuration found. Run 'ccr-setup' to create one."
+    echo "No configuration found. Run 'ccr-setup' to create one."
 fi
 
 show_ccr_info
@@ -174,7 +174,7 @@ ccr-config-example() {
 }
 EOF
 
-    echo "✓ Example configuration created: $config_file"
+    echo "Example configuration created: $config_file"
     echo ""
     echo "Edit with: ${EDITOR:-nano} $config_file"
     echo "Or use:    ccr-setup (interactive wizard)"
@@ -183,7 +183,7 @@ EOF
 # Helper: Interactive configuration wizard
 ccr-setup() {
     if ! command -v gum &> /dev/null; then
-        echo "⚠️  gum not found. Using non-interactive mode."
+        echo "gum not found. Using non-interactive mode."
         ccr-config-example
         return 0
     fi
@@ -361,7 +361,7 @@ EOF
 EOF
 
     echo ""
-    gum style --foreground 34 --bold "✓ Configuration saved!"
+    gum style --foreground 34 --bold "Configuration saved!"
     echo ""
     echo "Next steps:"
     echo "  1. Set API keys as environment variables"
@@ -373,12 +373,12 @@ EOF
 ccr-status() {
     echo "Claude Code Router Status"
     echo ""
-    echo "✓ ccr: $(which ccr)"
+    echo "ccr:$(which ccr)"
     echo ""
 
     # Check config
     if [[ -f "$CCR_CONFIG_FILE" ]]; then
-        echo "✓ Config exists: $CCR_CONFIG_FILE"
+        echo "Config exists: $CCR_CONFIG_FILE"
 
         # Show providers
         if command -v jq &> /dev/null; then
@@ -391,16 +391,16 @@ ccr-status() {
             jq -r '.Router | to_entries[] | "  \(.key): \(.value)"' "$CCR_CONFIG_FILE"
         fi
     else
-        echo "✗ No config found"
+        echo "No config found"
     fi
 
     echo ""
 
     # Check if service is running
     if pgrep -f "claude-code-router" > /dev/null; then
-        echo "✓ Service is running"
+        echo "Service is running"
     else
-        echo "⚠️  Service not running (start with: flox activate -s)"
+        echo "Service not running (start with: flox activate -s)"
     fi
 }
 
@@ -436,10 +436,10 @@ ccr-test() {
     echo "Testing connection to $endpoint..."
 
     if curl -s "$endpoint/health" > /dev/null 2>&1; then
-        echo "✓ Router is reachable"
+        echo "Router is reachable"
         return 0
     else
-        echo "✗ Router is not reachable"
+        echo "Router is not reachable"
         echo ""
         echo "Make sure the service is running:"
         echo "  flox activate -s"
@@ -502,7 +502,7 @@ ccr-config-example() {
 }
 EOF
 
-    echo "✓ Example configuration created: $config_file"
+    echo "Example configuration created: $config_file"
     echo ""
     echo "Edit with: ${EDITOR:-nano} $config_file"
     echo "Or use:    ccr-setup (interactive wizard)"
@@ -511,7 +511,7 @@ EOF
 # Helper: Interactive configuration wizard
 ccr-setup() {
     if ! command -v gum &> /dev/null; then
-        echo "⚠️  gum not found. Using non-interactive mode."
+        echo "gum not found. Using non-interactive mode."
         ccr-config-example
         return 0
     fi
@@ -579,18 +579,18 @@ $(gum style --foreground 240 'Setup your AI model router')"
     # ... [similar implementation]
 
     echo ""
-    gum style --foreground 34 --bold "✓ Configuration saved!"
+    gum style --foreground 34 --bold "Configuration saved!"
 }
 
 # Helper: Show configuration status
 ccr-status() {
     echo "Claude Code Router Status"
     echo ""
-    echo "✓ ccr: $(which ccr)"
+    echo "ccr:$(which ccr)"
     echo ""
 
     if [[ -f "$CCR_CONFIG_FILE" ]]; then
-        echo "✓ Config exists: $CCR_CONFIG_FILE"
+        echo "Config exists: $CCR_CONFIG_FILE"
 
         if command -v jq &> /dev/null; then
             echo ""
@@ -602,15 +602,15 @@ ccr-status() {
             jq -r '.Router | to_entries[] | "  \(.key): \(.value)"' "$CCR_CONFIG_FILE"
         fi
     else
-        echo "✗ No config found"
+        echo "No config found"
     fi
 
     echo ""
 
     if pgrep -f "claude-code-router" > /dev/null; then
-        echo "✓ Service is running"
+        echo "Service is running"
     else
-        echo "⚠️  Service not running (start with: flox activate -s)"
+        echo "Service not running (start with: flox activate -s)"
     fi
 }
 
@@ -646,10 +646,10 @@ ccr-test() {
     echo "Testing connection to $endpoint..."
 
     if curl -s "$endpoint/health" > /dev/null 2>&1; then
-        echo "✓ Router is reachable"
+        echo "Router is reachable"
         return 0
     else
-        echo "✗ Router is not reachable"
+        echo "Router is not reachable"
         echo ""
         echo "Make sure the service is running:"
         echo "  flox activate -s"
@@ -709,7 +709,7 @@ function ccr-config-example
 }
 EOF
 
-    echo "✓ Example configuration created: $config_file"
+    echo "Example configuration created: $config_file"
     echo ""
     echo "Edit with: "(set -q EDITOR; and echo $EDITOR; or echo "nano")" $config_file"
     echo "Or use:    ccr-setup (interactive wizard)"
@@ -719,11 +719,11 @@ end
 function ccr-status
     echo "Claude Code Router Status"
     echo ""
-    echo "✓ ccr: "(which ccr)
+    echo "ccr:"(which ccr)
     echo ""
 
     if test -f "$CCR_CONFIG_FILE"
-        echo "✓ Config exists: $CCR_CONFIG_FILE"
+        echo "Config exists: $CCR_CONFIG_FILE"
 
         if command -v jq &> /dev/null
             echo ""
@@ -735,15 +735,15 @@ function ccr-status
             jq -r '.Router | to_entries[] | "  \(.key): \(.value)"' "$CCR_CONFIG_FILE"
         end
     else
-        echo "✗ No config found"
+        echo "No config found"
     end
 
     echo ""
 
     if pgrep -f "claude-code-router" > /dev/null
-        echo "✓ Service is running"
+        echo "Service is running"
     else
-        echo "⚠️  Service not running (start with: flox activate -s)"
+        echo "Service not running (start with: flox activate -s)"
     end
 end
 
@@ -779,10 +779,10 @@ function ccr-test
     echo "Testing connection to $endpoint..."
 
     if curl -s "$endpoint/health" > /dev/null 2>&1
-        echo "✓ Router is reachable"
+        echo "Router is reachable"
         return 0
     else
-        echo "✗ Router is not reachable"
+        echo "Router is not reachable"
         echo ""
         echo "Make sure the service is running:"
         echo "  flox activate -s"

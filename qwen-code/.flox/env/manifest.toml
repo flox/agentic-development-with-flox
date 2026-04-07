@@ -26,7 +26,7 @@ qwen-code.outputs = "all"
 [hook]
 on-activate = '''
 echo ""
-echo "🤖 Qwen Code - AI-Powered CLI for Developers"
+echo "Qwen Code - AI-Powered CLI for Developers"
 echo ""
 echo "Quick start:"
 echo "  qwen                         # Start interactive session"

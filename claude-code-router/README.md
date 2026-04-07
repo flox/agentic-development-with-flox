@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Claude Code Router
+# Flox Environment for Claude Code Router
 
 A Flox environment for [Claude Code Router](https://github.com/musistudio/claude-code-router), a middleware proxy that routes Claude Code requests to different AI providers (OpenRouter, DeepSeek, OpenAI, Gemini, Anthropic, Ollama) with dynamic model switching, request transformation, and centralized API key management. This environment supports both interactive configuration and headless CI/CD workflows.
 
-## ✨ Features
+## Features
 
 - **Local Ollama included by default**: Compose with ollama-headless for free, private, offline LLM access
 - **Hybrid workflow support**: Interactive setup wizard OR runtime environment variable injection
@@ -16,7 +16,7 @@ A Flox environment for [Claude Code Router](https://github.com/musistudio/claude
 - **Interactive TUI configuration**: Gum-powered setup wizard
 - **Runtime configuration**: Override settings via environment variables
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
@@ -27,15 +27,15 @@ The environment includes:
 - `jq` - JSON processor for config inspection
 - `bat` - Enhanced file viewer with syntax highlighting
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API keys for one or more AI providers (DeepSeek, OpenRouter, OpenAI, etc.)
 - Claude Code installed (or use the bundled `claude-code` from this environment)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -54,7 +54,7 @@ For headless/CI workflows:
 DEEPSEEK_API_KEY=sk-xxx OPENROUTER_API_KEY=sk-xxx flox activate -s
 ```
 
-## 📝 Usage Scenarios
+## Usage Scenarios
 
 ### Interactive Setup (Local Development)
 
@@ -190,7 +190,7 @@ ccr model  # Terminal-based model selector
 ccr ui     # Web-based configuration UI
 ```
 
-## 🔍 Configuration Variables
+## Configuration Variables
 
 All configuration supports runtime override via environment variables:
 
@@ -224,9 +224,9 @@ All configuration supports runtime override via environment variables:
 | `ANTHROPIC_API_BASE_URL` | Set to `http://127.0.0.1:3456` to route through ccr |
 | `ANTHROPIC_API_KEY` | Router's APIKEY if authentication enabled |
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Configuration Management
+### Configuration Management
 
 The environment implements flexible configuration strategies:
 
@@ -247,7 +247,7 @@ The environment implements flexible configuration strategies:
    - Use environment variables for others
    - Maximum flexibility for different workflows
 
-### 🚀 Service Integration
+### Service Integration
 
 The environment uses Flox's service management with daemon support:
 
@@ -256,7 +256,7 @@ The environment uses Flox's service management with daemon support:
 3. **Shutdown Command**: Graceful stop via `ccr stop`
 4. **Status Tracking**: Monitor via `ccr status` or `flox services status`
 
-### 🌐 Request Flow
+### Request Flow
 
 ```
 ┌─────────────┐
@@ -279,14 +279,14 @@ The environment uses Flox's service management with daemon support:
 └─────────┘ └─────────┘ └──────┘ └────────┘ └──────────┘
 ```
 
-### 📂 Directory Structure
+### Directory Structure
 
 - `~/.claude-code-router/config.json` - Main configuration
 - `~/.claude-code-router/logs/` - Router logs
 - `~/.claude-code-router/plugins/` - Custom transformers
 - `~/.claude-code-router/.claude-code-router.pid` - Daemon PID file
 
-## 🛠️ Configuration Examples
+## Configuration Examples
 
 ### Example 1: Interactive Setup with Environment Variables
 
@@ -470,7 +470,7 @@ flox services start ccr    # Start only the router, not Ollama
 
 This gives you flexibility to use cloud providers only when needed without modifying the manifest.
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Router Won't Start
 
@@ -572,13 +572,13 @@ ccr model  # Interactive selector shows all configured models
 ccr ui     # Web UI shows full configuration
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux (ARM64, x86_64)
 - macOS (ARM64, x86_64)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Environment variable approach (recommended)**: API keys not stored in config files
 - **Hard-coded keys**: Convenient but less secure - protect `~/.claude-code-router/` directory
@@ -587,7 +587,7 @@ This environment works on:
 - **Log files**: May contain request/response data - secure `~/.claude-code-router/logs/`
 - **Production use**: Always use strong API keys and restrict network access
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Upstream Project**: [Claude Code Router on GitHub](https://github.com/musistudio/claude-code-router)
 - **Claude Code**: [Official Claude Code documentation](https://claude.com/claude-code)
@@ -600,12 +600,12 @@ This environment works on:
   - [Google Gemini](https://ai.google.dev/docs)
   - [Anthropic API](https://docs.anthropic.com/)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Claude Code Router Team**: Huge thanks to [musistudio](https://github.com/musistudio) and all contributors to the [Claude Code Router project](https://github.com/musistudio/claude-code-router) for creating this powerful middleware proxy that enables flexible AI provider routing and model switching
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like Claude Code Router in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -615,6 +615,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. The upstream Claude Code Router project has its own license - see the [upstream repository](https://github.com/musistudio/claude-code-router) for details.

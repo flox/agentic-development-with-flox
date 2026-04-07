@@ -1,10 +1,10 @@
-# 💫 Flox Environment for GitHub Spec Kit
+# Flox Environment for GitHub Spec Kit
 
 A Flox environment for [GitHub Spec Kit](https://github.com/github/spec-kit), a framework for spec-driven development that adds structured workflows to AI coding agents.
 
 **IMPORTANT: Spec-Kit is NOT a standalone AI coding agent.** It's a methodology framework designed to be used **WITH** other AI agents by adding structured spec-driven development workflows to them.
 
-## ✨ Features
+## Features
 
 - **Spec-Driven Development**: Structured workflow from specification to implementation
 - **Multi-agent support**: Works with 14+ AI coding agents
@@ -15,13 +15,13 @@ A Flox environment for [GitHub Spec Kit](https://github.com/github/spec-kit), a 
 - **Slash command integration**: Creates commands in `.claude/`, `.github/prompts/`, etc.
 - **Free and open source**: From GitHub
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `specify` - Spec Kit project initialization tool
 
-## 🎯 What Is Spec-Driven Development?
+## What Is Spec-Driven Development?
 
 Spec-Driven Development is a methodology where **specifications become executable artifacts** that directly generate implementations, rather than merely guiding them.
 
@@ -33,7 +33,7 @@ Spec-Driven Development is a methodology where **specifications become executabl
 4. **Tasks** (`/tasks`) - Generate actionable task lists
 5. **Implement** (`/implement`) - Execute all tasks to build features
 
-## 🔗 Integration with AI Agents
+## Integration with AI Agents
 
 Spec-Kit is designed to **layer with AI agent environments**. It creates agent-specific slash commands in your projects that implement the spec-driven workflow.
 
@@ -52,15 +52,15 @@ These AI agent environments work with Spec-Kit:
 
 Spec-Kit also supports: `qwen`, `opencode`, `codex`, `windsurf`, `auggie`, `codebuddy`, `amp`, `shai`, `q`
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - One or more AI coding agent environments (gemini-cli, kilocode-cli, copilot-cli, cursor-agent)
 - Git (for project initialization)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 **Spec-Kit should be layered with an AI agent environment:**
 
@@ -84,7 +84,7 @@ flox activate -r flox/cursor-agent
 flox activate -r flox/spec-kit
 ```
 
-### 🚀 Initialize a Project
+### Initialize a Project
 
 Once layered with an AI agent, initialize a new project:
 
@@ -108,7 +108,7 @@ This creates:
 - Git repository (optional with `--no-git`)
 - Ready-to-use development environment
 
-## 📝 Usage
+## Usage
 
 ### Complete Workflow Example
 
@@ -232,7 +232,7 @@ specify init my-project --ai gemini
 specify init my-project --ai copilot --debug
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Starting a New Feature with Spec-Driven Workflow
 
@@ -317,7 +317,7 @@ gemini
 # Generates quality checklist
 ```
 
-## 🔧 Integration Patterns
+## Integration Patterns
 
 ### Pattern 1: Temporary Layering (Recommended)
 
@@ -375,7 +375,7 @@ specify init . --ai kilocode --force
 # Now both agents have slash commands
 ```
 
-## 📚 Slash Commands Reference
+## Slash Commands Reference
 
 After initialization, these commands are available in your AI agent:
 
@@ -418,7 +418,7 @@ After initialization, these commands are available in your AI agent:
   - Code review points
   - Deployment readiness
 
-## 🎯 Benefits of Spec-Driven Development
+## Benefits of Spec-Driven Development
 
 ### Traditional Approach Problems
 
@@ -429,10 +429,10 @@ After initialization, these commands are available in your AI agent:
 
 ### Spec-Driven Approach Solutions
 
-- ✅ **Complete specifications**: Structured workflow ensures nothing missed
-- ✅ **Consistent implementations**: Follows defined plan
-- ✅ **Early requirement discovery**: Systematic specification phase
-- ✅ **Built-in quality**: Analysis and checklist validation
+- **Complete specifications**: Structured workflow ensures nothing missed
+- **Consistent implementations**: Follows defined plan
+- **Early requirement discovery**: Systematic specification phase
+- **Built-in quality**: Analysis and checklist validation
 
 ### When to Use Spec-Driven Development
 
@@ -450,7 +450,7 @@ After initialization, these commands are available in your AI agent:
 - Exploratory coding
 - Well-understood problems
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Command Not Found
 
@@ -545,14 +545,14 @@ flox activate -r flox/spec-kit
 specify init . --ai kilocode --force
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 - macOS x86_64 (Intel)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Project templates**: Downloaded from GitHub's official spec-kit repository
 - **Git initialization**: Optional, user-controlled
@@ -567,7 +567,7 @@ This environment works on:
 - Validate generated specifications
 - Review implementation code before deployment
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **GitHub Spec Kit Repository**: [github.com/github/spec-kit](https://github.com/github/spec-kit)
 - **Spec-Driven Development Guide**: [GitHub Blog](https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/)
@@ -582,11 +582,11 @@ From this collection:
 - [copilot-cli](../copilot-cli/) - GitHub Copilot CLI
 - [cursor-agent](../cursor-agent/) - Cursor Agent CLI
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **GitHub Team**: Thanks to GitHub for creating Spec Kit and making it open source
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -596,6 +596,6 @@ From this collection:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. GitHub Spec Kit is open source - see the [Spec Kit repository](https://github.com/github/spec-kit) for license details.

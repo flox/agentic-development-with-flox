@@ -31,7 +31,7 @@ goose-cli.pkg-path = "goose-cli"
 [hook]
 on-activate = '''
 echo ""
-echo "🪿 Goose - Local AI Agent for Engineering Tasks"
+echo "Goose - Local AI Agent for Engineering Tasks"
 echo ""
 echo "An open-source, extensible AI agent that automates engineering tasks."
 echo ""

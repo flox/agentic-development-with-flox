@@ -151,7 +151,7 @@ $content"
 }
 
 show_welcome() {
-    show_box "✨ Crush Setup Wizard" "Welcome to the Crush setup wizard!
+    show_box "Crush Setup Wizard" "Welcome to the Crush setup wizard!
 
 Crush is a glamorous AI coding agent for the terminal from Charm.
 
@@ -510,7 +510,7 @@ run_setup_wizard() {
     local mcp_status="Disabled"
     [[ "$enable_mcp" == "true" ]] && mcp_status="$(gum style --foreground 42 'Enabled')"
 
-    show_box "✨ Setup Complete!" "Crush has been configured successfully!
+    show_box "Setup Complete!" "Crush has been configured successfully!
 
 $(gum style --foreground 212 'Providers:') ${configured_providers:-None configured}
 $(gum style --foreground 212 'Flox MCP:') $mcp_status
@@ -537,7 +537,7 @@ show_status() {
     local mcp_status="disabled"
     [[ -f "$CONFIG_FILE" ]] && jq -e '.mcp.flox' "$CONFIG_FILE" >/dev/null 2>&1 && mcp_status="enabled"
 
-    gum style --foreground 212 "✨ Crush ready"
+    gum style --foreground 212 "Crush ready"
     echo "   providers=[${providers:-none}] mcp=$mcp_status"
     echo ""
     gum style --foreground 240 "   RESET=true flox activate to reconfigure"
@@ -579,10 +579,10 @@ crush_rollback() {
     local config="$HOME/.local/share/crush/crush.json"
     if [[ -f "$backup" ]]; then
         cp "$backup" "$config"
-        echo "✓ Rolled back to previous configuration"
+        echo "Rolled back to previous configuration"
         echo "  Restart Crush to use restored settings"
     else
-        echo "✗ No backup found at $backup"
+        echo "No backup found at $backup"
         return 1
     fi
 }
@@ -604,10 +604,10 @@ crush_rollback() {
     local config="$HOME/.local/share/crush/crush.json"
     if [[ -f "$backup" ]]; then
         cp "$backup" "$config"
-        echo "✓ Rolled back to previous configuration"
+        echo "Rolled back to previous configuration"
         echo "  Restart Crush to use restored settings"
     else
-        echo "✗ No backup found at $backup"
+        echo "No backup found at $backup"
         return 1
     fi
 }

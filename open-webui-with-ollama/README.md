@@ -1,8 +1,8 @@
-# 🤖 Open WebUI + Ollama
+# Open WebUI + Ollama
 
 A beautiful web interface for local LLMs, powered by Open WebUI and Ollama with GPU acceleration.
 
-## ✨ What You Get
+## What You Get
 
 - **Beautiful Chat Interface** - Open WebUI's polished UI for interacting with LLMs
 - **Local LLMs** - Run models completely offline with Ollama
@@ -11,7 +11,7 @@ A beautiful web interface for local LLMs, powered by Open WebUI and Ollama with 
 - **Privacy First** - All telemetry disabled, data stays local
 - **Model Library** - Access to Ollama's entire model catalog
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Navigate to environment
@@ -26,7 +26,7 @@ flox activate -s
 
 That's it! Open WebUI is now running with Ollama backend.
 
-## 📦 Download Models
+## Download Models
 
 ### Popular Models
 
@@ -53,7 +53,7 @@ ollama rm <model>
 ollama cp llama3.2:3b mycustom
 ```
 
-## 🛠️ Helper Commands
+## Helper Commands
 
 Once activated, these commands are available:
 
@@ -69,7 +69,7 @@ Once activated, these commands are available:
 | `flox services status` | Show all services |
 | `flox services logs <service>` | View service logs |
 
-## ⚙️ Configuration
+## Configuration
 
 ### Default Settings
 
@@ -102,7 +102,7 @@ DATA_DIR=~/.open-webui/data flox activate -s
 PORT=8081 OLLAMA_HOST=0.0.0.0:11435 flox activate -s
 ```
 
-## 📁 Data Persistence
+## Data Persistence
 
 All data is stored in `$FLOX_ENV_CACHE/openwebui/`:
 
@@ -129,7 +129,7 @@ tar -czf openwebui-backup.tar.gz $FLOX_ENV_CACHE/openwebui/
 tar -xzf openwebui-backup.tar.gz -C $FLOX_ENV_CACHE/
 ```
 
-## 🎮 GPU Support
+## GPU Support
 
 ### NVIDIA GPUs (Linux)
 
@@ -155,7 +155,7 @@ Force CPU-only mode:
 CUDA_VISIBLE_DEVICES="" flox activate -s
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Services Won't Start
 
@@ -222,7 +222,7 @@ rm -rf $FLOX_ENV_CACHE/openwebui/
 flox activate -s
 ```
 
-## 🚀 Advanced Usage
+## Advanced Usage
 
 ### Multiple Instances
 
@@ -287,17 +287,17 @@ curl http://localhost:8080/api/chat/completions \
   -d '{"model": "llama3.2:3b", "messages": [{"role": "user", "content": "Hello!"}]}'
 ```
 
-## 🎯 Features
+## Features
 
-- ✅ **Composable** - Includes `barstoolbluz/ollama` environment
-- ✅ **Cross-platform** - Linux (with CUDA) and macOS support
-- ✅ **Persistent** - Chat history and settings preserved
-- ✅ **Secure** - Secret key auto-generated, telemetry disabled
-- ✅ **Flexible** - All settings configurable via environment variables
-- ✅ **Service Management** - Automatic startup and monitoring
-- ✅ **Model Caching** - Efficient model storage and loading
+- **Composable** - Includes `barstoolbluz/ollama` environment
+- **Cross-platform** - Linux (with CUDA) and macOS support
+- **Persistent** - Chat history and settings preserved
+- **Secure** - Secret key auto-generated, telemetry disabled
+- **Flexible** - All settings configurable via environment variables
+- **Service Management** - Automatic startup and monitoring
+- **Model Caching** - Efficient model storage and loading
 
-## 🔒 Security Notes
+## Security Notes
 
 - **Secret Key**: Auto-generated on first run, stored in `webui_secret_key`
 - **Telemetry**: All analytics and tracking disabled by default
@@ -305,7 +305,7 @@ curl http://localhost:8080/api/chat/completions \
 - **Data**: All data stored locally, nothing sent to external servers
 - **Authentication**: Open WebUI supports user accounts and API keys
 
-## 📋 Environment Details
+## Environment Details
 
 ### Included Packages
 - `open-webui` v0.6.40 (pinned version)
@@ -325,7 +325,7 @@ Both services run as Flox-managed services:
 - **Open WebUI**: Logs to `$FLOX_ENV_CACHE/logs/openwebui.log`
 - **Ollama**: Inherits configuration from composed environment
 
-## 🤝 Contributing
+## Contributing
 
 This environment is managed in Git. To contribute:
 
@@ -347,7 +347,7 @@ flox list -c
 cat .flox/env/manifest.toml
 ```
 
-## 📚 Links
+## Links
 
 - [Open WebUI Documentation](https://docs.openwebui.com/)
 - [Open WebUI GitHub](https://github.com/open-webui/open-webui)
@@ -356,6 +356,6 @@ cat .flox/env/manifest.toml
 - [Flox Documentation](https://flox.dev/docs)
 - [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
 
-## 📝 License
+## License
 
 This Flox environment configuration is open source. Open WebUI and Ollama have their own respective licenses.

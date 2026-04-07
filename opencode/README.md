@@ -1,8 +1,8 @@
-# 🚀 Flox Environment for OpenCode
+# Flox Environment for OpenCode
 
 A Flox environment for [OpenCode](https://github.com/sst/opencode), an AI coding agent built for the terminal. OpenCode provides a powerful TUI interface with multi-provider support, custom agents, and seamless integration with your development workflow.
 
-## ✨ Features
+## Features
 
 - **Terminal-native TUI**: Beautiful terminal user interface for AI-assisted coding
 - **Multi-provider support**: OpenAI, Anthropic Claude, Google Gemini, AWS Bedrock, Groq, Azure OpenAI, OpenRouter
@@ -17,20 +17,20 @@ A Flox environment for [OpenCode](https://github.com/sst/opencode), an AI coding
 - **SQLite persistence**: Store conversations and context
 - **Client/server architecture**: Run locally or remotely
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `opencode` - OpenCode CLI with TUI interface
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API key for your chosen provider (OpenAI, Anthropic, etc.)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -42,7 +42,7 @@ git clone https://github.com/yourusername/agentic-development-with-flox && cd ag
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Authentication:**
 
@@ -78,10 +78,10 @@ opencode
 mkdir -p ~/.config/opencode
 cat > ~/.config/opencode/opencode.json <<EOF
 {
-  "model": "anthropic/claude-sonnet-4.5",
-  "rules": [
+ "model": "anthropic/claude-sonnet-4.5",
+ "rules": [
     "~/.config/opencode/rules/general.md"
-  ]
+ ]
 }
 EOF
 
@@ -99,7 +99,7 @@ opencode auth login
 - Groq (fast inference)
 - OpenRouter (access to many models)
 
-## 📝 Usage
+## Usage
 
 ### Interactive TUI Session
 
@@ -115,7 +115,7 @@ opencode
 # Interface:
 # - Chat with AI in the bottom panel
 # - View file changes in the main panel
-# - Switch agents with Tab key (build ↔ plan)
+# - Switch agents with Tab key (build plan)
 # - Accept/reject changes with keybindings
 
 # Example interaction:
@@ -149,10 +149,10 @@ OpenCode has two agents you can switch between (press Tab):
 Available during TUI sessions:
 
 ```bash
-/undo       # Undo last change OpenCode made
-/redo       # Redo change after undo
-/clear      # Clear conversation history
-/exit       # Exit OpenCode
+/undo # Undo last change OpenCode made
+/redo # Redo change after undo
+/clear # Clear conversation history
+/exit # Exit OpenCode
 ```
 
 **Keyboard shortcuts:**
@@ -178,31 +178,31 @@ opencode agent create
 # Agent saved to ~/.config/opencode/agents/
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Files
 
 OpenCode uses a hierarchical configuration system:
 
-**⚠️ IMPORTANT - Flox Security Convention:**
+** IMPORTANT - Flox Security Convention:**
 Config files containing API keys or secrets MUST be in `$HOME` (`~/.config/opencode/`), never in project directories.
 
 **Global config** (for credentials and defaults):
 ```bash
 ~/.config/opencode/
-├── opencode.json          # Global settings (secrets go here)
-├── agents/                # Custom agents
-└── command/               # Global commands
+ opencode.json # Global settings (secrets go here)
+ agents/ # Custom agents
+ command/ # Global commands
 ```
 
 **Project config** (for project-specific settings WITHOUT secrets):
 ```bash
 your-project/
-├── opencode.json          # Project settings (NO secrets!)
-├── .opencode/
-│   └── command/           # Project-specific commands
-├── AGENTS.md              # Project instructions for AI
-└── .opencoderules         # Additional rules
+ opencode.json # Project settings (NO secrets!)
+ .opencode/
+    command/           # Project-specific commands
+ AGENTS.md # Project instructions for AI
+ .opencoderules # Additional rules
 ```
 
 **Configuration merging:**
@@ -215,35 +215,35 @@ your-project/
 **Global config** (`~/.config/opencode/opencode.json`):
 ```json
 {
-  "model": "anthropic/claude-sonnet-4.5",
-  "rules": [
+ "model": "anthropic/claude-sonnet-4.5",
+ "rules": [
     "~/.config/opencode/rules/security.md",
     "~/.config/opencode/rules/style.md"
-  ],
-  "disabled_providers": ["bedrock"],
-  "commands": {
+ ],
+ "disabled_providers": ["bedrock"],
+ "commands": {
     "test": {
       "description": "Run tests",
       "command": "npm test"
     }
-  }
+ }
 }
 ```
 
 **Project config** (`opencode.json` in project root):
 ```json
 {
-  "model": "anthropic/claude-sonnet-4.5",
-  "rules": [
+ "model": "anthropic/claude-sonnet-4.5",
+ "rules": [
     ".opencode/rules/flox.md",
     "AGENTS.md"
-  ],
-  "modes": {
+ ],
+ "modes": {
     "review": {
       "agent": "plan",
       "prompt": "Focus on code review and security"
     }
-  }
+ }
 }
 ```
 
@@ -314,7 +314,7 @@ This is a Python web application using Flask and PostgreSQL.
 - `npm test` - Run test suite
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Building Features
 
@@ -407,11 +407,11 @@ In your repository, use OpenCode in GitHub Actions:
 # .github/workflows/opencode.yml
 name: OpenCode Task
 on:
-  issue_comment:
+ issue_comment:
     types: [created]
 
 jobs:
-  opencode:
+ opencode:
     if: contains(github.event.comment.body, '/opencode')
     runs-on: ubuntu-latest
     steps:
@@ -446,7 +446,7 @@ OpenCode: [makes changes]
 # Files update in real-time in your IDE
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -551,14 +551,14 @@ cat .opencode/command/mycommand.md
 # Restart OpenCode to reload commands
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 - macOS x86_64 (Intel)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in `~/.config/opencode/` or via environment variables
 - **Configuration location**: `~/.config/opencode/` in your home directory (**NEVER in project root**)
@@ -580,7 +580,7 @@ This environment works on:
 - Audit custom agents before use
 - Use `.gitignore` to exclude `opencode.json` if it contains any sensitive data
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **OpenCode Website**: [opencode.ai](https://opencode.ai)
 - **GitHub Repository**: [github.com/sst/opencode](https://github.com/sst/opencode)
@@ -591,12 +591,12 @@ This environment works on:
 - **Commands**: [opencode.ai/docs/commands](https://opencode.ai/docs/commands)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **SST Team**: Thanks to the SST team for creating OpenCode and making it open source
 - **Terminal.shop**: Built by the creators of terminal.shop
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -606,6 +606,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. OpenCode is open source from SST - see the [OpenCode repository](https://github.com/sst/opencode) for license details.

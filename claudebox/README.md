@@ -1,8 +1,8 @@
-# 🔒 Flox Environment for Claudebox
+# Flox Environment for Claudebox
 
 A Flox environment for [Claudebox](https://github.com/numtide/nix-ai-tools/tree/main/packages/claudebox), a lightweight sandbox wrapper for Claude Code that provides transparency into executed commands. This environment creates a safe, monitored workspace where you can see exactly what Claude Code is doing in real-time.
 
-## ✨ Features
+## Features
 
 - **Lightweight sandboxing**: Uses bubblewrap for transparent command execution
 - **Real-time monitoring**: See all executed commands in a live tmux pane
@@ -13,7 +13,7 @@ A Flox environment for [Claudebox](https://github.com/numtide/nix-ai-tools/tree/
 - **Helper functions**: Convenient shortcuts for common usage patterns
 - **Cross-shell support**: Works with bash, zsh, and fish
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
@@ -22,15 +22,15 @@ The environment includes:
 - `tmux` - Terminal multiplexer for command monitoring display
 - `bat` - Enhanced file viewer for logs
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - x86_64 Linux system (currently Linux-only)
 - Basic familiarity with Claude Code
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -44,7 +44,7 @@ flox activate
 
 This displays usage information and makes claudebox available.
 
-## 📝 Usage
+## Usage
 
 ### Basic Usage
 
@@ -119,9 +119,9 @@ claudebox --no-tmux-config
 claudebox --split-direction vertical --no-tmux-config
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Sandboxing Model
+### Sandboxing Model
 
 **Home Directory Shadowing:**
 - Claudebox creates a shadow $HOME environment
@@ -138,7 +138,7 @@ claudebox --split-direction vertical --no-tmux-config
 - Commands displayed in real-time via tmux
 - Full command history logged to /tmp
 
-### 🚀 Monitoring Interface
+### Monitoring Interface
 
 **Tmux Layout:**
 - Adaptive split based on terminal dimensions
@@ -151,7 +151,7 @@ claudebox --split-direction vertical --no-tmux-config
 - Execution status (running, completed, failed)
 - Output and errors in real-time
 
-### 🔐 Security Model
+### Security Model
 
 **Important:** Claudebox is **not a security boundary**. It's designed for:
 - **Transparency**: See what Claude Code is doing
@@ -163,7 +163,7 @@ claudebox --split-direction vertical --no-tmux-config
 - Preventing malicious code execution
 - Production deployments
 
-### 📂 What's Sandboxed
+### What's Sandboxed
 
 **Isolated:**
 - $HOME directory (shadowed)
@@ -176,7 +176,7 @@ claudebox --split-direction vertical --no-tmux-config
 - Project dependencies
 - System tools and commands
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Quick Code Review
 
@@ -218,7 +218,7 @@ ls -lt /tmp/claudebox-* | head -1
 bat $(ls -t /tmp/claudebox-* | head -1)
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Claudebox Won't Start
 
@@ -290,14 +290,14 @@ This is expected behavior - claudebox shadows $HOME. Access files via:
 - Parent folder (read-only)
 - Not from $HOME (isolated)
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment currently works on:
 - Linux x86_64
 
 **Note:** macOS and ARM64 support coming soon.
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Not a security boundary**: Designed for transparency, not isolation
 - **Shadow $HOME**: Credentials isolated (except ~/.claude)
@@ -306,7 +306,7 @@ This environment currently works on:
 - **No telemetry**: Disabled in sandbox environment
 - **Use for development**: Not intended for production or untrusted code
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Upstream Package**: [Claudebox in nix-ai-tools](https://github.com/numtide/nix-ai-tools/tree/main/packages/claudebox)
 - **AI Tools Collection**: [nix-ai-tools](https://github.com/numtide/nix-ai-tools) - A great resource for collecting and running AI development tools with Nix
@@ -315,11 +315,11 @@ This environment currently works on:
 - **Bubblewrap**: [Lightweight sandboxing tool](https://github.com/containers/bubblewrap)
 - **tmux**: [Terminal multiplexer](https://github.com/tmux/tmux)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **nix-ai-tools Team**: Special thanks to [numtide](https://github.com/numtide) and all contributors to [nix-ai-tools](https://github.com/numtide/nix-ai-tools) for creating and packaging Claudebox, making it easy to use this transparent sandbox wrapper for Claude Code in reproducible Nix-based environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -329,6 +329,6 @@ This environment currently works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Claudebox and its dependencies have their own licenses - see the [nix-ai-tools repository](https://github.com/numtide/nix-ai-tools) for details.

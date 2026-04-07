@@ -38,8 +38,8 @@ on-activate = '''
 # Check if flox-mcp is available on this system
 check_flox_mcp() {
     if command -v flox-mcp >/dev/null 2>&1; then
-        echo "  🔧 Flox MCP server available (flox-mcp)"
-        echo "     Use /mcp in Copilot to view available MCP servers"
+        echo "  Flox MCP server available (flox-mcp)"
+        echo "  Use /mcp in Copilot to view available MCP servers"
         return 0
     else
         return 1
@@ -47,7 +47,7 @@ check_flox_mcp() {
 }
 
 echo ""
-echo "🤖 GitHub Copilot CLI - AI Coding Agent in Your Terminal"
+echo "GitHub Copilot CLI - AI Coding Agent in Your Terminal"
 echo ""
 echo "Copilot CLI brings the power of GitHub Copilot directly to your command line."
 echo ""

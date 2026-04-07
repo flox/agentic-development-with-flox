@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Qwen Code CLI
+# Flox Environment for Qwen Code CLI
 
 A Flox environment for [Qwen Code](https://github.com/QwenLM/qwen-code), an AI-powered command-line workflow tool optimized for Qwen3-Coder models. Built on technology adapted from Google's Gemini CLI, Qwen Code enables developers to query large codebases, automate workflows, and leverage vision models for multimodal analysis.
 
-## ✨ Features
+## Features
 
 - **Code comprehension**: Query and edit large codebases beyond traditional context limits
 - **Workflow automation**: Handle tasks like pull requests, rebasing, and git operations
@@ -14,21 +14,21 @@ A Flox environment for [Qwen Code](https://github.com/QwenLM/qwen-code), an AI-p
 - **Free tier**: 2,000 requests/day with Qwen OAuth
 - **Local execution**: Runs on your machine for privacy and control
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `qwen` - Qwen Code CLI tool
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - Node.js 20+ (included in environment)
 - Authentication credentials (Qwen OAuth recommended)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -40,7 +40,7 @@ git clone https://github.com/yourusername/agentic-development-with-flox && cd ag
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Authentication Methods:**
 
@@ -95,7 +95,7 @@ export OPENAI_API_KEY="your-key-here"
 - ModelScope
 - Regional providers (China/International)
 
-## 📝 Usage
+## Usage
 
 ### Interactive Session
 
@@ -164,13 +164,13 @@ Qwen: [analyzes image visually, provides feedback]
 }
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Settings File
 
 Qwen Code uses `~/.qwen/settings.json` for configuration:
 
-**⚠️ IMPORTANT - Flox Security Convention:**
+**IMPORTANT - Flox Security Convention:**
 Config files containing API keys or secrets MUST be in `$HOME` (`~/.qwen/`), never in project directories.
 
 ```json
@@ -213,7 +213,7 @@ qwen --yolo
 qwen --vlm-switch-mode=session
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Building a Project from Scratch
 
@@ -336,7 +336,7 @@ You: Implement this UI design
 Qwen: [creates components matching the visual design]
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -416,14 +416,14 @@ qwen --vlm-switch-mode=once
 - Break large tasks into smaller steps
 - Use more powerful models for complex analysis
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 - macOS x86_64 (Intel)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in `~/.qwen/settings.json` or via environment variables
 - **Configuration location**: `~/.qwen/` in your home directory (**NEVER in project root**)
@@ -444,7 +444,7 @@ This environment works on:
 - Keep Qwen Code updated
 - Use `.gitignore` to exclude sensitive files from context
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Qwen Code Repository**: [github.com/QwenLM/qwen-code](https://github.com/QwenLM/qwen-code)
 - **Documentation**: Check repository README for latest updates
@@ -452,12 +452,12 @@ This environment works on:
 - **Alibaba Cloud DashScope**: [dashscope.aliyun.com](https://dashscope.aliyun.com/)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Qwen Team**: Thanks to Alibaba Cloud and the Qwen team for creating Qwen Code
 - **Gemini CLI**: Built on technology adapted from Google's Gemini CLI
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -467,6 +467,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Qwen Code is from Alibaba Cloud - see the [Qwen Code repository](https://github.com/QwenLM/qwen-code) for license details.

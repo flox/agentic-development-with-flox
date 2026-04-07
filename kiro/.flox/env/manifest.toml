@@ -42,7 +42,7 @@ echo ""
 
 # First-time setup check
 if [ ! -f "$HOME/.config/kiro/settings.json" ] && [ ! -f "$HOME/.kiro/settings.json" ]; then
-  echo "⚡ First time? Run 'kiro-cli login' to authenticate."
+  echo "First time? Run 'kiro-cli login' to authenticate."
   echo ""
 fi
 

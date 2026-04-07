@@ -35,7 +35,7 @@ bat.pkg-path = "bat"
 [hook]
 on-activate = '''
 echo ""
-echo "🔒 Claudebox - Sandboxed Claude Code Environment"
+echo "Claudebox - Sandboxed Claude Code Environment"
 echo ""
 echo "Claudebox wraps Claude Code in a lightweight sandbox for transparency:"
 echo "  • Shadows \$HOME (no credentials except ~/.claude)"

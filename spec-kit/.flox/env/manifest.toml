@@ -26,7 +26,7 @@ spec-kit.outputs = "all"
 [hook]
 on-activate = '''
 echo ""
-echo "💫 GitHub Spec Kit - Spec-Driven Development Framework"
+echo "GitHub Spec Kit - Spec-Driven Development Framework"
 echo ""
 echo "NOTE: Spec-Kit is a framework for use WITH AI coding agents."
 echo "      It is NOT a standalone agent."
@@ -43,7 +43,7 @@ echo "  specify init       # Initialize project with spec-driven workflow"
 echo "  specify check      # Check installed AI agents"
 echo "  specify version    # Display version info"
 echo ""
-echo "From GitHub • Open Source"
+echo "From GitHub - Open Source"
 echo ""
 '''
 

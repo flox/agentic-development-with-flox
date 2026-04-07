@@ -20,7 +20,7 @@ coderabbit-cli.pkg-group = "coderabbit-cli"
 [hook]
 on-activate = '''
 echo ""
-echo "🐰 CodeRabbit CLI - AI Code Reviews in Your Terminal"
+echo "CodeRabbit CLI - AI Code Reviews in Your Terminal"
 echo ""
 echo "CodeRabbit provides AI-powered code reviews that catch bugs, security"
 echo "issues, and code smells before you commit."

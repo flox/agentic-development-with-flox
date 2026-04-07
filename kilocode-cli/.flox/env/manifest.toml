@@ -26,7 +26,7 @@ kilocode-cli.outputs = "all"
 [hook]
 on-activate = '''
 echo ""
-echo "🚀 Kilo Code - Open-Source AI Coding Agent"
+echo "Kilo Code - Open-Source AI Coding Agent"
 echo ""
 echo "A multi-modal AI agent for autonomous coding, architecting, and debugging."
 echo ""

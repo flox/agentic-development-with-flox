@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for GitHub Copilot CLI
+# Flox Environment for GitHub Copilot CLI
 
 A Flox environment for [GitHub Copilot CLI](https://github.com/github/copilot-cli), an AI-powered coding agent that brings GitHub Copilot directly to your terminal. Copilot CLI enables natural language conversations about code, helping you build, debug, and understand projects through an intelligent command-line interface.
 
-## ✨ Features
+## Features
 
 - **Conversational coding**: Natural language interactions for development tasks
 - **Agentic execution**: Plans and executes complex coding tasks autonomously
@@ -13,21 +13,21 @@ A Flox environment for [GitHub Copilot CLI](https://github.com/github/copilot-cl
 - **Inline help**: Built-in slash commands for authentication, model switching, feedback
 - **Cross-platform**: Works on Linux and macOS (ARM64, x86_64)
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `copilot` - GitHub Copilot CLI (also available as `github-copilot`)
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)
 - Git repository (optional, for project context)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -39,7 +39,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/copilot-cli
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Authenticate with GitHub (required):
 
@@ -54,7 +54,7 @@ copilot
 # Your GitHub Copilot subscription must be active
 ```
 
-## 📝 Usage
+## Usage
 
 ### Basic Usage (Interactive Mode)
 
@@ -122,9 +122,9 @@ copilot --help              # Show all available options
 copilot --version           # Display version information
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Conversational Interface
+### Conversational Interface
 
 **Natural Language Processing:**
 - Copilot CLI understands natural language queries about your code
@@ -138,7 +138,7 @@ copilot --version           # Display version information
 - Accesses documentation and README files
 - Integrates with GitHub APIs for comprehensive context
 
-### 🚀 Agentic Execution
+### Agentic Execution
 
 **Task Planning:**
 1. **Understand**: Analyzes your request and current codebase
@@ -154,7 +154,7 @@ copilot --version           # Display version information
 - No automatic execution without consent
 - Rollback support for reversible operations
 
-### 📂 MCP Extensibility
+### MCP Extensibility
 
 **Model Context Protocol Support:**
 - Custom MCP servers can extend functionality
@@ -172,7 +172,7 @@ copilot --version           # Display version information
 **MCP Server Configuration:**
 While GitHub Copilot CLI's exact MCP configuration method isn't fully documented, it supports MCP servers through its `/mcp` command. The Flox MCP server (`flox-mcp`) is automatically available in this environment when activated on supported systems.
 
-### 🎯 Context Awareness
+### Context Awareness
 
 **Codebase Understanding:**
 - Scans project structure and files
@@ -186,7 +186,7 @@ While GitHub Copilot CLI's exact MCP configuration method isn't fully documented
 - Team discussions and decisions
 - Project documentation
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Generation
 
@@ -288,7 +288,7 @@ You: Generate the same algorithm
 # Compare outputs and choose preferred approach
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -388,13 +388,13 @@ git remote -v
 - Break down complex changes into steps
 - Provide more specific instructions
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - macOS (Apple Silicon and Intel)
 - Linux (x86_64 and ARM64)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Authentication**: Secure token-based GitHub authentication
 - **Preview-before-execution**: All actions require explicit approval
@@ -405,7 +405,7 @@ This environment works on:
 - **Local processing**: Code analysis happens in-session, results not permanently stored
 - **MCP extensions**: Third-party extensions should be vetted before use
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **GitHub Copilot CLI**: [github.com/github/copilot-cli](https://github.com/github/copilot-cli)
 - **Official Documentation**: [docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli](https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli)
@@ -413,12 +413,12 @@ This environment works on:
 - **GitHub Copilot Features**: [github.com/features/copilot](https://github.com/features/copilot)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **GitHub Copilot Team**: Huge thanks to GitHub and all contributors to the [Copilot CLI project](https://github.com/github/copilot-cli) for creating this powerful AI coding agent that brings natural language assistance directly to the terminal
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like GitHub Copilot CLI in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -428,6 +428,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. GitHub Copilot and its CLI tool have their own terms of service - see the [GitHub Copilot website](https://github.com/features/copilot) and [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) for details.

@@ -34,7 +34,7 @@ cursor-agent.pkg-group = "cursor-agent"
 [hook]
 on-activate = '''
 echo ""
-echo "🤖 Cursor Agent CLI - Autonomous AI Coding from Your Terminal"
+echo "Cursor Agent CLI - Autonomous AI Coding from Your Terminal"
 echo ""
 echo "Use Cursor's powerful AI agent directly from the command line."
 echo ""

@@ -33,7 +33,7 @@ amazon-q-cli.pkg-path = "amazon-q-cli"
 [hook]
 on-activate = '''
 echo ""
-echo "🤖 Amazon Q Developer CLI - AI-Powered Terminal Assistant"
+echo "Amazon Q Developer CLI - AI-Powered Terminal Assistant"
 echo ""
 echo "Quick start:"
 echo "  q login                      # Authenticate with AWS Builder ID or IAM"

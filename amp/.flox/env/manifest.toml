@@ -101,13 +101,13 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
     echo ""
     case "$AMP_MODE" in
         "smart")
-            gum style --foreground 240 "  ℹ️  Smart mode: State-of-the-art models, maximum capability (paid credits)"
+            gum style --foreground 240 "  Smart mode: State-of-the-art models, maximum capability (paid credits)"
             ;;
         "rush")
-            gum style --foreground 240 "  ℹ️  Rush mode: Faster, cheaper, suitable for small tasks (paid credits)"
+            gum style --foreground 240 "  Rush mode: Faster, cheaper, suitable for small tasks (paid credits)"
             ;;
         "free")
-            gum style --foreground 240 "  ℹ️  Free mode: No charge, using fast basic models"
+            gum style --foreground 240 "  Free mode: No charge, using fast basic models"
             ;;
     esac
 
@@ -120,13 +120,13 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
         if gum confirm "Do you have an Amp API key?" --default=false; then
             AMP_API_KEY=$(gum input --prompt "Enter your Amp API key: " --password)
         else
-            gum style --foreground 212 "  👉 Get your API key at: https://ampcode.com/install"
+            gum style --foreground 212 "  Get your API key at: https://ampcode.com/install"
             gum style --foreground 240 "  You can add it later by running 'amp-config' or setting AMP_API_KEY"
             AMP_API_KEY=""
         fi
     else
         AMP_API_KEY=""
-        gum style --foreground 240 "  ℹ️  Free mode doesn't require an API key"
+        gum style --foreground 240 "  Free mode doesn't require an API key"
     fi
 
     # Editor integration
@@ -142,16 +142,16 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
 
     case "$AMP_EDITOR" in
         "vscode"|"cursor")
-            gum style --foreground 240 "  ℹ️  Install the Amp extension from the marketplace"
+            gum style --foreground 240 "  Install the Amp extension from the marketplace"
             ;;
         "jetbrains")
-            gum style --foreground 240 "  ℹ️  Run 'amp --jetbrains' to enable IDE integration"
+            gum style --foreground 240 "  Run 'amp --jetbrains' to enable IDE integration"
             ;;
         "neovim")
-            gum style --foreground 240 "  ℹ️  Install Amp Neovim plugin and run 'amp --ide'"
+            gum style --foreground 240 "  Install Amp Neovim plugin and run 'amp --ide'"
             ;;
         "cli-only")
-            gum style --foreground 240 "  ℹ️  You can use 'amp' command for CLI-only usage"
+            gum style --foreground 240 "  You can use 'amp' command for CLI-only usage"
             ;;
     esac
 
@@ -181,7 +181,7 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
     echo ""
 
     if gum confirm "Configure MCP servers now?" --default=false; then
-        gum style --foreground 240 "  ℹ️  You can add MCP servers like Playwright, Semgrep, Linear, etc."
+        gum style --foreground 240 "  You can add MCP servers like Playwright, Semgrep, Linear, etc."
         gum style --foreground 240 "  We'll set this up interactively in your shell after configuration"
         AMP_MCP_SERVERS="configure-later"
     else
@@ -194,7 +194,7 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
     save_amp_config
 
     echo ""
-    gum style --foreground 34 --bold "✓ Amp configuration saved!"
+    gum style --foreground 34 --bold "Amp configuration saved!"
     echo ""
 }
 
@@ -202,7 +202,7 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
 show_amp_help() {
     local auth_status
     if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 '✓ Configured')"
+        auth_status="$(gum style --foreground 82 'Configured')"
     else
         auth_status="$(gum style --foreground 240 'Not set')"
     fi
@@ -210,25 +210,25 @@ show_amp_help() {
     local header_content=$(cat << EOF
 $(gum style --foreground 141 --bold 'This is a  F l o x  Amp Environment')
 
-🤖  Core Amp Commands:
+Core Amp Commands:
     $(gum style --foreground 212 'amp')                    Start Amp CLI interactively
     $(gum style --foreground 212 'amp -x "task"')          Execute a task and exit
     $(gum style --foreground 212 'amp threads list')       List your conversation threads
     $(gum style --foreground 212 'amp threads continue')   Continue a previous thread
 
-🛠️  Environment Management:
+Environment Management:
     $(gum style --foreground 212 'amp-mode')               Switch between smart/rush/free modes
     $(gum style --foreground 212 'amp-config')             Reconfigure Amp settings
     $(gum style --foreground 212 'amp-info')               Show current configuration
     $(gum style --foreground 212 'amp-mcp-add')            Add MCP server interactively
     $(gum style --foreground 212 'amp-test')               Test Amp authentication
 
-📚  Documentation:
+Documentation:
     $(gum style --foreground 212 'amp-help')               Show this help message
     $(gum style --foreground 212 'amp-docs')               Open Amp documentation
     $(gum style --foreground 212 'readme')                 View README.md
 
-👉  Flox Environment Details:
+Flox Environment Details:
     Mode:           $(gum style --foreground 212 "${AMP_MODE:-Not configured}")
     Editor:         $(gum style --foreground 212 "${AMP_EDITOR:-Not configured}")
     API Key:        ${auth_status}
@@ -328,7 +328,7 @@ amp-mode() {
             sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
         fi
 
-        gum style --foreground 82 "✓ Switched to $new_mode mode"
+        gum style --foreground 82 "Switched to $new_mode mode"
 
         case "$new_mode" in
             "smart")
@@ -361,9 +361,9 @@ amp-config() {
 amp-info() {
     local auth_status
     if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 '✓ Configured')"
+        auth_status="$(gum style --foreground 82 'Configured')"
     else
-        auth_status="$(gum style --foreground 196 '✗ Not set')"
+        auth_status="$(gum style --foreground 196 ' Not set')"
     fi
 
     gum style \
@@ -462,7 +462,7 @@ EOF
     fi
 
     echo ""
-    gum style --foreground 82 "✓ MCP server configuration generated"
+    gum style --foreground 82 "MCP server configuration generated"
 }
 
 # Test Amp authentication
@@ -470,7 +470,7 @@ amp-test() {
     echo "Testing Amp authentication..."
 
     if [[ -z "$AMP_API_KEY" ]] && [[ "$AMP_MODE" != "free" ]]; then
-        gum style --foreground 196 "✗ API key not configured for $AMP_MODE mode"
+        gum style --foreground 196 "API key not configured for $AMP_MODE mode"
         echo ""
         if gum confirm "Configure API key now?"; then
             amp-config
@@ -480,10 +480,10 @@ amp-test() {
 
     # Try a simple amp command
     if timeout 10s amp -x "what is 2+2?" > /dev/null 2>&1; then
-        gum style --foreground 82 "✓ Amp authentication successful"
+        gum style --foreground 82 "Amp authentication successful"
         return 0
     else
-        gum style --foreground 196 "✗ Amp authentication failed"
+        gum style --foreground 196 "Amp authentication failed"
         echo "  Check your API key or network connection"
         return 1
     fi
@@ -537,7 +537,7 @@ amp-mode() {
             sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
         fi
 
-        gum style --foreground 82 "✓ Switched to $new_mode mode"
+        gum style --foreground 82 "Switched to $new_mode mode"
 
         case "$new_mode" in
             "smart")
@@ -570,9 +570,9 @@ amp-config() {
 amp-info() {
     local auth_status
     if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 '✓ Configured')"
+        auth_status="$(gum style --foreground 82 'Configured')"
     else
-        auth_status="$(gum style --foreground 196 '✗ Not set')"
+        auth_status="$(gum style --foreground 196 ' Not set')"
     fi
 
     gum style \
@@ -671,7 +671,7 @@ EOF
     fi
 
     echo ""
-    gum style --foreground 82 "✓ MCP server configuration generated"
+    gum style --foreground 82 "MCP server configuration generated"
 }
 
 # Test Amp authentication
@@ -679,7 +679,7 @@ amp-test() {
     echo "Testing Amp authentication..."
 
     if [[ -z "$AMP_API_KEY" ]] && [[ "$AMP_MODE" != "free" ]]; then
-        gum style --foreground 196 "✗ API key not configured for $AMP_MODE mode"
+        gum style --foreground 196 "API key not configured for $AMP_MODE mode"
         echo ""
         if gum confirm "Configure API key now?"; then
             amp-config
@@ -689,10 +689,10 @@ amp-test() {
 
     # Try a simple amp command
     if timeout 10s amp -x "what is 2+2?" > /dev/null 2>&1; then
-        gum style --foreground 82 "✓ Amp authentication successful"
+        gum style --foreground 82 "Amp authentication successful"
         return 0
     else
-        gum style --foreground 196 "✗ Amp authentication failed"
+        gum style --foreground 196 "Amp authentication failed"
         echo "  Check your API key or network connection"
         return 1
     fi
@@ -741,7 +741,7 @@ function amp-mode
             sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
         end
 
-        gum style --foreground 82 "✓ Switched to $new_mode mode"
+        gum style --foreground 82 "Switched to $new_mode mode"
 
         switch "$new_mode"
             case "smart"
@@ -771,9 +771,9 @@ end
 function amp-info
     set auth_status
     if test -n "$AMP_API_KEY"
-        set auth_status (gum style --foreground 82 '✓ Configured')
+        set auth_status (gum style --foreground 82 'Configured')
     else
-        set auth_status (gum style --foreground 196 '✗ Not set')
+        set auth_status (gum style --foreground 196 ' Not set')
     end
 
     gum style \
@@ -839,7 +839,7 @@ function amp-mcp-add
     end
 
     echo ""
-    gum style --foreground 82 "✓ MCP server configuration generated"
+    gum style --foreground 82 "MCP server configuration generated"
 end
 
 # Test Amp authentication
@@ -847,7 +847,7 @@ function amp-test
     echo "Testing Amp authentication..."
 
     if test -z "$AMP_API_KEY"; and test "$AMP_MODE" != "free"
-        gum style --foreground 196 "✗ API key not configured for $AMP_MODE mode"
+        gum style --foreground 196 "API key not configured for $AMP_MODE mode"
         echo ""
         if gum confirm "Configure API key now?"
             amp-config
@@ -857,10 +857,10 @@ function amp-test
 
     # Try a simple amp command
     if timeout 10s amp -x "what is 2+2?" > /dev/null 2>&1
-        gum style --foreground 82 "✓ Amp authentication successful"
+        gum style --foreground 82 "Amp authentication successful"
         return 0
     else
-        gum style --foreground 196 "✗ Amp authentication failed"
+        gum style --foreground 196 "Amp authentication failed"
         echo "  Check your API key or network connection"
         return 1
     end

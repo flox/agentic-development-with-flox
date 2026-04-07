@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for Droid CLI
+# Flox Environment for Droid CLI
 
 A Flox environment for [Droid](https://factory.ai), Factory's AI software development agent that automates complete development tasks across your existing workflow. Droid handles refactors, incident response, migrations, and more - working seamlessly with your IDE, terminal, CI/CD pipelines, and team communication tools.
 
-## ✨ Features
+## Features
 
 - **Autonomous task completion**: Handles complete development tasks from start to finish
 - **Dual-mode operation**: Interactive mode for IDE/terminal, headless exec mode for automation
@@ -13,22 +13,22 @@ A Flox environment for [Droid](https://factory.ai), Factory's AI software develo
 - **State-of-the-art performance**: 58.75% on Terminal-Bench
 - **Cross-platform**: Linux x86_64 and macOS ARM64 (Apple Silicon)
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `droid` - Factory's AI development agent CLI
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - x86_64 Linux or ARM64 macOS (Apple Silicon)
 - Factory.ai account
 - Git repository (recommended, for project context)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -40,7 +40,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/droid
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Launch Droid and authenticate:
 
@@ -52,7 +52,7 @@ droid
 # Follow the authentication flow to complete setup
 ```
 
-## 📝 Usage
+## Usage
 
 ### Interactive Mode (IDE/Terminal)
 
@@ -128,15 +128,15 @@ droid
 ### Command-Line Options
 
 ```bash
-droid                        # Start interactive mode
-droid exec "task"            # Headless execution
-droid --help                 # Show available options
-droid --version              # Display version information
+droid # Start interactive mode
+droid exec "task" # Headless execution
+droid --help # Show available options
+droid --version # Display version information
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Agent-Native Development
+### Agent-Native Development
 
 **Task Understanding:**
 - Analyzes your request with full codebase context
@@ -157,7 +157,7 @@ droid --version              # Display version information
 - Maintains context across long-running tasks
 - Learns from your codebase patterns
 
-### 🚀 Dual-Mode Architecture
+### Dual-Mode Architecture
 
 **Interactive Mode:**
 - Visual feedback in IDE or terminal
@@ -173,7 +173,7 @@ droid --version              # Display version information
 - Loggable output format
 - Scriptable and reproducible
 
-### 📂 Workflow Integration
+### Workflow Integration
 
 **IDE Integration:**
 - VS Code extension
@@ -196,7 +196,7 @@ droid --version              # Display version information
 - Issue tracking sync (Linear, Jira)
 - Mobile access for on-the-go
 
-### 🎯 State-of-the-Art Performance
+### State-of-the-Art Performance
 
 **Terminal-Bench Results:**
 - 58.75% success rate (state-of-the-art)
@@ -212,7 +212,7 @@ droid --version              # Display version information
 - Test writing and maintenance
 - Documentation updates
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Large-Scale Refactoring
 
@@ -339,7 +339,7 @@ for repo in $(cat repos.txt); do
 done
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Authentication Issues
 
@@ -447,13 +447,13 @@ droid exec "simple task"
 - Work in focused directories
 - Use headless exec for simple tasks
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **Authentication**: Secure Factory.ai account authentication
 - **File system access**: Full read/write access to project directory
@@ -470,7 +470,7 @@ This environment works on:
 - Keep Factory account credentials private
 - Monitor Droid activity in team environments
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Factory Website**: [factory.ai](https://factory.ai)
 - **CLI Documentation**: [docs.factory.ai/cli](https://docs.factory.ai/cli/getting-started/quickstart)
@@ -478,13 +478,13 @@ This environment works on:
 - **Product Overview**: [factory.ai/product/cli](https://factory.ai/product/cli)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Factory Team**: Thanks to the team at [Factory.ai](https://factory.ai) for creating Droid.
 
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like Droid in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -494,6 +494,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Droid and the Factory platform have their own terms of service - see the [Factory.ai website](https://factory.ai) for details.

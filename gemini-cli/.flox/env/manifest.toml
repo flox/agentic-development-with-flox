@@ -31,7 +31,7 @@ setup_mcp_config() {
     # Create directory if it doesn't exist
     if [ ! -d "$settings_dir" ]; then
         mkdir -p "$settings_dir"
-        echo "📁 Created ~/.gemini directory for settings"
+        echo "Created ~/.gemini directory for settings"
     fi
 
     # Check if settings.json exists
@@ -49,11 +49,11 @@ setup_mcp_config() {
   }
 }
 EOF
-        echo "✅ Created MCP configuration with Flox server at ~/.gemini/settings.json"
+        echo "Created MCP configuration with Flox server at ~/.gemini/settings.json"
     else
         # Check if Flox MCP server is already configured
         if ! grep -q '"flox"' "$settings_file" 2>/dev/null; then
-            echo "ℹ️  Existing settings.json found. To add Flox MCP server, add this to mcpServers:"
+            echo "Existing settings.json found. To add Flox MCP server, add this to mcpServers:"
             echo '
     "flox": {
       "command": "flox-mcp",
@@ -69,7 +69,7 @@ EOF
 setup_mcp_config
 
 echo ""
-echo "🤖 Gemini CLI - AI Agent in Your Terminal"
+echo "Gemini CLI - AI Agent in Your Terminal"
 echo ""
 echo "An open-source AI agent from Google bringing Gemini to your terminal."
 echo ""
@@ -84,7 +84,7 @@ echo "  gemini --output-format json # JSON output for scripting"
 echo "  gemini -m gemini-2.5-flash  # Specify model"
 echo ""
 echo "MCP Server:"
-echo "  🔧 Flox MCP server configured in ~/.gemini/settings.json"
+echo "  Flox MCP server configured in ~/.gemini/settings.json"
 echo "  Use Flox tools in your prompts to manage environments and packages"
 echo ""
 echo "Optional enhancements:"

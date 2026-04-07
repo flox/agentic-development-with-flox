@@ -34,7 +34,7 @@ droid.pkg-group = "droid"
 [hook]
 on-activate = '''
 echo ""
-echo "🤖 Droid - AI Software Development Agent from Factory"
+echo "Droid - AI Software Development Agent from Factory"
 echo ""
 echo "Automate refactors, incident response, and migrations across your workflow."
 echo ""

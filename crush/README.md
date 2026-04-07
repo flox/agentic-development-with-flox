@@ -1,8 +1,8 @@
-# ✨ Flox Environment for Crush
+# Flox Environment for Crush
 
 A Flox environment for [Crush](https://github.com/charmbracelet/crush), a glamorous AI coding agent for the terminal from Charm. Crush brings intelligent coding assistance directly to your command line with multi-model LLM support, session-based organization, and extensive extensibility through LSP and MCP integrations.
 
-## ✨ Features
+## Features
 
 - **Multi-model LLM support**: Switch between OpenAI, Anthropic, or custom API-compatible models
 - **Session-based organization**: Maintain separate work sessions per project with persistent context
@@ -13,16 +13,16 @@ A Flox environment for [Crush](https://github.com/charmbracelet/crush), a glamor
 - **Cross-platform**: Works on macOS, Linux, Windows, FreeBSD, OpenBSD, NetBSD
 - **Charm ecosystem**: Beautiful terminal UI from the makers of Gum, Bubble Tea, and more
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `crush` - AI coding agent for the terminal
 - `flox-mcp` - Flox MCP Server for managing Flox environments via Model Context Protocol
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API keys for one or more LLM providers:
@@ -30,7 +30,7 @@ The environment includes:
   - Anthropic API key (for Claude models)
   - Or any OpenAI/Anthropic-compatible API endpoint
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -42,7 +42,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/crush
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Launch Crush and configure on first run:
 
@@ -59,7 +59,7 @@ crush
 
 Configuration is stored in `~/.config/crush/` (or platform-specific config directory).
 
-## 📝 Usage
+## Usage
 
 ### Basic Usage (Interactive Mode)
 
@@ -157,9 +157,9 @@ crush --version           # Display version information
 # --model <name>          # Start with specific model
 ```
 
-## 🔍 How It Works
+## How It Works
 
-### 🗄️ Session-Based Context
+### Session-Based Context
 
 **Project Sessions:**
 - Crush creates a unique session for each project directory
@@ -173,7 +173,7 @@ crush --version           # Display version information
 - Model switches preserve context
 - Session files stored in config directory
 
-### 🚀 LSP Integration
+### LSP Integration
 
 **Language Server Protocol Support:**
 - Enhanced code understanding and navigation
@@ -186,7 +186,7 @@ crush --version           # Display version information
 - Automatic LSP detection per project
 - Configurable LSP server settings
 
-### 📂 MCP Extensibility
+### MCP Extensibility
 
 **Model Context Protocol:**
 - Extend Crush with custom MCP servers
@@ -201,7 +201,7 @@ crush --version           # Display version information
 - Team-specific knowledge bases
 - External tool integrations
 
-### 🔧 Flox MCP Server Integration
+### Flox MCP Server Integration
 
 This environment includes the **Flox MCP Server** (`flox-mcp`), which enables Crush to manage Flox environments directly. When configured as an MCP server, Crush gains the ability to:
 
@@ -243,7 +243,7 @@ Crush: [uses flox-mcp to search and install scikit-learn]
 
 **Note:** The Flox MCP Server is available on aarch64-darwin, aarch64-linux, and x86_64-linux platforms.
 
-### 🎯 Multi-Model Architecture
+### Multi-Model Architecture
 
 **Flexible LLM Selection:**
 - Multiple providers configured simultaneously
@@ -257,7 +257,7 @@ Crush: [uses flox-mcp to search and install scikit-learn]
 - **Custom**: Any OpenAI-compatible API (Ollama, LocalAI, etc.)
 - **Custom**: Any Anthropic-compatible API
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Generation
 
@@ -366,7 +366,7 @@ Crush: I'll run these commands:
 # Review option allows approving/rejecting individually
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Configuration Issues
 
@@ -468,7 +468,7 @@ cat ~/.config/crush/config.json
 - Review transport type (stdio/HTTP/SSE)
 - Check server logs for errors
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - macOS (Apple Silicon and Intel)
@@ -476,7 +476,7 @@ This environment works on:
 - Windows (x86_64)
 - FreeBSD, OpenBSD, NetBSD
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API key storage**: Keys stored in config file - protect with file permissions
 - **Permission-based execution**: Commands require approval by default (configurable)
@@ -493,7 +493,7 @@ This environment works on:
 - Enable permission prompts for sensitive operations
 - Audit MCP server sources before installation
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Crush Repository**: [github.com/charmbracelet/crush](https://github.com/charmbracelet/crush)
 - **Charm**: [charm.sh](https://charm.sh) - The Charm ecosystem of delightful CLI tools
@@ -501,13 +501,13 @@ This environment works on:
 - **Model Context Protocol**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- **Charm Team**: An extra special shout-out to the absolutely brilliant folks at [Charm](https://github.com/charmbracelet) and all contributors to the [Crush project](https://github.com/charmbracelet/crush)! Charm has consistently elevated the entire landscape of terminal user interfaces, proving that CLI tools can be both powerful and downright beautiful. From [Gum](https://github.com/charmbracelet/gum) to [Bubble Tea](https://github.com/charmbracelet/bubbletea), from [Lip Gloss](https://github.com/charmbracelet/lipgloss) to [VHS](https://github.com/charmbracelet/vhs), and now with Crush, they continue to demonstrate that developer tools should be delightful, elegant, and a joy to use. Their unwavering commitment to open source excellence, impeccable design sensibility, and genuine care for developer experience has created an ecosystem that makes working in the terminal feel like magic. The Charm team has fundamentally changed what we expect from CLI tools, and the development community is infinitely better for it. Thank you for making the terminal glamorous! ✨
+- **Charm Team**: An extra special shout-out to the absolutely brilliant folks at [Charm](https://github.com/charmbracelet) and all contributors to the [Crush project](https://github.com/charmbracelet/crush)! Charm has consistently elevated the entire landscape of terminal user interfaces, proving that CLI tools can be both powerful and downright beautiful. From [Gum](https://github.com/charmbracelet/gum) to [Bubble Tea](https://github.com/charmbracelet/bubbletea), from [Lip Gloss](https://github.com/charmbracelet/lipgloss) to [VHS](https://github.com/charmbracelet/vhs), and now with Crush, they continue to demonstrate that developer tools should be delightful, elegant, and a joy to use. Their unwavering commitment to open source excellence, impeccable design sensibility, and genuine care for developer experience has created an ecosystem that makes working in the terminal feel like magic. The Charm team has fundamentally changed what we expect from CLI tools, and the development community is infinitely better for it. Thank you for making the terminal glamorous! 
 
 - **nix-ai-tools**: Special thanks to [numtide](https://github.com/numtide) and contributors for maintaining [nix-ai-tools](https://github.com/numtide/nix-ai-tools), which packages and distributes AI development tools for the Nix ecosystem, making it easy to use tools like Crush in reproducible environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -517,6 +517,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Crush and its dependencies have their own licenses - see the [Crush repository](https://github.com/charmbracelet/crush) for details.

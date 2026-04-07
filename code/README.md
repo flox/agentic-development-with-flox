@@ -1,8 +1,8 @@
-# 🤖 A Flox Environment for CODE
+# A Flox Environment for CODE
 
-This Flox environment gives you [CODE](https://github.com/just-every/code/)—a fast, local coding agent for your terminal—with isolated configuration and cache directories per project.
+This Flox environment gives you [CODE](https://github.com/just-every/code/)a fast, local coding agent for your terminalwith isolated configuration and cache directories per project.
 
-## ✨ What You Get
+## What You Get
 
 - **Local AI coding** - Uses Ollama by default (no API costs!)
 - **AI coding agent** - Multi-agent orchestration with Claude, Gemini, and GPT-5
@@ -13,14 +13,14 @@ This Flox environment gives you [CODE](https://github.com/just-every/code/)—a 
 - **Isolated config** - Each project gets its own CODE configuration and auth
 - **Flexible backends** - Switch between Ollama (local) and OpenAI API (cloud)
 
-## 🧰 What's Inside
+## What's Inside
 
 - `code` - AI coding agent CLI
 - `ollama` - Local LLM runtime (from `barstoolbluz/ollama-headless`)
 - Isolated config directory in `$FLOX_ENV_CACHE/code`
 - Pre-configured to use Ollama by default
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -67,7 +67,7 @@ flox services start
 OPENAI_API_KEY=sk-xxx code
 ```
 
-## 📝 Built-in Commands
+## Built-in Commands
 
 ### Interactive Commands
 
@@ -90,7 +90,7 @@ code --no-approval "implement user authentication"
 code --read-only "analyze this codebase"
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -132,7 +132,7 @@ CODE stores auth credentials in `$CODE_HOME/auth.json`. Two authentication metho
 1. **ChatGPT Sign-in** - For Plus/Pro/Team subscribers (uses models available to your plan)
 2. **API Key** - Set `OPENAI_API_KEY` environment variable
 
-## 🔥 Troubleshooting
+## Troubleshooting
 
 ### Authentication issues
 
@@ -163,34 +163,34 @@ which google-chrome
 which chromium
 ```
 
-## 💻 System Support
+## System Support
 
 This Flox environment currently supports:
 - Linux (x86_64)
 
 **Note**: While [CODE](https://github.com/just-every/code/) itself may support multiple platforms, the `flox/code` package is currently available for x86_64-linux.
 
-## 🔍 Power User Tips
+## Power User Tips
 
-- **Free local AI**: Ollama runs locally—no API costs, full privacy
+- **Free local AI**: Ollama runs locallyno API costs, full privacy
 - **Model selection**: Pull multiple models with `ollama pull` and switch between them
 - **Multi-agent strategies**: Use `/plan` for consensus across models or `/solve` for racing strategies
 - **Hybrid approach**: Use Ollama for quick tasks, switch to OpenAI API for complex ones
-- **Project isolation**: Each Flox environment has its own CODE config—great for different projects with different settings
+- **Project isolation**: Each Flox environment has its own CODE configgreat for different projects with different settings
 - **On-demand Ollama**: Start without `-s` flag, then `flox services start` when you need Ollama
 - **CI automation**: Use `--no-approval --read-only` flags for automated code analysis in pipelines
 - **MCP extensions**: Extend CODE with filesystem, database, and API integrations via Model Context Protocol
 - **Theme customization**: Access themes with `/themes` command for personalized UI
 
-## 🌟 Related Projects
+## Related Projects
 
 ### Upstream
 
-This environment packages [CODE](https://github.com/just-every/code/) by just-every. **Thank you** to the just-every team and all contributors for creating and maintaining this excellent community-driven fork of OpenAI's Codex—a fast, local coding agent with multi-agent orchestration, browser integration, and extensive customization.
+This environment packages [CODE](https://github.com/just-every/code/) by just-every. **Thank you** to the just-every team and all contributors for creating and maintaining this excellent community-driven fork of OpenAI's Codexa fast, local coding agent with multi-agent orchestration, browser integration, and extensive customization.
 
 ### Packaging & Distribution
 
-**Special thanks** to the [nix-ai-tools](https://github.com/numtide/nix-ai-tools) project by numtide and its contributors for making AI development tools accessible through Nix packaging. This comprehensive collection of AI-powered development utilities—including code assistants, MCP servers, and language models—makes it easy to get started with AI tooling. Their work benefits the entire community.
+**Special thanks** to the [nix-ai-tools](https://github.com/numtide/nix-ai-tools) project by numtide and its contributors for making AI development tools accessible through Nix packaging. This comprehensive collection of AI-powered development utilitiesincluding code assistants, MCP servers, and language modelsmakes it easy to get started with AI tooling. Their work benefits the entire community.
 
 ## About Flox
 
@@ -200,4 +200,4 @@ This environment packages [CODE](https://github.com/just-every/code/) by just-ev
 - **Content-addressed storage**. Multiple versions of packages with conflicting dependencies can coexist in the same environment;
 - **Reproducibility**. The same environment can be reused across development, CI, and production;
 - **Deterministic builds**. The same inputs always produce identical outputs for a given architecture, regardless of when or where builds occur;
-- **World's largest collection of packages**. Access to over 150,000 packages—and millions of package-version combinations—from [Nixpkgs](https://github.com/NixOS/nixpkgs).
+- **World's largest collection of packages**. Access to over 150,000 packagesand millions of package-version combinationsfrom [Nixpkgs](https://github.com/NixOS/nixpkgs).

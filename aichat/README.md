@@ -1,8 +1,8 @@
-# 🤖 Flox Environment for AIChat
+# Flox Environment for AIChat
 
 A Flox environment for [AIChat](https://github.com/sigoden/aichat), an all-in-one LLM CLI tool that brings conversational AI to your terminal. AIChat supports 20+ LLM providers (OpenAI, Claude, Gemini, Ollama, Groq, Azure, Bedrock, and more), enabling powerful workflows like shell assistance, code generation, RAG (Retrieval-Augmented Generation), AI tools, agents, and context-aware sessions.
 
-## ✨ Features
+## Features
 
 - **20+ LLM providers**: OpenAI, Claude, Gemini, Ollama, Groq, Azure OpenAI, AWS Bedrock, Cohere, Perplexity, Mistral, and more
 - **Shell Assistant**: Convert natural language to shell commands with automatic execution
@@ -18,7 +18,7 @@ A Flox environment for [AIChat](https://github.com/sigoden/aichat), an all-in-on
 - **File integration**: Include files in prompts with `.file` command
 - **Command execution**: Execute generated shell commands directly from REPL
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
@@ -26,15 +26,15 @@ The environment includes:
 - `jq` - JSON processor for configuration management
 - `curl` - For API testing and debugging
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API key for at least one LLM provider (OpenAI, Claude, etc.)
 - Internet connection for API access
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -46,13 +46,13 @@ git clone https://github.com/yourusername/agentic-development-with-flox && cd ag
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 **Configuration Location:**
 
 AIChat stores configuration in `~/.config/aichat/` in your home directory (following security best practices).
 
-**⚠️ CRITICAL - Flox Security Convention:**
+**CRITICAL - Flox Security Convention:**
 Config files with API keys MUST be in `$HOME` (`~/.config/aichat/`), **NEVER in project directories**.
 
 **Initial Configuration:**
@@ -165,7 +165,7 @@ export COHERE_API_KEY="..."
 export MISTRAL_API_KEY="..."
 ```
 
-## 📝 Usage
+## Usage
 
 ### Interactive REPL Mode
 
@@ -457,13 +457,13 @@ You> .file implementation.py
 You> Verify the implementation matches the architecture
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Files
 
 AIChat uses a hierarchical configuration system:
 
-**⚠️ IMPORTANT - Flox Security Convention:**
+**IMPORTANT - Flox Security Convention:**
 Config files containing API keys MUST be in `$HOME` (`~/.config/aichat/`), **NEVER in project directories**.
 
 **Global config** (for credentials and defaults):
@@ -618,7 +618,7 @@ Define custom personas and prompts:
       description: "Execute code in various languages"
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Code Development
 
@@ -722,7 +722,7 @@ You> .file pr_changes.py
 You> Review these changes for the pull request
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Connection Issues
 
@@ -902,7 +902,7 @@ clients:
 EOF
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
@@ -918,9 +918,9 @@ This environment works on:
 - Azure OpenAI: All platforms
 - AWS Bedrock: Requires AWS credentials
 
-## 🔒 Security Considerations
+## Security Considerations
 
-**⚠️ CRITICAL SECURITY RULES:**
+**CRITICAL SECURITY RULES:**
 
 - **API keys location**: MUST be in `~/.config/aichat/config.yaml` or environment variables in `$HOME`
 - **NEVER commit secrets**: Don't commit `config.yaml` with API keys to version control
@@ -939,9 +939,9 @@ export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 
 # Never put secrets in project config files
-# ✅ Good: ~/.config/aichat/config.yaml (in $HOME)
-# ❌ Bad:  /project/.aichat/config.yaml (in project)
-# ❌ Bad:  $FLOX_ENV_CACHE/aichat-config.yaml
+# Good: ~/.config/aichat/config.yaml (in $HOME)
+# Bad: /project/.aichat/config.yaml (in project)
+# Bad: $FLOX_ENV_CACHE/aichat-config.yaml
 
 # Add to .gitignore if you must have project-level config
 echo ".aichat/" >> .gitignore
@@ -975,7 +975,7 @@ cat ~/.config/aichat/config.yaml | grep -v api_key
 - **File operations**: AIChat can read files you specify with `-f`
 - **RAG indexing**: Only indexes paths you specify
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Official Repository**: [github.com/sigoden/aichat](https://github.com/sigoden/aichat)
 - **Documentation**: [github.com/sigoden/aichat/wiki](https://github.com/sigoden/aichat/wiki)
@@ -992,13 +992,13 @@ cat ~/.config/aichat/config.yaml | grep -v api_key
 - **Groq**: [console.groq.com/docs](https://console.groq.com/docs)
 - **AWS Bedrock**: [docs.aws.amazon.com/bedrock](https://docs.aws.amazon.com/bedrock)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **sigoden**: Creator and maintainer of AIChat
 - **LLM Providers**: OpenAI, Anthropic, Google, Meta, Mistral, and others for making powerful AI models accessible
 - **Flox Community**: For promoting reproducible development environments
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -1016,6 +1016,6 @@ cat ~/.config/aichat/config.yaml | grep -v api_key
 - **Cross-platform**: Same environment on Linux and macOS
 - **No conflicts**: AIChat doesn't interfere with system Python or other tools
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. AIChat is licensed under the MIT License - see the [LICENSE](https://github.com/sigoden/aichat/blob/main/LICENSE) file in the AIChat repository for details.

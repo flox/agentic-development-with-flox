@@ -1,8 +1,8 @@
-# 🔬 Flox Environment for Nanocoder
+# Flox Environment for Nanocoder
 
 A Flox environment for [Nanocoder](https://github.com/Nano-Collective/nanocoder), a beautiful local-first CLI coding agent built by the community for the community. Nanocoder brings the power of agentic AI directly into your terminal with a focus on privacy, control, and flexibility.
 
-## ✨ Features
+## Features
 
 - **Local-first architecture**: Privacy-focused design with full control over your data
 - **Multi-provider support**: Ollama, OpenRouter, OpenAI, LM Studio, llama.cpp, Z.ai
@@ -16,21 +16,21 @@ A Flox environment for [Nanocoder](https://github.com/Nano-Collective/nanocoder)
 - **Environment variables**: Secure credential management
 - **Free and open source**: Community-driven development
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `nanocoder` - Nanocoder CLI tool
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - Node.js 18+ (included in environment)
 - API key(s) for your chosen provider(s) OR local model setup (Ollama, LM Studio, etc.)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -42,7 +42,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/nanocoder
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Configure providers on first use:
 
@@ -66,7 +66,7 @@ nanocoder
 - **Cloud**: OpenRouter, OpenAI, Anthropic (via OpenRouter), Z.ai
 - **Custom**: Any OpenAI-compatible API
 
-## 📝 Usage
+## Usage
 
 ### Interactive Mode
 
@@ -98,22 +98,22 @@ Use slash commands within interactive sessions:
 
 **Configuration & Settings:**
 ```
-/setup-config       # Guided configuration wizard
-/provider           # Show current provider or switch providers
-/model              # List available models or switch model
-/mcp                # List connected MCP services
+/setup-config # Guided configuration wizard
+/provider # Show current provider or switch providers
+/model # List available models or switch model
+/mcp # List connected MCP services
 ```
 
 **Custom Commands:**
 ```
-/custom-commands    # Show available custom commands
-/[command-name]     # Execute custom command from .nanocoder/commands/
+/custom-commands # Show available custom commands
+/[command-name] # Execute custom command from .nanocoder/commands/
 ```
 
 **Session Management:**
 ```
-/clear              # Clear conversation history
-/export             # Export conversation to file
+/clear # Clear conversation history
+/export # Export conversation to file
 ```
 
 ### Shell Commands
@@ -174,30 +174,30 @@ nanocoder
 # Executes the custom command prompt
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Location
 
 Nanocoder uses `agents.config.json` for configuration.
 
-**⚠️ IMPORTANT - Flox Security Convention:**
+** IMPORTANT - Flox Security Convention:**
 Config files containing API keys or secrets MUST be in `$HOME` (`~/.nanocoder/`), never in project directories.
 
 **User-level** (RECOMMENDED for configs with secrets):
 ```
 ~/.nanocoder/
-└── agents.config.json     # Global configuration with API keys
+ agents.config.json # Global configuration with API keys
 ```
 
 **Project-level** (ONLY for non-secret settings):
 ```
 your-project/
-├── agents.config.json     # Project settings WITHOUT secrets
-├── .nanocoder/
-│   └── commands/          # Custom commands for this project
-│       ├── review.md
-│       └── refactor.md
-└── ...
+ agents.config.json # Project settings WITHOUT secrets
+ .nanocoder/
+    commands/          # Custom commands for this project
+        review.md
+        refactor.md
+ ...
 ```
 
 **Note:** If using project-level config, use environment variables for API keys (e.g., `ANTHROPIC_API_KEY`) instead of storing them in `agents.config.json`.
@@ -223,7 +223,7 @@ Create `agents.config.json` in `~/.nanocoder/` (recommended) or use environment 
 
 ```json
 {
-  "providers": [
+ "providers": [
     {
       "name": "ollama",
       "baseUrl": "http://localhost:11434",
@@ -242,22 +242,22 @@ Create `agents.config.json` in `~/.nanocoder/` (recommended) or use environment 
         "openai/gpt-5.1"
       ]
     }
-  ],
-  "defaultProvider": "ollama",
-  "defaultModel": "qwen2.5-coder:7b",
-  "mcpServers": [
+ ],
+ "defaultProvider": "ollama",
+ "defaultModel": "qwen2.5-coder:7b",
+ "mcpServers": [
     {
       "name": "filesystem",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"],
       "env": {}
     }
-  ],
-  "tools": {
+ ],
+ "tools": {
     "fileOperations": true,
     "shellCommands": true,
     "webBrowsing": false
-  }
+ }
 }
 ```
 
@@ -272,12 +272,12 @@ export OPENAI_API_KEY="sk-..."
 
 # Reference in agents.config.json
 {
-  "providers": [
+ "providers": [
     {
       "name": "openrouter",
       "apiKey": "$OPENROUTER_API_KEY"
     }
-  ]
+ ]
 }
 ```
 
@@ -302,7 +302,7 @@ ollama pull qwen2.5-coder:7b
 **Configure Ollama provider:**
 ```json
 {
-  "providers": [
+ "providers": [
     {
       "name": "ollama",
       "baseUrl": "http://localhost:11434",
@@ -313,23 +313,23 @@ ollama pull qwen2.5-coder:7b
         "deepseek-coder:33b"
       ]
     }
-  ],
-  "defaultProvider": "ollama",
-  "defaultModel": "qwen2.5-coder:7b"
+ ],
+ "defaultProvider": "ollama",
+ "defaultModel": "qwen2.5-coder:7b"
 }
 ```
 
-**⚠️ IMPORTANT - Tool Support Required:**
+** IMPORTANT - Tool Support Required:**
 Nanocoder requires models that support function calling (tools). **Not all models support this feature.**
 
-**✅ Recommended tool-capable models:**
+** Recommended tool-capable models:**
 - `qwen2.5-coder:7b` - Fast, 8GB VRAM, excellent tool support
 - `llama3.1:8b` - Reliable tool support, good performance
 - `mistral:7b` - Strong tool capabilities
 - `qwen2.5-coder:32b` - High quality, 24GB+ VRAM
 - `deepseek-coder:33b` - Strong understanding, 24GB+ VRAM
 
-**❌ Models that do NOT work:**
+** Models that do NOT work:**
 - `phi3:latest` - No tool support
 - `phi3:medium` - No tool support
 - Most base/chat models without explicit tool support
@@ -340,7 +340,7 @@ Configure Model Context Protocol servers in `agents.config.json`:
 
 ```json
 {
-  "mcpServers": [
+ "mcpServers": [
     {
       "name": "filesystem",
       "command": "npx",
@@ -363,7 +363,7 @@ Configure Model Context Protocol servers in `agents.config.json`:
         "DATABASE_URL": "$DATABASE_URL"
       }
     }
-  ]
+ ]
 }
 ```
 
@@ -374,7 +374,7 @@ nanocoder
 # Lists all connected MCP servers and their available tools
 ```
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Getting Started with a New Project
 
@@ -491,7 +491,7 @@ You: Implement that fix
 Nanocoder: [updates code, adds validation]
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Command Not Found
 
@@ -527,8 +527,8 @@ cat agents.config.json | jq .
 **Solutions:**
 ```bash
 # For Ollama
-ollama list  # Verify Ollama is running
-ollama serve &  # Start if not running
+ollama list # Verify Ollama is running
+ollama serve & # Start if not running
 
 # For cloud providers
 # Verify API key is set
@@ -574,7 +574,7 @@ nanocoder
 # Or reconfigure completely
 rm agents.config.json
 nanocoder
-/setup-config  # Choose a tool-capable model
+/setup-config # Choose a tool-capable model
 ```
 
 **Prevention:** Always verify tool support before selecting models. See "Recommended tool-capable models" section above.
@@ -622,14 +622,14 @@ nanocoder
 - Consider quantized models for faster inference
 - Use cloud provider for complex tasks
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
 - macOS x86_64 (Intel)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in `~/.nanocoder/agents.config.json` or via environment variables
 - **Configuration location**: `~/.nanocoder/` in your home directory (**NEVER in project root**)
@@ -651,18 +651,18 @@ This environment works on:
 - Start with local models for sensitive codebases
 - Keep Nanocoder updated
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Nanocoder Repository**: [github.com/Nano-Collective/nanocoder](https://github.com/Nano-Collective/nanocoder)
 - **Community Discussions**: [GitHub Discussions](https://github.com/Nano-Collective/nanocoder/discussions)
 - **Report Issues**: [GitHub Issues](https://github.com/Nano-Collective/nanocoder/issues)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 A special shout-out to the Nano Collective and all contributors for building Nanocoder as a truly community-driven project! Nanocoder exemplifies what open-source collaboration can achieve - a powerful, privacy-focused alternative to commercial tools, built by developers for developers. The commitment to local-first architecture and user control makes this a standout project in the AI coding assistant space.
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -672,6 +672,6 @@ A special shout-out to the Nano Collective and all contributors for building Nan
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Nanocoder is open source - see the [Nanocoder repository](https://github.com/Nano-Collective/nanocoder) for license details.

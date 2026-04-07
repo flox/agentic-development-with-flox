@@ -1,8 +1,8 @@
-# 🚀 Flox Environment for Kilo Code CLI
+# Flox Environment for Kilo Code CLI
 
-A Flox environment for [Kilo Code CLI](https://github.com/Kilo-Org/kilocode), an open-source AI coding agent that brings multi-modal autonomous development directly into your terminal. Kilo Code enables you to orchestrate, architect, code, and debug—switching into the right mode for each step of your workflow.
+A Flox environment for [Kilo Code CLI](https://github.com/Kilo-Org/kilocode), an open-source AI coding agent that brings multi-modal autonomous development directly into your terminal. Kilo Code enables you to orchestrate, architect, code, and debugswitching into the right mode for each step of your workflow.
 
-## ✨ Features
+## Features
 
 - **Multi-modal workflow**: Switch between architect, code, debug, ask, and orchestrator modes
 - **Interactive sessions**: Conversational interface with context-aware AI
@@ -15,21 +15,21 @@ A Flox environment for [Kilo Code CLI](https://github.com/Kilo-Org/kilocode), an
 - **Configuration management**: Interactive config editor or manual JSON editing
 - **Free and open source**: From Kilo
 
-## 🧰 Included Tools
+## Included Tools
 
 The environment includes:
 
 - `kilocode` - Kilo Code CLI tool
 
-## 🏁 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
 - API key(s) for your chosen LLM provider (OpenAI, Anthropic, Gemini, etc.)
 - Node.js 18+ (included in environment)
 
-### 💻 Installation & Activation
+### Installation & Activation
 
 Get started with:
 
@@ -41,7 +41,7 @@ git clone https://github.com/yourusername/floxenvs && cd floxenvs/kilocode-cli
 flox activate
 ```
 
-### 🔐 First-Time Setup
+### First-Time Setup
 
 Configure API keys on first use:
 
@@ -70,7 +70,7 @@ kilocode config
 - Vercel AI Gateway
 - Custom/local models
 
-## 📝 Usage
+## Usage
 
 ### Interactive Mode
 
@@ -178,15 +178,15 @@ Use slash commands within interactive sessions:
 
 **Configuration & Settings:**
 ```
-/config         # Open configuration editor
-/model          # Switch models or view available models
-/mode           # Switch agent modes
+/config # Open configuration editor
+/model # Switch models or view available models
+/mode # Switch agent modes
 ```
 
 **Session Management:**
 ```
-/new            # Start fresh task (clear context)
-/help           # Show all available commands
+/new # Start fresh task (clear context)
+/help # Show all available commands
 ```
 
 ### Agent Modes
@@ -223,7 +223,7 @@ Switch modes based on your workflow stage:
 - Integration and deployment
 - Process automation
 
-## 🛠️ Common Workflows
+## Common Workflows
 
 ### Full-Stack Project from Scratch
 
@@ -358,7 +358,7 @@ You: Implement it
 Kilo: [switches to code mode, refactors]
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Configuration Location
 
@@ -366,8 +366,8 @@ Kilo Code stores configuration in `~/.kilocode/cli/config.json`:
 
 ```
 ~/.kilocode/cli/
-├── config.json          # API keys, providers, models, preferences
-└── ...
+ config.json # API keys, providers, models, preferences
+ ...
 ```
 
 ### Interactive Configuration
@@ -392,9 +392,9 @@ Edit `~/.kilocode/cli/config.json` directly:
 
 ```json
 {
-  "version": "1.0.0",
-  "provider": "anthropic",
-  "providers": [
+ "version": "1.0.0",
+ "provider": "anthropic",
+ "providers": [
     {
       "id": "openai",
       "provider": "openai-native",
@@ -413,7 +413,7 @@ Edit `~/.kilocode/cli/config.json` directly:
       "geminiApiKey": "AIza...",
       "apiModelId": "gemini-3-pro"
     }
-  ]
+ ]
 }
 ```
 
@@ -421,9 +421,9 @@ Edit `~/.kilocode/cli/config.json` directly:
 - `"provider"`: ID of active provider (references a provider's `"id"` in the array)
 - `"providers"`: Array of configured providers
 - Each provider object:
-  - `"id"`: Unique identifier (can be anything)
-  - `"provider"`: Provider type (anthropic, openai-native, gemini, ollama, etc.)
-  - Provider-specific configuration fields
+ - `"id"`: Unique identifier (can be anything)
+ - `"provider"`: Provider type (anthropic, openai-native, gemini, ollama, etc.)
+ - Provider-specific configuration fields
 
 **To switch providers:** Change the top-level `"provider"` field to the ID of the provider you want to use.
 
@@ -439,11 +439,11 @@ export GOOGLE_API_KEY="AIza..."
 
 # Reference in config.json
 {
-  "providers": {
+ "providers": {
     "openai": {
       "apiKey": "${OPENAI_API_KEY}"
     }
-  }
+ }
 }
 ```
 
@@ -474,8 +474,8 @@ Add to `~/.kilocode/cli/config.json`:
 
 ```json
 {
-  "provider": "ollama",
-  "providers": [
+ "provider": "ollama",
+ "providers": [
     {
       "id": "ollama",
       "provider": "ollama",
@@ -484,7 +484,7 @@ Add to `~/.kilocode/cli/config.json`:
       "ollamaApiKey": "",
       "ollamaNumCtx": 32768
     }
-  ]
+ ]
 }
 ```
 
@@ -511,17 +511,17 @@ kilocode config
 - **Context window (`ollamaNumCtx`)**: **Minimum 32768 (32k)** - Ollama defaults to very short contexts which break Kilo Code
 - **Timeout**: May need to increase for slower inference (see troubleshooting)
 - **Hardware**:
-  - GPU with 24GB+ VRAM for 30B+ models
-  - Apple Silicon with 32GB+ unified memory
-  - Smaller models (7B) work on 8GB VRAM
+ - GPU with 24GB+ VRAM for 30B+ models
+ - Apple Silicon with 32GB+ unified memory
+ - Smaller models (7B) work on 8GB VRAM
 
 **Switch between cloud and local:**
 
 Keep multiple providers configured:
 ```json
 {
-  "provider": "ollama",
-  "providers": [
+ "provider": "ollama",
+ "providers": [
     {
       "id": "anthropic",
       "provider": "anthropic",
@@ -536,15 +536,15 @@ Keep multiple providers configured:
       "ollamaApiKey": "",
       "ollamaNumCtx": 32768
     }
-  ]
+ ]
 }
 ```
 
 Switch by editing the top-level `"provider"` field:
-- `"provider": "anthropic"` → Use Claude via cloud
-- `"provider": "ollama"` → Use local Ollama model
+- `"provider": "anthropic"` Use Claude via cloud
+- `"provider": "ollama"` Use local Ollama model
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Command Not Found
 
@@ -701,9 +701,9 @@ ollama list | grep qwen2.5-coder
 ```json
 // In ~/.kilocode/cli/config.json
 {
-  "id": "ollama",
-  "provider": "ollama",
-  "ollamaNumCtx": 32768  // <- Set to at least 32k
+ "id": "ollama",
+ "provider": "ollama",
+ "ollamaNumCtx": 32768 // <- Set to at least 32k
 }
 ```
 
@@ -753,7 +753,7 @@ flox activate
 kilocode
 ```
 
-## 💻 System Compatibility
+## System Compatibility
 
 This environment works on:
 - Linux x86_64
@@ -761,7 +761,7 @@ This environment works on:
 - macOS x86_64 (Intel)
 - Windows (via WSL)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **API credentials**: Stored in `~/.kilocode/cli/config.json` or via environment variables
 - **Configuration location**: `~/.kilocode/cli/` in your home directory
@@ -781,7 +781,7 @@ This environment works on:
 - Review changes before accepting in sensitive codebases
 - Keep Kilo Code CLI updated
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **Kilo Code Repository**: [github.com/Kilo-Org/kilocode](https://github.com/Kilo-Org/kilocode)
 - **Kilo Code Website**: [kilo.ai](https://kilo.ai/)
@@ -790,11 +790,11 @@ This environment works on:
 - **Community**: [Join discussions and get support](https://github.com/Kilo-Org/kilocode/discussions)
 - **Flox Documentation**: [flox.dev/docs](https://flox.dev/docs)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Kilo Team**: Thanks to Kilo and all contributors for creating Kilo Code and making it open source
 
-## 🔗 About Flox
+## About Flox
 
 [Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
 
@@ -804,6 +804,6 @@ This environment works on:
 - **Deterministic builds** - Same inputs always produce identical outputs
 - **Huge package collection** - Access to 150,000+ packages from [Nixpkgs](https://github.com/NixOS/nixpkgs)
 
-## 📝 License
+## License
 
 This Flox environment configuration is provided as-is. Kilo Code is open source - see the [Kilo Code repository](https://github.com/Kilo-Org/kilocode) for license details.
