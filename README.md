@@ -59,6 +59,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**sglang**](./sglang) - Production SGLang inference server (v0.5.9) with CUDA, multi-GPU tensor parallelism
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
 - [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server (v2.66.0) with Python, ONNX, vLLM, and TensorRT backends
+- [**lm-studio**](./lm-studio) - LM Studio (v0.4.9) local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI (v0.15.0) image generation with 22 custom nodes, CUDA/MPS support
@@ -154,6 +155,7 @@ AI coding tools frequently generate code requiring backend infrastructure. This 
 - **sglang** - Production SGLang inference server with multi-GPU tensor parallelism
 - **llamacpp** - Production llama.cpp server for GGUF models with GPU offload
 - **nvidia-triton** - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends
+- **lm-studio** - LM Studio local LLM app and inference server with OpenAI/Anthropic-compatible API
 - **gpt4all** - CPU-optimized local LLM inference
 
 **Web Interfaces**

@@ -1,4 +1,4 @@
-version = 1
+schema-version = "1.11.0"
 
 ## DESIGN PHILOSOPHY -------------------------------------------------
 ##
@@ -41,25 +41,30 @@ version = 1
 comfyui.pkg-path = "flox/comfyui-complete"
 comfyui.pkg-group = "comfyui"
 comfyui.priority = 0
-comfyui.version = "0.15.0+f04d744"
+comfyui.version = "0.18.3+1e05b7a"
+comfyui.outputs = "all"
 
 # Core Python environment
 python.pkg-path = "python313Full"
 python.pkg-group = "runtime"
 python.priority = 5
+python.outputs = "all"
 
 # Tools
 uv.pkg-path = "uv"
 uv.pkg-group = "tools"
 uv.priority = 5
+uv.outputs = "all"
 
 curl.pkg-path = "curl"
 curl.pkg-group = "tools"
+curl.outputs = "all"
 
 # System libraries
 gcc-unwrapped.pkg-path = "gcc-unwrapped"
 gcc-unwrapped.priority = 6
 gcc-unwrapped.pkg-group = "libraries"
+gcc-unwrapped.outputs = "all"
 
 # CUDA torch packages
 # These provide CUDA-enabled torch as a dependency. The comfyui-start script
@@ -73,23 +78,27 @@ cuda-torchvision.version = "0.25.0"
 cuda-torchvision.systems = ["x86_64-linux", "aarch64-linux"]
 cuda-torchvision.priority = 0
 cuda-torchvision.pkg-group = "torchvision"
+cuda-torchvision.outputs = "all"
 
 cuda-torchaudio.pkg-path = "flox-cuda/python3Packages.torchaudio"
 cuda-torchaudio.version = "2.10.0"
 cuda-torchaudio.systems = ["x86_64-linux", "aarch64-linux"]
 cuda-torchaudio.priority = 3
 cuda-torchaudio.pkg-group = "torchaudio"
+cuda-torchaudio.outputs = "all"
 
 # fallback for other platforms
 torchvision.pkg-path = "python313Packages.torchvision"
 torchvision.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
 torchvision.priority = 6
 torchvision.pkg-group = "torchvision"
+torchvision.outputs = "all"
 
 torchaudio.pkg-path = "python313Packages.torchaudio"
 torchaudio.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
 torchaudio.priority = 7
 torchaudio.pkg-group = "torchaudio"
+torchaudio.outputs = "all"
 
 # torchsde - not in nixpkgs, required by ComfyUI samplers
 # Using local build with scipy/numpy removed from deps to prevent profile merge conflicts
@@ -106,8 +115,10 @@ kornia.pkg-path = "flox-cuda/python3Packages.kornia"
 kornia.systems = ["x86_64-linux"]
 kornia.priority = 33
 kornia.pkg-group = "kornia"
+kornia.outputs = "all"
 
 awscli2.pkg-path = "awscli2"
+awscli2.outputs = "all"
 
 
 [vars]
