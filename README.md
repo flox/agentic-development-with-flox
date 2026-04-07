@@ -35,6 +35,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ### AI Coding Tools
 
+- [**aider**](./aider) - Aider AI pair programming with multi-provider support (Anthropic, OpenAI, Ollama, etc.)
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
