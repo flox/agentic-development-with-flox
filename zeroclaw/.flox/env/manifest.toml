@@ -1,0 +1,296 @@
+schema-version = "1.11.0"
+
+[install]
+zeroclaw.pkg-path = "flox/zeroclaw"
+zeroclaw.pkg-group = "zeroclaw"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+ripgrep.pkg-path = "ripgrep"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+# Node.js for the web dashboard (optional)
+nodejs.pkg-path = "nodejs"
+
+[vars]
+ZEROCLAW_HOME = "$FLOX_ENV_CACHE/zeroclaw"
+
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+# GOOGLE_API_KEY = ""
+
+# Config lives in $ZEROCLAW_HOME/config.toml
+# Run 'zeroclaw onboard' for interactive setup
+
+[hook]
+on-activate = '''
+# === ZEROCLAW HOME ===
+export ZEROCLAW_HOME="${ZEROCLAW_HOME:-$FLOX_ENV_CACHE/zeroclaw}"
+mkdir -p "$ZEROCLAW_HOME"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Zeroclaw environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo "  ZEROCLAW_HOME: $ZEROCLAW_HOME"
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Set an API key or run the onboarding wizard:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo "    zeroclaw onboard"
+  echo ""
+fi
+
+echo "Commands:"
+echo "  zeroclaw agent               Interactive chat"
+echo "  zeroclaw gateway             Start webhook server + web dashboard"
+echo "  zeroclaw daemon              Full autonomous runtime"
+echo "  zeroclaw status              System status"
+echo "  zeroclaw doctor              Run diagnostics"
+echo "  zeroclaw-info                Show configuration"
+echo ""
+echo "Service mode:"
+echo "  flox activate -s             Start daemon as Flox service"
+echo "  zeroclaw-pair                Show the pairing code from service logs"
+echo ""
+
+# First-time setup check
+if [ ! -f "$ZEROCLAW_HOME/config.toml" ]; then
+  echo "First time? Run: zeroclaw onboard"
+  echo ""
+fi
+
+unset _has_key
+'''
+
+[services.zeroclaw-daemon]
+command = """
+export ZEROCLAW_HOME="${ZEROCLAW_HOME:-$FLOX_ENV_CACHE/zeroclaw}"
+exec zeroclaw daemon 2>&1
+"""
+is-daemon = false
+
+[profile]
+bash = '''
+zeroclaw-info() {
+    echo "Zeroclaw Environment Configuration"
+    echo ""
+    echo "ZEROCLAW_HOME: ${ZEROCLAW_HOME}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$GOOGLE_API_KEY" ] && echo "  Google: set" || echo "  Google: not set"
+    echo ""
+    echo "Commands:"
+    echo "  zeroclaw agent               Interactive chat"
+    echo "  zeroclaw agent -m \"<msg>\"    Single-message query"
+    echo "  zeroclaw gateway             Webhook server + web dashboard"
+    echo "  zeroclaw daemon              Full autonomous runtime"
+    echo "  zeroclaw status              System status"
+    echo "  zeroclaw doctor              Run diagnostics"
+    echo "  zeroclaw channel             Channel configuration"
+    echo "  zeroclaw cron                Scheduled task management"
+    echo "  zeroclaw skills              Skill/tool management"
+    echo "  zeroclaw migrate openclaw    Import from OpenClaw"
+    echo "  flox activate -s             Start daemon as Flox service"
+    echo ""
+    echo "Config: \$ZEROCLAW_HOME/config.toml"
+}
+export -f zeroclaw-info
+
+zeroclaw-pair() {
+    local code
+    code=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1 || true)
+    if [ -n "$code" ]; then
+        echo "  Pairing code: $code"
+        local dashboard
+        dashboard=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1 || true)
+        if [ -n "$dashboard" ]; then
+            echo "  Web dashboard: $dashboard"
+        fi
+    else
+        echo "  No pairing code found. Is the service running?"
+        echo "    flox services status"
+        echo "    flox services logs"
+    fi
+}
+export -f zeroclaw-pair
+
+# Auto-surface pairing code if service is running
+if flox services status 2>/dev/null | grep -q "zeroclaw-daemon.*Running"; then
+  _zc_code=""
+  for _zc_i in $(seq 1 10); do
+    _zc_code=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1 || true)
+    [ -n "$_zc_code" ] && break
+    sleep 1
+  done
+  if [ -n "$_zc_code" ]; then
+    _zc_dash=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1 || true)
+    echo "  Pairing code: $_zc_code"
+    [ -n "$_zc_dash" ] && echo "  Web dashboard: $_zc_dash"
+    echo ""
+  fi
+  unset _zc_code _zc_dash _zc_i
+fi
+'''
+
+zsh = '''
+zeroclaw-info() {
+    echo "Zeroclaw Environment Configuration"
+    echo ""
+    echo "ZEROCLAW_HOME: ${ZEROCLAW_HOME}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$GOOGLE_API_KEY" ] && echo "  Google: set" || echo "  Google: not set"
+    echo ""
+    echo "Commands:"
+    echo "  zeroclaw agent               Interactive chat"
+    echo "  zeroclaw agent -m \"<msg>\"    Single-message query"
+    echo "  zeroclaw gateway             Webhook server + web dashboard"
+    echo "  zeroclaw daemon              Full autonomous runtime"
+    echo "  zeroclaw status              System status"
+    echo "  zeroclaw doctor              Run diagnostics"
+    echo "  zeroclaw channel             Channel configuration"
+    echo "  zeroclaw cron                Scheduled task management"
+    echo "  zeroclaw skills              Skill/tool management"
+    echo "  zeroclaw migrate openclaw    Import from OpenClaw"
+    echo "  flox activate -s             Start daemon as Flox service"
+    echo ""
+    echo "Config: \$ZEROCLAW_HOME/config.toml"
+}
+
+zeroclaw-pair() {
+    local code
+    code=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1 || true)
+    if [ -n "$code" ]; then
+        echo "  Pairing code: $code"
+        local dashboard
+        dashboard=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1 || true)
+        if [ -n "$dashboard" ]; then
+            echo "  Web dashboard: $dashboard"
+        fi
+    else
+        echo "  No pairing code found. Is the service running?"
+        echo "    flox services status"
+        echo "    flox services logs"
+    fi
+}
+
+# Auto-surface pairing code if service is running
+if flox services status 2>/dev/null | grep -q "zeroclaw-daemon.*Running"; then
+  _zc_code=""
+  for _zc_i in $(seq 1 10); do
+    _zc_code=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1 || true)
+    [ -n "$_zc_code" ] && break
+    sleep 1
+  done
+  if [ -n "$_zc_code" ]; then
+    _zc_dash=$(flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1 || true)
+    echo "  Pairing code: $_zc_code"
+    [ -n "$_zc_dash" ] && echo "  Web dashboard: $_zc_dash"
+    echo ""
+  fi
+  unset _zc_code _zc_dash _zc_i
+fi
+'''
+
+fish = '''
+function zeroclaw-info
+    echo "Zeroclaw Environment Configuration"
+    echo ""
+    echo "ZEROCLAW_HOME: $ZEROCLAW_HOME"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    if test -n "$GOOGLE_API_KEY"
+        echo "  Google: set"
+    else
+        echo "  Google: not set"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  zeroclaw agent               Interactive chat"
+    echo "  zeroclaw agent -m \"<msg>\"    Single-message query"
+    echo "  zeroclaw gateway             Webhook server + web dashboard"
+    echo "  zeroclaw daemon              Full autonomous runtime"
+    echo "  zeroclaw status              System status"
+    echo "  zeroclaw doctor              Run diagnostics"
+    echo "  zeroclaw channel             Channel configuration"
+    echo "  zeroclaw cron                Scheduled task management"
+    echo "  zeroclaw skills              Skill/tool management"
+    echo "  zeroclaw migrate openclaw    Import from OpenClaw"
+    echo "  flox activate -s             Start daemon as Flox service"
+    echo ""
+    echo "Config: \$ZEROCLAW_HOME/config.toml"
+end
+
+function zeroclaw-pair
+    set -l code (flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1)
+    if test -n "$code"
+        echo "  Pairing code: $code"
+        set -l dashboard (flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1)
+        if test -n "$dashboard"
+            echo "  Web dashboard: $dashboard"
+        end
+    else
+        echo "  No pairing code found. Is the service running?"
+        echo "    flox services status"
+        echo "    flox services logs"
+    end
+end
+
+# Auto-surface pairing code if service is running
+if flox services status 2>/dev/null | grep -q "zeroclaw-daemon.*Running"
+    set -l _zc_code ""
+    for _zc_i in (seq 1 10)
+        set _zc_code (flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'X-Pairing-Code:\s*\K\d+' | tail -1)
+        if test -n "$_zc_code"
+            break
+        end
+        sleep 1
+    end
+    if test -n "$_zc_code"
+        set -l _zc_dash (flox services logs zeroclaw-daemon 2>/dev/null | grep -oP 'http://[0-9.:]+/' | head -1)
+        echo "  Pairing code: $_zc_code"
+        if test -n "$_zc_dash"
+            echo "  Web dashboard: $_zc_dash"
+        end
+        echo ""
+    end
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
