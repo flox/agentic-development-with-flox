@@ -37,7 +37,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent
 - [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
-- [**code**](./code) - CODE fast local coding agent with multi-agent orchestration
+- [**code**](./code) - Every Code fast local coding agent with multi-agent orchestration
 - [**codex**](./codex) - OpenAI Codex CLI coding agent
 - [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
 - [**crush**](./crush) - Crush AI coding agent for the terminal by Charm
