@@ -1,0 +1,216 @@
+schema-version = "1.11.0"
+
+[install]
+mux.pkg-path = "flox/mux"
+mux.pkg-group = "mux"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+# xvfb-run provides a virtual framebuffer so the Electron-based mux server
+# can run headlessly without a display server
+xvfb-run.pkg-path = "xvfb-run"
+xvfb-run.systems = ["x86_64-linux", "aarch64-linux"]
+
+[vars]
+# Server configuration - override at activation time
+# MUX_PORT       - Server port (default: 3000)
+# MUX_HOST       - Server bind address (default: 127.0.0.1)
+# MUX_AUTH       - Enable auth on server: true/false (default: true)
+
+# Provider API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+
+# Provider config lives in ~/.mux/providers.jsonc
+# Secrets config lives in ~/.mux/secrets.json
+
+[hook]
+on-activate = '''
+# === SERVER CONFIGURATION ===
+export MUX_PORT="${MUX_PORT:-3000}"
+export MUX_HOST="${MUX_HOST:-127.0.0.1}"
+export MUX_AUTH="${MUX_AUTH:-true}"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Mux environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  No API keys detected. Set a provider key:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo "    export OPENAI_API_KEY=sk-..."
+  echo ""
+  echo "  Or configure providers in ~/.mux/providers.jsonc"
+  echo ""
+fi
+
+echo "Commands:"
+echo "  mux run \"<prompt>\"         Run an agent task from the CLI"
+echo "  mux server                  Start the browser UI (port $MUX_PORT)"
+echo "  mux desktop                 Launch the desktop app"
+echo "  mux-info                    Show configuration"
+echo ""
+echo "Examples:"
+echo "  mux run \"Add error handling to the API routes\""
+echo "  mux run -m anthropic:claude-sonnet-4-5 \"Fix the failing tests\""
+echo "  mux run -r worktree \"Refactor auth module\"    # Isolated git worktree"
+echo "  flox activate -s                                # Start browser UI as service"
+echo ""
+
+unset _has_key
+'''
+
+[services.mux-server]
+command = """
+AUTH_FLAG=""
+if [ "$MUX_AUTH" = "false" ]; then
+  AUTH_FLAG="--no-auth"
+fi
+
+# Electron needs a display server; use xvfb-run on headless Linux
+if [ "$(uname)" = "Linux" ] && [ -z "$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then
+  export ELECTRON_DISABLE_GPU=1
+  exec xvfb-run --auto-servernum mux server --host "$MUX_HOST" --port "$MUX_PORT" $AUTH_FLAG
+else
+  exec mux server --host "$MUX_HOST" --port "$MUX_PORT" $AUTH_FLAG
+fi
+"""
+is-daemon = false
+
+[profile]
+bash = '''
+mux-info() {
+    echo "Mux Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${MUX_HOST}"
+    echo "  Port: ${MUX_PORT}"
+    echo "  URL:  http://${MUX_HOST}:${MUX_PORT}"
+    echo "  Auth: ${MUX_AUTH}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Provider config: ~/.mux/providers.jsonc"
+    echo "Secrets config:  ~/.mux/secrets.json"
+    echo ""
+    echo "Commands:"
+    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
+    echo "  mux server                  Start browser UI"
+    echo "  mux desktop                 Launch desktop app"
+    echo "  mux acp                     ACP bridge (editor integrations)"
+    echo "  flox activate -s            Start browser UI as Flox service"
+    echo ""
+    echo "Run options:"
+    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
+    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
+    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
+    echo "  -b <usd>         Budget limit in USD"
+    echo "  --mode plan      Plan before executing"
+    echo "  --json           NDJSON output for scripting"
+}
+export -f mux-info
+'''
+
+zsh = '''
+mux-info() {
+    echo "Mux Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${MUX_HOST}"
+    echo "  Port: ${MUX_PORT}"
+    echo "  URL:  http://${MUX_HOST}:${MUX_PORT}"
+    echo "  Auth: ${MUX_AUTH}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Provider config: ~/.mux/providers.jsonc"
+    echo "Secrets config:  ~/.mux/secrets.json"
+    echo ""
+    echo "Commands:"
+    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
+    echo "  mux server                  Start browser UI"
+    echo "  mux desktop                 Launch desktop app"
+    echo "  mux acp                     ACP bridge (editor integrations)"
+    echo "  flox activate -s            Start browser UI as Flox service"
+    echo ""
+    echo "Run options:"
+    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
+    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
+    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
+    echo "  -b <usd>         Budget limit in USD"
+    echo "  --mode plan      Plan before executing"
+    echo "  --json           NDJSON output for scripting"
+}
+'''
+
+fish = '''
+function mux-info
+    echo "Mux Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: $MUX_HOST"
+    echo "  Port: $MUX_PORT"
+    echo "  URL:  http://$MUX_HOST:$MUX_PORT"
+    echo "  Auth: $MUX_AUTH"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    echo ""
+    echo "Provider config: ~/.mux/providers.jsonc"
+    echo "Secrets config:  ~/.mux/secrets.json"
+    echo ""
+    echo "Commands:"
+    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
+    echo "  mux server                  Start browser UI"
+    echo "  mux desktop                 Launch desktop app"
+    echo "  mux acp                     ACP bridge (editor integrations)"
+    echo "  flox activate -s            Start browser UI as Flox service"
+    echo ""
+    echo "Run options:"
+    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
+    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
+    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
+    echo "  -b <usd>         Budget limit in USD"
+    echo "  --mode plan      Plan before executing"
+    echo "  --json           NDJSON output for scripting"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]

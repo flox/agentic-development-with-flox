@@ -1,0 +1,623 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "schema-version": "1.11.0",
+    "install": {
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "git": {
+        "pkg-path": "gitFull",
+        "outputs": "all"
+      },
+      "mux": {
+        "pkg-path": "flox/mux",
+        "pkg-group": "mux"
+      },
+      "xvfb-run": {
+        "pkg-path": "xvfb-run",
+        "systems": [
+          "x86_64-linux",
+          "aarch64-linux"
+        ]
+      }
+    },
+    "hook": {
+      "on-activate": "# === SERVER CONFIGURATION ===\nexport MUX_PORT=\"${MUX_PORT:-3000}\"\nexport MUX_HOST=\"${MUX_HOST:-127.0.0.1}\"\nexport MUX_AUTH=\"${MUX_AUTH:-true}\"\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"Mux environment ready\"\necho \"\"\n\n# Show API key status\n_has_key=0\nif [ -n \"$ANTHROPIC_API_KEY\" ]; then\n  echo \"  Anthropic API key: set\"\n  _has_key=1\nelse\n  echo \"  Anthropic API key: not set\"\nfi\nif [ -n \"$OPENAI_API_KEY\" ]; then\n  echo \"  OpenAI API key: set\"\n  _has_key=1\nelse\n  echo \"  OpenAI API key: not set\"\nfi\necho \"\"\n\nif [ \"$_has_key\" = \"0\" ]; then\n  echo \"  No API keys detected. Set a provider key:\"\n  echo \"    export ANTHROPIC_API_KEY=sk-ant-...\"\n  echo \"    export OPENAI_API_KEY=sk-...\"\n  echo \"\"\n  echo \"  Or configure providers in ~/.mux/providers.jsonc\"\n  echo \"\"\nfi\n\necho \"Commands:\"\necho \"  mux run \\\"<prompt>\\\"         Run an agent task from the CLI\"\necho \"  mux server                  Start the browser UI (port $MUX_PORT)\"\necho \"  mux desktop                 Launch the desktop app\"\necho \"  mux-info                    Show configuration\"\necho \"\"\necho \"Examples:\"\necho \"  mux run \\\"Add error handling to the API routes\\\"\"\necho \"  mux run -m anthropic:claude-sonnet-4-5 \\\"Fix the failing tests\\\"\"\necho \"  mux run -r worktree \\\"Refactor auth module\\\"    # Isolated git worktree\"\necho \"  flox activate -s                                # Start browser UI as service\"\necho \"\"\n\nunset _has_key\n"
+    },
+    "profile": {
+      "bash": "mux-info() {\n    echo \"Mux Environment Configuration\"\n    echo \"\"\n    echo \"Server:\"\n    echo \"  Host: ${MUX_HOST}\"\n    echo \"  Port: ${MUX_PORT}\"\n    echo \"  URL:  http://${MUX_HOST}:${MUX_PORT}\"\n    echo \"  Auth: ${MUX_AUTH}\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    echo \"\"\n    echo \"Provider config: ~/.mux/providers.jsonc\"\n    echo \"Secrets config:  ~/.mux/secrets.json\"\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  mux run \\\"<prompt>\\\"         Run agent task (CLI)\"\n    echo \"  mux server                  Start browser UI\"\n    echo \"  mux desktop                 Launch desktop app\"\n    echo \"  mux acp                     ACP bridge (editor integrations)\"\n    echo \"  flox activate -s            Start browser UI as Flox service\"\n    echo \"\"\n    echo \"Run options:\"\n    echo \"  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)\"\n    echo \"  -r <runtime>     Runtime: local, worktree, docker, ssh\"\n    echo \"  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX\"\n    echo \"  -b <usd>         Budget limit in USD\"\n    echo \"  --mode plan      Plan before executing\"\n    echo \"  --json           NDJSON output for scripting\"\n}\nexport -f mux-info\n",
+      "zsh": "mux-info() {\n    echo \"Mux Environment Configuration\"\n    echo \"\"\n    echo \"Server:\"\n    echo \"  Host: ${MUX_HOST}\"\n    echo \"  Port: ${MUX_PORT}\"\n    echo \"  URL:  http://${MUX_HOST}:${MUX_PORT}\"\n    echo \"  Auth: ${MUX_AUTH}\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    echo \"\"\n    echo \"Provider config: ~/.mux/providers.jsonc\"\n    echo \"Secrets config:  ~/.mux/secrets.json\"\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  mux run \\\"<prompt>\\\"         Run agent task (CLI)\"\n    echo \"  mux server                  Start browser UI\"\n    echo \"  mux desktop                 Launch desktop app\"\n    echo \"  mux acp                     ACP bridge (editor integrations)\"\n    echo \"  flox activate -s            Start browser UI as Flox service\"\n    echo \"\"\n    echo \"Run options:\"\n    echo \"  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)\"\n    echo \"  -r <runtime>     Runtime: local, worktree, docker, ssh\"\n    echo \"  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX\"\n    echo \"  -b <usd>         Budget limit in USD\"\n    echo \"  --mode plan      Plan before executing\"\n    echo \"  --json           NDJSON output for scripting\"\n}\n",
+      "fish": "function mux-info\n    echo \"Mux Environment Configuration\"\n    echo \"\"\n    echo \"Server:\"\n    echo \"  Host: $MUX_HOST\"\n    echo \"  Port: $MUX_PORT\"\n    echo \"  URL:  http://$MUX_HOST:$MUX_PORT\"\n    echo \"  Auth: $MUX_AUTH\"\n    echo \"\"\n    echo \"API Keys:\"\n    if test -n \"$ANTHROPIC_API_KEY\"\n        echo \"  Anthropic: set\"\n    else\n        echo \"  Anthropic: not set\"\n    end\n    if test -n \"$OPENAI_API_KEY\"\n        echo \"  OpenAI: set\"\n    else\n        echo \"  OpenAI: not set\"\n    end\n    echo \"\"\n    echo \"Provider config: ~/.mux/providers.jsonc\"\n    echo \"Secrets config:  ~/.mux/secrets.json\"\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  mux run \\\"<prompt>\\\"         Run agent task (CLI)\"\n    echo \"  mux server                  Start browser UI\"\n    echo \"  mux desktop                 Launch desktop app\"\n    echo \"  mux acp                     ACP bridge (editor integrations)\"\n    echo \"  flox activate -s            Start browser UI as Flox service\"\n    echo \"\"\n    echo \"Run options:\"\n    echo \"  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)\"\n    echo \"  -r <runtime>     Runtime: local, worktree, docker, ssh\"\n    echo \"  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX\"\n    echo \"  -b <usd>         Budget limit in USD\"\n    echo \"  --mode plan      Plan before executing\"\n    echo \"  --json           NDJSON output for scripting\"\nend\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    },
+    "services": {
+      "mux-server": {
+        "command": "AUTH_FLAG=\"\"\nif [ \"$MUX_AUTH\" = \"false\" ]; then\n  AUTH_FLAG=\"--no-auth\"\nfi\n\n# Electron needs a display server; use xvfb-run on headless Linux\nif [ \"$(uname)\" = \"Linux\" ] && [ -z \"$DISPLAY\" ] && command -v xvfb-run >/dev/null 2>&1; then\n  export ELECTRON_DISABLE_GPU=1\n  exec xvfb-run --auto-servernum mux server --host \"$MUX_HOST\" --port \"$MUX_PORT\" $AUTH_FLAG\nelse\n  exec mux server --host \"$MUX_HOST\" --port \"$MUX_PORT\" $AUTH_FLAG\nfi\n",
+        "is-daemon": false
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "mux",
+      "broken": false,
+      "derivation": "/nix/store/s42r3niyfk516nq2wy21zma1wvk9b5dx-mux-0.22.0.drv",
+      "description": "Mux - Desktop app for isolated, parallel agentic development",
+      "install_id": "mux",
+      "license": "AGPL-3.0-only",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=312206258e237b4b88fa13379b9189677c3b002e",
+      "name": "mux-0.22.0",
+      "pname": "mux",
+      "rev": "312206258e237b4b88fa13379b9189677c3b002e",
+      "rev_count": 80,
+      "rev_date": "2026-04-07T10:37:09Z",
+      "scrape_date": "2026-04-07T10:43:07.116141511Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.22.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dmrjs32z07zpqlq4wyim7m9zc6x97b5x-mux-0.22.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "mux",
+      "priority": 5
+    },
+    {
+      "attr_path": "mux",
+      "broken": false,
+      "derivation": "/nix/store/nlwmlhi8x93m5g492hacj7xzzffx2wjv-mux-0.22.0.drv",
+      "description": "Mux - Desktop app for isolated, parallel agentic development",
+      "install_id": "mux",
+      "license": "AGPL-3.0-only",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools?rev=4871a7dfd666140929b46fa17d34e904eb459257",
+      "name": "mux-0.22.0",
+      "pname": "mux",
+      "rev": "4871a7dfd666140929b46fa17d34e904eb459257",
+      "rev_count": 79,
+      "rev_date": "2026-04-07T10:28:14Z",
+      "scrape_date": "2026-04-07T10:43:07.116150086Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.22.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vlp7hw69inygpnd08qic5m0j1277s92v-mux-0.22.0"
+      },
+      "system": "aarch64-linux",
+      "group": "mux",
+      "priority": 5
+    },
+    {
+      "attr_path": "mux",
+      "broken": false,
+      "derivation": "/nix/store/xvb21p1xlvw3rcns5dqdqdagjn22ra7r-mux-0.22.0.drv",
+      "description": "Mux - Desktop app for isolated, parallel agentic development",
+      "install_id": "mux",
+      "license": "AGPL-3.0-only",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=312206258e237b4b88fa13379b9189677c3b002e",
+      "name": "mux-0.22.0",
+      "pname": "mux",
+      "rev": "312206258e237b4b88fa13379b9189677c3b002e",
+      "rev_count": 80,
+      "rev_date": "2026-04-07T10:37:09Z",
+      "scrape_date": "2026-04-07T10:43:07.116151892Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.22.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/98albjaa1bf06kq7fxdw1j88ynhxg0mg-mux-0.22.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "mux",
+      "priority": 5
+    },
+    {
+      "attr_path": "mux",
+      "broken": false,
+      "derivation": "/nix/store/q5dh4cpq896vs6hzsv5b45dnpaxr3c7s-mux-0.22.0.drv",
+      "description": "Mux - Desktop app for isolated, parallel agentic development",
+      "install_id": "mux",
+      "license": "AGPL-3.0-only",
+      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=4871a7dfd666140929b46fa17d34e904eb459257",
+      "name": "mux-0.22.0",
+      "pname": "mux",
+      "rev": "4871a7dfd666140929b46fa17d34e904eb459257",
+      "rev_count": 79,
+      "rev_date": "2026-04-07T10:28:14Z",
+      "scrape_date": "2026-04-07T10:43:07.116153342Z",
+      "stabilities": [
+        "unstable",
+        "staging",
+        "stable"
+      ],
+      "unfree": false,
+      "version": "0.22.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/i5nzmb9rr9abrh90irc36jgfiwggmwbg-mux-0.22.0"
+      },
+      "system": "x86_64-linux",
+      "group": "mux",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/0rz5012a1mncwvhjxmlxmd1sbl3098qn-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:31.721211Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ccd4fyjaa0hmvic3a0x0lak1akm1wbf9-bat-0.26.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/gb3ci4ykq5avscr3n9f7xfpj33xdsw4c-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:56.152680Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g11dl0f63i53kaw2ki0kk8bycy99ax1v-bat-0.26.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/clmnmqx3ibq8n46m6q6p79q71w7idv5f-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:04:59.541381Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/mysappv2jzlb7q13scn0836jwpaf6gc4-bat-0.26.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/n8vbndgcm30iy5x1bapgi89xn0vbwsd4-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:05.907325Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1n63v53bzw0j9qkivrqcmgx53kng3l7z-bat-0.26.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/9f2i20yq3jp4yhaxk3qnxhazp7syqmvn-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:32.259858Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/gki71gmvlp9d86rqh8b4b6wp7wg396qg-curl-8.18.0-bin",
+        "dev": "/nix/store/2xrq7swcyjrvsbp5wk4qivwbzrqxasxr-curl-8.18.0-dev",
+        "devdoc": "/nix/store/vrff2ib15qhdig8ich94visj28x9m931-curl-8.18.0-devdoc",
+        "man": "/nix/store/wd2w49jdql1n3c6cg4qimqbq5k6m6j4f-curl-8.18.0-man",
+        "out": "/nix/store/7bxrgix4f88r6xvidyl035vxdbn2rnyk-curl-8.18.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/g29rj5wpfqyckm3f1b3jrrslqgaw9rzm-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:56.828607Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/asrq77x05br50nmmv7akp0ry2n1xxrb4-curl-8.18.0-bin",
+        "debug": "/nix/store/b4mmgwziiqa4jirsrw162r794zi48fz6-curl-8.18.0-debug",
+        "dev": "/nix/store/nxarksm7m9ll9p3r87issf0389hwdz3l-curl-8.18.0-dev",
+        "devdoc": "/nix/store/canqrd4xwygamx7qw3j7dd923l7bmg9n-curl-8.18.0-devdoc",
+        "man": "/nix/store/8z4wa6lizr4gzfpmj3928c2wjk1ldslf-curl-8.18.0-man",
+        "out": "/nix/store/qxkiwf9mg5x9jijpmk0hmz9nkd4xlzph-curl-8.18.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/gkm06vy5lkp1n6wlgrr7vvfirf2zgs0g-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:04:59.969284Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/0h4avs7960hxfgmlayshci76pdd7j1zp-curl-8.18.0-bin",
+        "dev": "/nix/store/rpw29w7jmwrp32bp72s805rh0rchp7fh-curl-8.18.0-dev",
+        "devdoc": "/nix/store/4sbv3g3n1nxlq5nfasd194h893k5nkm9-curl-8.18.0-devdoc",
+        "man": "/nix/store/lb59x8lcbiqjph4gfl5a99l8wh1ckvfy-curl-8.18.0-man",
+        "out": "/nix/store/sdf4br1wm1s10y67yz062mc1vmkykm0f-curl-8.18.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/1wrll60slxlmvb56g6zk7amw3pwylcng-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:06.566385Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/6j3b51rypymg5inhr27rcc7in5cxbvjz-curl-8.18.0-bin",
+        "debug": "/nix/store/9gvh3ymdh38n7lkbjd61cwx6ff510wpb-curl-8.18.0-debug",
+        "dev": "/nix/store/m2b7j4s1jlhlnpxhpf2sjwvd2nn0x8hx-curl-8.18.0-dev",
+        "devdoc": "/nix/store/r2xswgdxf2z7h9vnirhzkzj4k721nbhh-curl-8.18.0-devdoc",
+        "man": "/nix/store/gxspg74jdwaxdb80giixl4517nw6q139-curl-8.18.0-man",
+        "out": "/nix/store/dhdysbgmgqp936mvkf5f9s8fh2mk68k5-curl-8.18.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/ahg9ydap0brb8kdmy9b62rwgr0xx8qm0-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:32.999299Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/9h82rkslybd153w7rz4ld5vxqz82jf3s-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/g4hra7xls04bs78rmbacvrkjzigs19b0-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/kmhccbchascywfqvimy9m6p2skr4h7nh-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:58.157078Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/vzzil4z2363pzav0mgxqyllkpxmk3jry-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/a79mwy2j4i15i2kmvm7j23jn89rrph8m-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/99y3ds3lbh9ymfvcbxdsddd91x6dwcy1-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/jx4bdzj3vfhj27isz1whxgzpkz2wpa6j-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:05:00.745256Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/cfmh4xaba4n924k88a25agll7fivwbbm-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/blfmq8dj9108wlqpi9cibvm7qrp5abqx-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/dk9c3ichl9cgbgk7l0w7dfqf6jvghcyq-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:07.879614Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/44ypzal8ivxpgv03icvf4pkbfyhrsw3i-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/5dda4wgpms0xyc7ml8imp07a9zb9kyfb-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/s7f41ijzn16w4c3rw219sxflc7j6pz66-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "xvfb-run",
+      "broken": false,
+      "derivation": "/nix/store/2xgr2z8gxbw8rban05zq9q4yj1mpj3sq-xvfb-run-1+g87f6705.drv",
+      "description": "Convenience script to run a virtualized X-Server",
+      "install_id": "xvfb-run",
+      "license": "GPL-2.0-only",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "xvfb-run-1+g87f6705",
+      "pname": "xvfb-run",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:38:52.518533Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1+g87f6705",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/48k1ldazzz8f4msif0wjz5bj2nh7qfgz-xvfb-run-1+g87f6705"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "xvfb-run",
+      "broken": false,
+      "derivation": "/nix/store/n7mr658312rijdaxy476zwa9q5dvbb8n-xvfb-run-1+g87f6705.drv",
+      "description": "Convenience script to run a virtualized X-Server",
+      "install_id": "xvfb-run",
+      "license": "GPL-2.0-only",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "xvfb-run-1+g87f6705",
+      "pname": "xvfb-run",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:42:56.125260Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1+g87f6705",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/sbzdw6r5mw722sm93lr86qq07vpm28xj-xvfb-run-1+g87f6705"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}

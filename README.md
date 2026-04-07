@@ -50,6 +50,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**groq-code-cli**](./groq-code-cli) - Groq-powered coding CLI
 - [**forge**](./forge) - Forge development tool
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
+- [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces
 - [**coderabbit-cli**](./coderabbit-cli) - CodeRabbit code review tool
 
 ### Local AI/ML Infrastructure
