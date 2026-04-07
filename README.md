@@ -35,6 +35,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ### AI Coding Tools
 
+- [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
 - [**aider**](./aider) - Aider AI pair programming with multi-provider support (Anthropic, OpenAI, Ollama, etc.)
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)

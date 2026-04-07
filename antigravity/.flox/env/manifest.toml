@@ -1,0 +1,119 @@
+schema-version = "1.11.0"
+
+[install]
+antigravity-fhs.pkg-path = "antigravity-fhs"
+antigravity-fhs.systems = ["aarch64-linux", "x86_64-linux"]
+antigravity.pkg-path = "antigravity"
+antigravity.systems = ["aarch64-darwin"]
+antigravity.pkg-group = "darwin"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Antigravity uses a Google Account for authentication.
+# No API keys needed for the free tier; Pro/Ultra unlock higher rate limits.
+
+[hook]
+on-activate = '''
+echo ""
+echo "Google Antigravity environment ready"
+echo ""
+echo "Commands:"
+echo "  antigravity                Open Antigravity IDE"
+echo "  antigravity <dir>          Open a project directory"
+echo "  antigravity-info           Show configuration"
+echo ""
+echo "First run:"
+echo "  Sign in with your Google Account when prompted."
+echo "  Gemini models are available immediately on the free tier."
+echo ""
+'''
+
+[profile]
+bash = '''
+antigravity-info() {
+    echo "Google Antigravity Environment"
+    echo ""
+    echo "Commands:"
+    echo "  antigravity                Open Antigravity IDE"
+    echo "  antigravity <dir>          Open a project directory"
+    echo "  antigravity --help         Show CLI options"
+    echo ""
+    echo "IDE Shortcuts:"
+    echo "  Cmd/Ctrl+I       Inline AI command"
+    echo "  Manager View     Spawn and monitor parallel agents"
+    echo ""
+    echo "Agent Configuration:"
+    echo "  agents.md         Project-level agent instructions"
+    echo "  skills.md         Reusable agent skills"
+    echo ""
+    echo "Supported Models:"
+    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
+    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
+    echo ""
+    echo "Account: Sign in at antigravity.google"
+    echo "Docs:    https://antigravity.google/docs"
+}
+export -f antigravity-info
+'''
+
+zsh = '''
+antigravity-info() {
+    echo "Google Antigravity Environment"
+    echo ""
+    echo "Commands:"
+    echo "  antigravity                Open Antigravity IDE"
+    echo "  antigravity <dir>          Open a project directory"
+    echo "  antigravity --help         Show CLI options"
+    echo ""
+    echo "IDE Shortcuts:"
+    echo "  Cmd/Ctrl+I       Inline AI command"
+    echo "  Manager View     Spawn and monitor parallel agents"
+    echo ""
+    echo "Agent Configuration:"
+    echo "  agents.md         Project-level agent instructions"
+    echo "  skills.md         Reusable agent skills"
+    echo ""
+    echo "Supported Models:"
+    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
+    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
+    echo ""
+    echo "Account: Sign in at antigravity.google"
+    echo "Docs:    https://antigravity.google/docs"
+}
+'''
+
+fish = '''
+function antigravity-info
+    echo "Google Antigravity Environment"
+    echo ""
+    echo "Commands:"
+    echo "  antigravity                Open Antigravity IDE"
+    echo "  antigravity <dir>          Open a project directory"
+    echo "  antigravity --help         Show CLI options"
+    echo ""
+    echo "IDE Shortcuts:"
+    echo "  Cmd/Ctrl+I       Inline AI command"
+    echo "  Manager View     Spawn and monitor parallel agents"
+    echo ""
+    echo "Agent Configuration:"
+    echo "  agents.md         Project-level agent instructions"
+    echo "  skills.md         Reusable agent skills"
+    echo ""
+    echo "Supported Models:"
+    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
+    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
+    echo ""
+    echo "Account: Sign in at antigravity.google"
+    echo "Docs:    https://antigravity.google/docs"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
