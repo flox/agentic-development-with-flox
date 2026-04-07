@@ -50,6 +50,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
 - [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces
+- [**nanobot**](./nanobot) - Nanobot ultra-lightweight personal AI agent with multi-channel chat and persistent memory
 - [**nanocoder**](./nanocoder) - Nanocoder local-first CLI coding agent with multi-provider support
 - [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI

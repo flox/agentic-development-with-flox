@@ -1,0 +1,222 @@
+schema-version = "1.11.0"
+
+[install]
+# Python 3.12 (not 3.13 — typer/click incompatibility)
+python312.pkg-path = "python312Full"
+uv.pkg-path = "uv"
+# Node.js for the WhatsApp bridge
+nodejs.pkg-path = "nodejs"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+# OPENROUTER_API_KEY = ""  (recommended - access to all models)
+
+# Config lives in ~/.nanobot/config.json
+# Run 'nanobot onboard --wizard' for interactive setup
+
+[hook]
+on-activate = '''
+# === VENV BOOTSTRAP ===
+NANOBOT_VENV="$FLOX_ENV_CACHE/venv"
+
+if [ ! -d "$NANOBOT_VENV" ]; then
+  echo "Creating nanobot venv..."
+  uv venv "$NANOBOT_VENV" --python python3.12 --quiet
+fi
+
+# Install nanobot-ai if not present
+if [ ! -f "$NANOBOT_VENV/bin/nanobot" ]; then
+  echo "Installing nanobot-ai..."
+  uv pip install --python "$NANOBOT_VENV/bin/python" nanobot-ai==0.1.5 --quiet
+fi
+
+# Activate the venv
+export VIRTUAL_ENV="$NANOBOT_VENV"
+export PATH="$NANOBOT_VENV/bin:$PATH"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Nanobot environment ready"
+echo ""
+echo "Commands:"
+echo "  nanobot onboard --wizard     Interactive first-time setup"
+echo "  nanobot agent                Interactive chat mode"
+echo "  nanobot agent -m \"<msg>\"     Single-message chat"
+echo "  nanobot gateway              Start channel gateway (Telegram, Discord, WhatsApp, etc.)"
+echo "  nanobot serve                Start OpenAI-compatible API server"
+echo "  nanobot-info                 Show configuration"
+echo ""
+
+# First-time setup check
+if [ ! -f "$HOME/.nanobot/config.json" ]; then
+  echo "First time? Run: nanobot onboard --wizard"
+  echo ""
+fi
+'''
+
+[services.nanobot-gateway]
+command = """
+export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+unset PYTHONPATH
+exec nanobot gateway 2>&1
+"""
+is-daemon = false
+
+[profile]
+bash = '''
+export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Wrapper to unset PYTHONPATH before running nanobot
+nanobot() {
+    (unset PYTHONPATH; command nanobot "$@")
+}
+export -f nanobot
+
+nanobot-info() {
+    echo "Nanobot Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo ""
+    echo "Config: ~/.nanobot/config.json"
+    echo "Venv:   $FLOX_ENV_CACHE/venv"
+    echo ""
+    echo "Commands:"
+    echo "  nanobot onboard --wizard     Interactive first-time setup"
+    echo "  nanobot agent                Interactive chat mode"
+    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
+    echo "  nanobot gateway              Start channel gateway"
+    echo "  nanobot serve                Start OpenAI-compatible API server"
+    echo "  nanobot status               Show status"
+    echo "  nanobot channels status      Show channel status"
+    echo "  flox activate -s             Start gateway as Flox service"
+    echo ""
+    echo "Chat commands (in-session):"
+    echo "  /new       New conversation"
+    echo "  /dream     Run memory consolidation"
+    echo "  /stop      Stop current task"
+    echo "  /status    Show status"
+    echo ""
+    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
+    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
+}
+export -f nanobot-info
+'''
+
+zsh = '''
+export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Wrapper to unset PYTHONPATH before running nanobot
+nanobot() {
+    (unset PYTHONPATH; command nanobot "$@")
+}
+
+nanobot-info() {
+    echo "Nanobot Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo ""
+    echo "Config: ~/.nanobot/config.json"
+    echo "Venv:   $FLOX_ENV_CACHE/venv"
+    echo ""
+    echo "Commands:"
+    echo "  nanobot onboard --wizard     Interactive first-time setup"
+    echo "  nanobot agent                Interactive chat mode"
+    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
+    echo "  nanobot gateway              Start channel gateway"
+    echo "  nanobot serve                Start OpenAI-compatible API server"
+    echo "  nanobot status               Show status"
+    echo "  nanobot channels status      Show channel status"
+    echo "  flox activate -s             Start gateway as Flox service"
+    echo ""
+    echo "Chat commands (in-session):"
+    echo "  /new       New conversation"
+    echo "  /dream     Run memory consolidation"
+    echo "  /stop      Stop current task"
+    echo "  /status    Show status"
+    echo ""
+    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
+    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
+}
+'''
+
+fish = '''
+set -gx VIRTUAL_ENV "$FLOX_ENV_CACHE/venv"
+set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
+
+# Wrapper to unset PYTHONPATH before running nanobot
+function nanobot
+    set -l _had_pp (set -q PYTHONPATH; and echo 1; or echo 0)
+    set -l _saved_pp $PYTHONPATH
+    set -e PYTHONPATH
+    command nanobot $argv
+    if test "$_had_pp" = "1"
+        set -gx PYTHONPATH $_saved_pp
+    end
+end
+
+function nanobot-info
+    echo "Nanobot Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    if test -n "$OPENROUTER_API_KEY"
+        echo "  OpenRouter: set"
+    else
+        echo "  OpenRouter: not set"
+    end
+    echo ""
+    echo "Config: ~/.nanobot/config.json"
+    echo "Venv:   $FLOX_ENV_CACHE/venv"
+    echo ""
+    echo "Commands:"
+    echo "  nanobot onboard --wizard     Interactive first-time setup"
+    echo "  nanobot agent                Interactive chat mode"
+    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
+    echo "  nanobot gateway              Start channel gateway"
+    echo "  nanobot serve                Start OpenAI-compatible API server"
+    echo "  nanobot status               Show status"
+    echo "  nanobot channels status      Show channel status"
+    echo "  flox activate -s             Start gateway as Flox service"
+    echo ""
+    echo "Chat commands (in-session):"
+    echo "  /new       New conversation"
+    echo "  /dream     Run memory consolidation"
+    echo "  /stop      Stop current task"
+    echo "  /status    Show status"
+    echo ""
+    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
+    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
