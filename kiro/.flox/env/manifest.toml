@@ -1,19 +1,5 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##   https://flox.dev/docs/reference/command-reference/manifest.toml/
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
-
-## Install Packages --------------------------------------------------
-##  $ flox install gum  <- puts a package in [install] section below
-##  $ flox search gum   <- search for a package
-##  $ flox show gum     <- show all versions of a package
-## -------------------------------------------------------------------
 [install]
 # Use kiro-fhs on x86_64-linux for better extension compatibility
 kiro-fhs.pkg-path = "kiro-fhs"
@@ -23,101 +9,109 @@ kiro-fhs.systems = ["x86_64-linux"]
 kiro.pkg-path = "kiro"
 kiro.systems = ["aarch64-darwin", "x86_64-darwin"]
 
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
 
-## Environment Variables ---------------------------------------------
-##  ... available for use in the activated environment
-##      as well as [hook], [profile] scripts and [services] below.
-## -------------------------------------------------------------------
 [vars]
 
-
-## Activation Hook ---------------------------------------------------
-##  ... run by _bash_ shell when you run 'flox activate'.
-## -------------------------------------------------------------------
 [hook]
 on-activate = '''
 echo ""
-echo "Kiro - Agentic AI Development Platform"
+echo "Kiro environment ready"
 echo ""
-
-# First-time setup check
-if [ ! -f "$HOME/.config/kiro/settings.json" ] && [ ! -f "$HOME/.kiro/settings.json" ]; then
-  echo "First time? Run 'kiro-cli login' to authenticate."
-  echo ""
-fi
-
-echo "CLI commands:"
-echo "  kiro-cli login               # Authenticate with GitHub/Google/AWS"
-echo "  kiro-cli chat                # Start AI chat session"
-echo "  kiro-cli translate \"<text>\"  # Natural language to shell commands"
-echo "  kiro-cli agent               # Use custom agents"
+echo "Commands:"
+echo "  kiro                           Open Kiro IDE"
+echo "  kiro <dir>                     Open a project directory"
+echo "  kiro chat \"<prompt>\"           AI chat session (agent mode)"
+echo "  kiro chat -m ask \"<prompt>\"    Ask mode (no edits)"
+echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
+echo "  kiro serve-web                 Run Kiro in the browser"
+echo "  kiro tunnel                    Create a secure tunnel"
+echo "  kiro-info                      Show configuration"
 echo ""
-echo "Configuration:"
-echo "  ~/.config/kiro/              # Config directory (credentials stored here)"
-echo "  kiro-cli settings list       # View/manage settings"
-echo ""
-echo "Documentation: https://kiro.dev/docs/cli"
+echo "Docs: https://kiro.dev/docs"
 echo ""
 '''
 
-
-## Profile script ----------------------------------------------------
-## ... sourced by _your shell_ when you run 'flox activate'.
-## -------------------------------------------------------------------
 [profile]
-# common = '''
-#   gum style \
-#   --foreground 212 --border-foreground 212 --border double \
-#   --align center --width 50 --margin "1 2" --padding "2 4" \
-#     $INTRO_MESSAGE
-# '''
-## Shell-specific customizations such as setting aliases go here:
-# bash = ...
-# zsh  = ...
-# fish = ...
+bash = '''
+kiro-info() {
+    echo "Kiro Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  kiro                           Open Kiro IDE"
+    echo "  kiro <dir>                     Open a project directory"
+    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
+    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
+    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
+    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
+    echo "  kiro serve-web                 Run Kiro in the browser"
+    echo "  kiro tunnel                    Create a secure tunnel"
+    echo "  kiro --add-mcp <json>          Add an MCP server"
+    echo ""
+    echo "Chat modes:"
+    echo "  ask       Ask questions without making edits"
+    echo "  edit      Make targeted edits"
+    echo "  agent     Autonomous agent (default)"
+    echo ""
+    echo "Docs: https://kiro.dev/docs"
+}
+export -f kiro-info
+'''
 
+zsh = '''
+kiro-info() {
+    echo "Kiro Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  kiro                           Open Kiro IDE"
+    echo "  kiro <dir>                     Open a project directory"
+    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
+    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
+    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
+    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
+    echo "  kiro serve-web                 Run Kiro in the browser"
+    echo "  kiro tunnel                    Create a secure tunnel"
+    echo "  kiro --add-mcp <json>          Add an MCP server"
+    echo ""
+    echo "Chat modes:"
+    echo "  ask       Ask questions without making edits"
+    echo "  edit      Make targeted edits"
+    echo "  agent     Autonomous agent (default)"
+    echo ""
+    echo "Docs: https://kiro.dev/docs"
+}
+'''
 
-## Services ---------------------------------------------------------
-##  $ flox services start             <- Starts all services
-##  $ flox services status            <- Status of running services
-##  $ flox activate --start-services  <- Activates & starts all
-## ------------------------------------------------------------------
-[services]
-# myservice.command = "python3 -m http.server"
+fish = '''
+function kiro-info
+    echo "Kiro Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  kiro                           Open Kiro IDE"
+    echo "  kiro <dir>                     Open a project directory"
+    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
+    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
+    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
+    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
+    echo "  kiro serve-web                 Run Kiro in the browser"
+    echo "  kiro tunnel                    Create a secure tunnel"
+    echo "  kiro --add-mcp <json>          Add an MCP server"
+    echo ""
+    echo "Chat modes:"
+    echo "  ask       Ask questions without making edits"
+    echo "  edit      Make targeted edits"
+    echo "  agent     Autonomous agent (default)"
+    echo ""
+    echo "Docs: https://kiro.dev/docs"
+end
+'''
 
-
-## Include ----------------------------------------------------------
-## ... environments to create a composed environment
-## ------------------------------------------------------------------
-[include]
-# environments = [
-#     { dir = "../common" }
-# ]
-
-
-## Build and publish your own packages ------------------------------
-##  $ flox build
-##  $ flox publish
-## ------------------------------------------------------------------
-[build]
-# [build.myproject]
-# description = "The coolest project ever"
-# version = "0.0.1"
-# command = """
-#   mkdir -p $out/bin
-#   cargo build --release
-#   cp target/release/myproject $out/bin/myproject
-# """
-
-
-## Other Environment Options -----------------------------------------
 [options]
-# Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
-# Uncomment to disable CUDA detection.
-# cuda-detection = false
+systems = [
+  "aarch64-darwin",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
