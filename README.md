@@ -84,6 +84,7 @@ aider --model ollama_chat/gemma4
 - [**nullclaw**](./nullclaw) - NullClaw ultra-minimal AI assistant in Zig with 50+ providers and 19 channels
 - [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
+- [**openhands**](./openhands) - OpenHands AI-driven software development agent with sandboxed Docker execution
 - [**qwen-code**](./qwen-code) - Qwen code model CLI
 - [**ruflo**](./ruflo) - Ruflo multi-agent AI orchestration platform for Claude Code with self-learning swarms
 - [**zeroclaw**](./zeroclaw) - Zeroclaw personal AI assistant infrastructure in Rust with multi-channel messaging and 70+ tools
