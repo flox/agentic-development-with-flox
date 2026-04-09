@@ -82,6 +82,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**backlog-md**](./backlog-md) - Markdown-native task manager and Kanban board with MCP integration
 - [**catnip**](./catnip) - Multi-agent orchestration for running multiple Claude Code sessions in parallel
 - [**claudebox**](./claudebox) - Lightweight sandbox wrapper for Claude Code with command transparency
+- [**claude-squad**](./claude-squad) - TUI for managing multiple AI coding agents in parallel with tmux isolation
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents

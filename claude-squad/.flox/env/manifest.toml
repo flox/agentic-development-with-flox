@@ -1,0 +1,176 @@
+schema-version = "1.11.0"
+
+[install]
+claude-squad.pkg-path = "flox/claude-squad"
+claude-squad.pkg-group = "claude-squad"
+# tmux is required at runtime. If you experience "error capturing pane content"
+# or "timed out waiting for tmux session", you may have a tmux version mismatch
+# between the Flox-provided tmux and an existing tmux server. In that case,
+# comment out the tmux line below and use your system tmux instead.
+tmux.pkg-path = "tmux"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+# GitHub CLI for PR workflows (optional but recommended)
+gh.pkg-path = "gh"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+CLAUDE_SQUAD_HOME = "$FLOX_ENV_CACHE/claude-squad"
+
+[hook]
+on-activate = '''
+# === CLAUDE SQUAD HOME ===
+export CLAUDE_SQUAD_HOME="${CLAUDE_SQUAD_HOME:-$FLOX_ENV_CACHE/claude-squad}"
+mkdir -p "$CLAUDE_SQUAD_HOME"
+
+# === PREFLIGHT CHECKS ===
+echo ""
+echo "Claude Squad environment ready"
+echo ""
+
+# Check tmux
+if command -v tmux >/dev/null 2>&1; then
+  echo "  tmux: $(tmux -V)"
+else
+  echo "  WARNING: tmux not found -- Claude Squad requires tmux for session isolation"
+fi
+
+# Check available agents
+echo "  Available agents:"
+command -v claude >/dev/null 2>&1 && echo "    claude (Claude Code)" || true
+command -v codex >/dev/null 2>&1 && echo "    codex (OpenAI Codex)" || true
+command -v gemini >/dev/null 2>&1 && echo "    gemini (Google Gemini CLI)" || true
+command -v aider >/dev/null 2>&1 && echo "    aider (Aider)" || true
+
+# Check if any agents found
+if ! command -v claude >/dev/null 2>&1 && \
+   ! command -v codex >/dev/null 2>&1 && \
+   ! command -v gemini >/dev/null 2>&1 && \
+   ! command -v aider >/dev/null 2>&1; then
+  echo "    (none detected -- install an agent or use cs -p \"<command>\")"
+fi
+echo ""
+
+echo "Commands:"
+echo "  cs                           Launch TUI (default agent: claude)"
+echo "  cs -p \"codex\"                Launch with a specific agent"
+echo "  cs -y                        Auto-accept mode"
+echo "  cs reset                     Reset all stored instances"
+echo "  cs-info                      Show configuration"
+echo ""
+echo "Config: ~/.claude-squad/config.json"
+echo ""
+'''
+
+[profile]
+bash = '''
+cs-info() {
+    echo "Claude Squad Environment Configuration"
+    echo ""
+    echo "CLAUDE_SQUAD_HOME: ${CLAUDE_SQUAD_HOME}"
+    echo "Config: ~/.claude-squad/config.json"
+    echo ""
+    echo "Available agents:"
+    command -v claude >/dev/null 2>&1 && echo "  claude (Claude Code)" || true
+    command -v codex >/dev/null 2>&1 && echo "  codex (OpenAI Codex)" || true
+    command -v gemini >/dev/null 2>&1 && echo "  gemini (Google Gemini CLI)" || true
+    command -v aider >/dev/null 2>&1 && echo "  aider (Aider)" || true
+    echo ""
+    echo "Commands:"
+    echo "  cs                           Launch TUI"
+    echo "  cs -p \"<agent>\"              Launch with a specific agent"
+    echo "  cs -y                        Auto-accept mode"
+    echo "  cs reset                     Reset all stored instances"
+    echo "  cs debug                     Print config paths"
+    echo "  cs version                   Print version"
+    echo ""
+    echo "TUI keys:"
+    echo "  n / N       New session (with/without prompt)"
+    echo "  D           Kill session"
+    echo "  Enter / o   Attach to session"
+    echo "  ctrl-q      Detach from session"
+    echo "  s           Commit and push"
+    echo "  c           Checkout (commit + pause)"
+    echo "  r           Resume paused session"
+    echo "  Tab         Toggle preview/diff view"
+    echo "  ?           Help"
+}
+export -f cs-info
+'''
+
+zsh = '''
+cs-info() {
+    echo "Claude Squad Environment Configuration"
+    echo ""
+    echo "CLAUDE_SQUAD_HOME: ${CLAUDE_SQUAD_HOME}"
+    echo "Config: ~/.claude-squad/config.json"
+    echo ""
+    echo "Available agents:"
+    command -v claude >/dev/null 2>&1 && echo "  claude (Claude Code)" || true
+    command -v codex >/dev/null 2>&1 && echo "  codex (OpenAI Codex)" || true
+    command -v gemini >/dev/null 2>&1 && echo "  gemini (Google Gemini CLI)" || true
+    command -v aider >/dev/null 2>&1 && echo "  aider (Aider)" || true
+    echo ""
+    echo "Commands:"
+    echo "  cs                           Launch TUI"
+    echo "  cs -p \"<agent>\"              Launch with a specific agent"
+    echo "  cs -y                        Auto-accept mode"
+    echo "  cs reset                     Reset all stored instances"
+    echo "  cs debug                     Print config paths"
+    echo "  cs version                   Print version"
+    echo ""
+    echo "TUI keys:"
+    echo "  n / N       New session (with/without prompt)"
+    echo "  D           Kill session"
+    echo "  Enter / o   Attach to session"
+    echo "  ctrl-q      Detach from session"
+    echo "  s           Commit and push"
+    echo "  c           Checkout (commit + pause)"
+    echo "  r           Resume paused session"
+    echo "  Tab         Toggle preview/diff view"
+    echo "  ?           Help"
+}
+'''
+
+fish = '''
+function cs-info
+    echo "Claude Squad Environment Configuration"
+    echo ""
+    echo "CLAUDE_SQUAD_HOME: $CLAUDE_SQUAD_HOME"
+    echo "Config: ~/.claude-squad/config.json"
+    echo ""
+    echo "Available agents:"
+    command -v claude >/dev/null 2>&1; and echo "  claude (Claude Code)"
+    command -v codex >/dev/null 2>&1; and echo "  codex (OpenAI Codex)"
+    command -v gemini >/dev/null 2>&1; and echo "  gemini (Google Gemini CLI)"
+    command -v aider >/dev/null 2>&1; and echo "  aider (Aider)"
+    echo ""
+    echo "Commands:"
+    echo "  cs                           Launch TUI"
+    echo "  cs -p \"<agent>\"              Launch with a specific agent"
+    echo "  cs -y                        Auto-accept mode"
+    echo "  cs reset                     Reset all stored instances"
+    echo "  cs debug                     Print config paths"
+    echo "  cs version                   Print version"
+    echo ""
+    echo "TUI keys:"
+    echo "  n / N       New session (with/without prompt)"
+    echo "  D           Kill session"
+    echo "  Enter / o   Attach to session"
+    echo "  ctrl-q      Detach from session"
+    echo "  s           Commit and push"
+    echo "  c           Checkout (commit + pause)"
+    echo "  r           Resume paused session"
+    echo "  Tab         Toggle preview/diff view"
+    echo "  ?           Help"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
