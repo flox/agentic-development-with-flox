@@ -1,0 +1,130 @@
+schema-version = "1.11.0"
+
+[install]
+codex-monitor.pkg-path = "flox/codex-monitor"
+codex-monitor.pkg-group = "codex-monitor"
+codex.pkg-path = "codex"
+codex.pkg-group = "codex"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+CODEX_MONITOR_HOME = "$FLOX_ENV_CACHE/codex-monitor"
+
+[hook]
+on-activate = '''
+# === CODEX MONITOR HOME ===
+export CODEX_MONITOR_HOME="${CODEX_MONITOR_HOME:-$FLOX_ENV_CACHE/codex-monitor}"
+mkdir -p "$CODEX_MONITOR_HOME"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Codex Monitor environment ready"
+echo ""
+
+# Check for codex CLI
+if command -v codex >/dev/null 2>&1; then
+  echo "  Codex CLI: $(which codex)"
+else
+  echo "  WARNING: codex CLI not found in PATH"
+  echo "  Codex Monitor requires the Codex CLI to spawn agent sessions."
+  echo ""
+  echo "  Install options:"
+  echo "    npm install -g @openai/codex"
+  echo "    Or on x86_64-linux: already included via flox/codex"
+  echo ""
+fi
+
+echo "  CODEX_MONITOR_HOME: $CODEX_MONITOR_HOME"
+echo ""
+echo "Commands:"
+echo "  codex-monitor                Launch Codex Monitor"
+echo "  codex-monitor-info           Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+codex-monitor-info() {
+    echo "Codex Monitor Environment Configuration"
+    echo ""
+    echo "CODEX_MONITOR_HOME: ${CODEX_MONITOR_HOME}"
+    echo ""
+    if command -v codex >/dev/null 2>&1; then
+        echo "  Codex CLI: $(which codex)"
+    else
+        echo "  Codex CLI: NOT FOUND"
+        echo "  Install: npm install -g @openai/codex"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  codex-monitor                Launch Codex Monitor"
+    echo ""
+    echo "Features:"
+    echo "  Workspace management with per-workspace Codex agents"
+    echo "  Thread tracking (pin, rename, archive, resume)"
+    echo "  Git/GitHub integration (diffs, staging, PRs, issues)"
+    echo "  Composer with image attachments and skill autocomplete"
+    echo "  Remote daemon mode with Tailscale integration"
+}
+export -f codex-monitor-info
+'''
+
+zsh = '''
+codex-monitor-info() {
+    echo "Codex Monitor Environment Configuration"
+    echo ""
+    echo "CODEX_MONITOR_HOME: ${CODEX_MONITOR_HOME}"
+    echo ""
+    if command -v codex >/dev/null 2>&1; then
+        echo "  Codex CLI: $(which codex)"
+    else
+        echo "  Codex CLI: NOT FOUND"
+        echo "  Install: npm install -g @openai/codex"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  codex-monitor                Launch Codex Monitor"
+    echo ""
+    echo "Features:"
+    echo "  Workspace management with per-workspace Codex agents"
+    echo "  Thread tracking (pin, rename, archive, resume)"
+    echo "  Git/GitHub integration (diffs, staging, PRs, issues)"
+    echo "  Composer with image attachments and skill autocomplete"
+    echo "  Remote daemon mode with Tailscale integration"
+}
+'''
+
+fish = '''
+function codex-monitor-info
+    echo "Codex Monitor Environment Configuration"
+    echo ""
+    echo "CODEX_MONITOR_HOME: $CODEX_MONITOR_HOME"
+    echo ""
+    if command -v codex >/dev/null 2>&1
+        echo "  Codex CLI: "(which codex)
+    else
+        echo "  Codex CLI: NOT FOUND"
+        echo "  Install: npm install -g @openai/codex"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  codex-monitor                Launch Codex Monitor"
+    echo ""
+    echo "Features:"
+    echo "  Workspace management with per-workspace Codex agents"
+    echo "  Thread tracking (pin, rename, archive, resume)"
+    echo "  Git/GitHub integration (diffs, staging, PRs, issues)"
+    echo "  Composer with image attachments and skill autocomplete"
+    echo "  Remote daemon mode with Tailscale integration"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
