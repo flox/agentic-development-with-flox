@@ -84,6 +84,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**claudebox**](./claudebox) - Lightweight sandbox wrapper for Claude Code with command transparency
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
+- [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 
 ### MCP and Integration
 

@@ -1,0 +1,170 @@
+schema-version = "1.11.0"
+
+[install]
+# Python 3.14 (required by batrachian-toad)
+python314.pkg-path = "python314"
+uv.pkg-path = "uv"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Configuration is managed through Toad's in-app settings UI
+
+[hook]
+on-activate = '''
+# === VENV BOOTSTRAP ===
+TOAD_VENV="$FLOX_ENV_CACHE/venv"
+TOAD_SENTINEL="$FLOX_ENV_CACHE/.deps_installed"
+
+if [ ! -d "$TOAD_VENV" ]; then
+  echo "Creating toad venv..."
+  uv venv "$TOAD_VENV" --python python3.14 --quiet
+fi
+
+# Install batrachian-toad if not present
+if [ ! -f "$TOAD_SENTINEL" ]; then
+  echo "Installing batrachian-toad..."
+  uv pip install --python "$TOAD_VENV/bin/python" batrachian-toad --quiet
+  touch "$TOAD_SENTINEL"
+  echo ""
+fi
+
+# Activate the venv
+export VIRTUAL_ENV="$TOAD_VENV"
+export PATH="$TOAD_VENV/bin:$PATH"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Toad environment ready"
+echo ""
+echo "Commands:"
+echo "  toad                         Launch the TUI"
+echo "  toad ~/projects/my-app       Open a specific project"
+echo "  toad -a claude               Launch with a specific agent"
+echo "  toad serve                   Run as a web application"
+echo "  toad-info                    Show configuration"
+echo "  toad-update                  Update to latest version"
+echo ""
+'''
+
+[profile]
+bash = '''
+export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Wrapper to unset PYTHONPATH before running toad
+toad() {
+    (unset PYTHONPATH; command toad "$@")
+}
+export -f toad
+
+toad-info() {
+    echo "Toad Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  toad                         Launch the TUI"
+    echo "  toad ~/projects/my-app       Open a specific project"
+    echo "  toad -a <agent>              Launch with a specific agent"
+    echo "  toad serve                   Run as a web application"
+    echo "  toad --help                  Show all subcommands"
+    echo ""
+    echo "Supported agents:"
+    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
+    echo "  Open Hands, and more via Agent Client Protocol"
+    echo ""
+    echo "Venv: $FLOX_ENV_CACHE/venv"
+    echo "Update: toad-update"
+}
+export -f toad-info
+
+toad-update() {
+    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
+    rm -f "$FLOX_ENV_CACHE/.deps_installed"
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+}
+export -f toad-update
+'''
+
+zsh = '''
+export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Wrapper to unset PYTHONPATH before running toad
+toad() {
+    (unset PYTHONPATH; command toad "$@")
+}
+
+toad-info() {
+    echo "Toad Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  toad                         Launch the TUI"
+    echo "  toad ~/projects/my-app       Open a specific project"
+    echo "  toad -a <agent>              Launch with a specific agent"
+    echo "  toad serve                   Run as a web application"
+    echo "  toad --help                  Show all subcommands"
+    echo ""
+    echo "Supported agents:"
+    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
+    echo "  Open Hands, and more via Agent Client Protocol"
+    echo ""
+    echo "Venv: $FLOX_ENV_CACHE/venv"
+    echo "Update: toad-update"
+}
+
+toad-update() {
+    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
+    rm -f "$FLOX_ENV_CACHE/.deps_installed"
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+}
+'''
+
+fish = '''
+set -gx VIRTUAL_ENV "$FLOX_ENV_CACHE/venv"
+set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
+
+# Wrapper to unset PYTHONPATH before running toad
+function toad
+    set -l _had_pp (set -q PYTHONPATH; and echo 1; or echo 0)
+    set -l _saved_pp $PYTHONPATH
+    set -e PYTHONPATH
+    command toad $argv
+    if test "$_had_pp" = "1"
+        set -gx PYTHONPATH $_saved_pp
+    end
+end
+
+function toad-info
+    echo "Toad Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  toad                         Launch the TUI"
+    echo "  toad ~/projects/my-app       Open a specific project"
+    echo "  toad -a <agent>              Launch with a specific agent"
+    echo "  toad serve                   Run as a web application"
+    echo "  toad --help                  Show all subcommands"
+    echo ""
+    echo "Supported agents:"
+    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
+    echo "  Open Hands, and more via Agent Client Protocol"
+    echo ""
+    echo "Venv: $FLOX_ENV_CACHE/venv"
+    echo "Update: toad-update"
+end
+
+function toad-update
+    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
+    rm -f "$FLOX_ENV_CACHE/.deps_installed"
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
