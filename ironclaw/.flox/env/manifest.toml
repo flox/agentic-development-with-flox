@@ -1,0 +1,410 @@
+schema-version = "1.11.0"
+
+[install]
+# Rust toolchain for cargo install
+rustup.pkg-path = "rustup"
+pkg-config.pkg-path = "pkg-config"
+openssl.pkg-path = "openssl"
+openssl.outputs = "all"
+# PostgreSQL for pgvector persistent memory
+postgresql.pkg-path = "postgresql"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+IRONCLAW_HOME = "$FLOX_ENV_CACHE/ironclaw"
+
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+# LLM_BACKEND = ""  (anthropic, openai, ollama, openai_compatible, etc.)
+# LLM_BASE_URL = ""  (for openai_compatible backends)
+# LLM_API_KEY = ""   (for openai_compatible backends)
+
+[hook]
+on-activate = '''
+# === IRONCLAW HOME ===
+export IRONCLAW_HOME="${IRONCLAW_HOME:-$FLOX_ENV_CACHE/ironclaw}"
+export IRONCLAW_BASE_DIR="$IRONCLAW_HOME"
+mkdir -p "$IRONCLAW_HOME"
+
+# === CARGO INSTALL ===
+export CARGO_INSTALL_ROOT="$FLOX_ENV_CACHE/cargo-bin"
+export PATH="$CARGO_INSTALL_ROOT/bin:$PATH"
+
+# Ensure rustup has a stable toolchain (ironclaw requires Rust 1.92+)
+if ! rustup show active-toolchain >/dev/null 2>&1; then
+  echo "Installing Rust stable toolchain..."
+  rustup default stable --quiet 2>/dev/null
+fi
+
+# Update to latest stable if current rustc is too old (ironclaw requires 1.92+)
+_rustc_minor=$(rustc --version 2>/dev/null | grep -oP '1\.(\d+)' | grep -oP '\d+$' || echo "0")
+if [ "$_rustc_minor" -lt 92 ]; then
+  echo "Updating Rust toolchain (ironclaw requires 1.92+)..."
+  rustup update stable --quiet 2>/dev/null
+fi
+unset _rustc_minor
+
+# Install ironclaw if not present
+if [ ! -f "$CARGO_INSTALL_ROOT/bin/ironclaw" ]; then
+  echo "Installing ironclaw (this may take a few minutes on first run)..."
+  CARGO_INSTALL_ROOT="$CARGO_INSTALL_ROOT" cargo install ironclaw --version 0.24.0 2>&1 | tail -1
+  echo ""
+fi
+
+# === PORT MANAGEMENT ===
+# Default webhook port; user can override with HTTP_PORT=<port>
+export HTTP_PORT="${HTTP_PORT:-8080}"
+export HTTP_HOST="${HTTP_HOST:-127.0.0.1}"
+
+# Check if a port is in use. Uses lsof (precise) with ss fallback.
+_port_in_use() {
+  lsof -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1 || \
+    ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]$1$"
+}
+
+# KILL=1 reclaims the port by killing whatever occupies it
+# Otherwise, auto-fallback to next available port
+if _port_in_use "$HTTP_PORT"; then
+  if [ "${KILL:-0}" = "1" ]; then
+    _pid=$(lsof -iTCP:"${HTTP_PORT}" -sTCP:LISTEN -t 2>/dev/null | head -1)
+    if [ -n "$_pid" ]; then
+      echo "  Reclaiming port ${HTTP_PORT} (killing PID $_pid)..."
+      kill "$_pid" 2>/dev/null
+      sleep 1
+    fi
+    unset _pid
+  else
+    # Find next available port starting from HTTP_PORT+1
+    _port=$((HTTP_PORT + 1))
+    while _port_in_use "$_port"; do
+      _port=$((_port + 1))
+      if [ "$_port" -gt "$((HTTP_PORT + 100))" ]; then
+        echo "  WARNING: Could not find free port near ${HTTP_PORT}"
+        _port="$HTTP_PORT"
+        break
+      fi
+    done
+    if [ "$_port" != "$HTTP_PORT" ]; then
+      echo "  Port ${HTTP_PORT} in use, using ${_port} instead"
+    fi
+    export HTTP_PORT="$_port"
+    unset _port
+  fi
+fi
+unset -f _port_in_use
+
+# === POSTGRESQL SETUP ===
+# PostgreSQL data dir for pgvector persistent memory
+export PGDATA="${PGDATA:-$FLOX_ENV_CACHE/pgdata}"
+export PGPORT="${PGPORT:-15432}"
+export PGHOST="$FLOX_ENV_CACHE"
+export PGDATABASE="${PGDATABASE:-ironclaw}"
+
+# Initialize PostgreSQL data directory if missing
+if [ ! -d "$PGDATA" ]; then
+  echo "Initializing PostgreSQL data directory..."
+  initdb --no-locale --encoding=UTF8 -D "$PGDATA" >/dev/null 2>&1
+  # Configure for local socket connections only
+  echo "unix_socket_directories = '$FLOX_ENV_CACHE'" >> "$PGDATA/postgresql.conf"
+  echo "port = $PGPORT" >> "$PGDATA/postgresql.conf"
+  echo "listen_addresses = ''" >> "$PGDATA/postgresql.conf"
+fi
+
+# DATABASE_URL detection happens in [profile] (after services start)
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "IronClaw environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo "  IRONCLAW_HOME: $IRONCLAW_HOME"
+echo "  Webhook: http://${HTTP_HOST}:${HTTP_PORT}"
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Set an API key or run the onboarding wizard:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo "    ironclaw onboard"
+  echo ""
+fi
+
+echo "Commands:"
+echo "  ironclaw                     Start interactive REPL"
+echo "  ironclaw onboard             First-time setup wizard"
+echo "  ironclaw-info                Show configuration"
+echo ""
+echo "With PostgreSQL (pgvector memory):"
+echo "  flox activate -s             Start PostgreSQL + enable pgvector"
+echo "  flox activate                libSQL only (no services needed)"
+echo ""
+echo "Port conflict? Options:"
+echo "  HTTP_PORT=9090 flox activate  Use a different port"
+echo "  KILL=1 flox activate          Kill process on port ${HTTP_PORT} and reclaim it"
+echo ""
+
+# First-time setup check
+if [ ! -f "$IRONCLAW_HOME/.env" ] && [ ! -f "$IRONCLAW_HOME/config.toml" ]; then
+  echo "First time? Run: ironclaw onboard"
+  echo ""
+fi
+
+unset _has_key
+'''
+
+[services.postgres]
+command = """
+export PGDATA="${PGDATA:-$FLOX_ENV_CACHE/pgdata}"
+export PGPORT="${PGPORT:-15432}"
+export PGHOST="$FLOX_ENV_CACHE"
+export PGDATABASE="${PGDATABASE:-ironclaw}"
+
+# Start PostgreSQL in the background, then run setup
+postgres -D "$PGDATA" -k "$PGHOST" -p "$PGPORT" &
+PG_PID=$!
+
+# Wait for it to accept connections
+for i in $(seq 1 30); do
+  pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1 && break
+  sleep 1
+done
+
+# Create database and pgvector extension if needed
+if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; then
+  if ! psql -h "$PGHOST" -p "$PGPORT" -lqt 2>/dev/null | grep -qw "$PGDATABASE"; then
+    createdb -h "$PGHOST" -p "$PGPORT" "$PGDATABASE" 2>/dev/null
+  fi
+  psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -c "CREATE EXTENSION IF NOT EXISTS vector;" >/dev/null 2>&1
+  echo "PostgreSQL ready: $PGDATABASE on port $PGPORT (pgvector enabled)"
+fi
+
+# Keep service alive by waiting on postgres
+wait $PG_PID
+"""
+is-daemon = false
+
+[profile]
+bash = '''
+export PATH="$FLOX_ENV_CACHE/cargo-bin/bin:$PATH"
+
+# Detect PostgreSQL and set DATABASE_URL if running
+if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; then
+  export DATABASE_URL="postgres://$PGHOST:$PGPORT/$PGDATABASE"
+  export DATABASE_BACKEND="postgres"
+  echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+  echo ""
+elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
+  for _pg_i in $(seq 1 10); do
+    if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; then
+      export DATABASE_URL="postgres://$PGHOST:$PGPORT/$PGDATABASE"
+      export DATABASE_BACKEND="postgres"
+      echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+      echo ""
+      break
+    fi
+    sleep 1
+  done
+  unset _pg_i
+  if [ -z "$DATABASE_URL" ]; then
+    echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+    echo ""
+  fi
+else
+  echo "  Database: libSQL (embedded)"
+  echo ""
+fi
+
+ironclaw-info() {
+    echo "IronClaw Environment Configuration"
+    echo ""
+    echo "IRONCLAW_HOME: ${IRONCLAW_HOME}"
+    echo "IRONCLAW_BASE_DIR: ${IRONCLAW_BASE_DIR}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    if [ -n "$LLM_BACKEND" ]; then
+        echo "  LLM backend: ${LLM_BACKEND}"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  ironclaw                     Start interactive REPL"
+    echo "  ironclaw onboard             First-time setup wizard"
+    echo ""
+    echo "Database setup (for pgvector memory):"
+    echo "  createdb ironclaw"
+    echo "  psql ironclaw -c \"CREATE EXTENSION IF NOT EXISTS vector;\""
+    echo ""
+    echo "LLM backend examples:"
+    echo "  LLM_BACKEND=anthropic ironclaw"
+    echo "  LLM_BACKEND=openai ironclaw"
+    echo "  LLM_BACKEND=ollama ironclaw"
+    echo "  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw"
+    echo ""
+    echo "Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,"
+    echo "  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more"
+    echo ""
+    echo "Config: \$IRONCLAW_HOME/.env"
+}
+export -f ironclaw-info
+'''
+
+zsh = '''
+export PATH="$FLOX_ENV_CACHE/cargo-bin/bin:$PATH"
+
+# Detect PostgreSQL and set DATABASE_URL if running
+if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; then
+  export DATABASE_URL="postgres://$PGHOST:$PGPORT/$PGDATABASE"
+  export DATABASE_BACKEND="postgres"
+  echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+  echo ""
+elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
+  for _pg_i in $(seq 1 10); do
+    if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; then
+      export DATABASE_URL="postgres://$PGHOST:$PGPORT/$PGDATABASE"
+      export DATABASE_BACKEND="postgres"
+      echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+      echo ""
+      break
+    fi
+    sleep 1
+  done
+  unset _pg_i
+  if [ -z "$DATABASE_URL" ]; then
+    echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+    echo ""
+  fi
+else
+  echo "  Database: libSQL (embedded)"
+  echo ""
+fi
+
+ironclaw-info() {
+    echo "IronClaw Environment Configuration"
+    echo ""
+    echo "IRONCLAW_HOME: ${IRONCLAW_HOME}"
+    echo "IRONCLAW_BASE_DIR: ${IRONCLAW_BASE_DIR}"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    if [ -n "$LLM_BACKEND" ]; then
+        echo "  LLM backend: ${LLM_BACKEND}"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  ironclaw                     Start interactive REPL"
+    echo "  ironclaw onboard             First-time setup wizard"
+    echo ""
+    echo "Database setup (for pgvector memory):"
+    echo "  createdb ironclaw"
+    echo "  psql ironclaw -c \"CREATE EXTENSION IF NOT EXISTS vector;\""
+    echo ""
+    echo "LLM backend examples:"
+    echo "  LLM_BACKEND=anthropic ironclaw"
+    echo "  LLM_BACKEND=openai ironclaw"
+    echo "  LLM_BACKEND=ollama ironclaw"
+    echo "  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw"
+    echo ""
+    echo "Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,"
+    echo "  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more"
+    echo ""
+    echo "Config: \$IRONCLAW_HOME/.env"
+}
+'''
+
+fish = '''
+set -gx PATH "$FLOX_ENV_CACHE/cargo-bin/bin" $PATH
+
+# Detect PostgreSQL and set DATABASE_URL if running
+if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1
+    set -gx DATABASE_URL "postgres://$PGHOST:$PGPORT/$PGDATABASE"
+    set -gx DATABASE_BACKEND "postgres"
+    echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+    echo ""
+else if test -d "$PGDATA"; and flox services status 2>/dev/null | grep -q "postgres"
+    for _pg_i in (seq 1 10)
+        if pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1
+            set -gx DATABASE_URL "postgres://$PGHOST:$PGPORT/$PGDATABASE"
+            set -gx DATABASE_BACKEND "postgres"
+            echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+            echo ""
+            break
+        end
+        sleep 1
+    end
+    if not set -q DATABASE_URL
+        echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+        echo ""
+    end
+else
+    echo "  Database: libSQL (embedded)"
+    echo ""
+end
+
+function ironclaw-info
+    echo "IronClaw Environment Configuration"
+    echo ""
+    echo "IRONCLAW_HOME: $IRONCLAW_HOME"
+    echo "IRONCLAW_BASE_DIR: $IRONCLAW_BASE_DIR"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    if test -n "$LLM_BACKEND"
+        echo "  LLM backend: $LLM_BACKEND"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  ironclaw                     Start interactive REPL"
+    echo "  ironclaw onboard             First-time setup wizard"
+    echo ""
+    echo "Database setup (for pgvector memory):"
+    echo "  createdb ironclaw"
+    echo "  psql ironclaw -c \"CREATE EXTENSION IF NOT EXISTS vector;\""
+    echo ""
+    echo "LLM backend examples:"
+    echo "  LLM_BACKEND=anthropic ironclaw"
+    echo "  LLM_BACKEND=openai ironclaw"
+    echo "  LLM_BACKEND=ollama ironclaw"
+    echo "  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw"
+    echo ""
+    echo "Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,"
+    echo "  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more"
+    echo ""
+    echo "Config: \$IRONCLAW_HOME/.env"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]

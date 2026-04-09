@@ -47,6 +47,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**forge**](./forge) - Forge AI coding agent by Antinomy
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
+- [**ironclaw**](./ironclaw) - IronClaw secure personal AI assistant in Rust with WASM sandboxing and pgvector memory
 - [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
 - [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces

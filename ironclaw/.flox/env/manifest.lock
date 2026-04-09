@@ -1,0 +1,995 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "schema-version": "1.11.0",
+    "install": {
+      "bat": {
+        "pkg-path": "bat"
+      },
+      "curl": {
+        "pkg-path": "curl"
+      },
+      "git": {
+        "pkg-path": "gitFull",
+        "outputs": "all"
+      },
+      "openssl": {
+        "pkg-path": "openssl",
+        "outputs": "all"
+      },
+      "pkg-config": {
+        "pkg-path": "pkg-config"
+      },
+      "postgresql": {
+        "pkg-path": "postgresql"
+      },
+      "rustup": {
+        "pkg-path": "rustup"
+      }
+    },
+    "vars": {
+      "IRONCLAW_HOME": "$FLOX_ENV_CACHE/ironclaw"
+    },
+    "hook": {
+      "on-activate": "# === IRONCLAW HOME ===\nexport IRONCLAW_HOME=\"${IRONCLAW_HOME:-$FLOX_ENV_CACHE/ironclaw}\"\nexport IRONCLAW_BASE_DIR=\"$IRONCLAW_HOME\"\nmkdir -p \"$IRONCLAW_HOME\"\n\n# === CARGO INSTALL ===\nexport CARGO_INSTALL_ROOT=\"$FLOX_ENV_CACHE/cargo-bin\"\nexport PATH=\"$CARGO_INSTALL_ROOT/bin:$PATH\"\n\n# Ensure rustup has a stable toolchain (ironclaw requires Rust 1.92+)\nif ! rustup show active-toolchain >/dev/null 2>&1; then\n  echo \"Installing Rust stable toolchain...\"\n  rustup default stable --quiet 2>/dev/null\nfi\n\n# Update to latest stable if current rustc is too old (ironclaw requires 1.92+)\n_rustc_minor=$(rustc --version 2>/dev/null | grep -oP '1\\.(\\d+)' | grep -oP '\\d+$' || echo \"0\")\nif [ \"$_rustc_minor\" -lt 92 ]; then\n  echo \"Updating Rust toolchain (ironclaw requires 1.92+)...\"\n  rustup update stable --quiet 2>/dev/null\nfi\nunset _rustc_minor\n\n# Install ironclaw if not present\nif [ ! -f \"$CARGO_INSTALL_ROOT/bin/ironclaw\" ]; then\n  echo \"Installing ironclaw (this may take a few minutes on first run)...\"\n  CARGO_INSTALL_ROOT=\"$CARGO_INSTALL_ROOT\" cargo install ironclaw --version 0.24.0 2>&1 | tail -1\n  echo \"\"\nfi\n\n# === PORT MANAGEMENT ===\n# Default webhook port; user can override with HTTP_PORT=<port>\nexport HTTP_PORT=\"${HTTP_PORT:-8080}\"\nexport HTTP_HOST=\"${HTTP_HOST:-127.0.0.1}\"\n\n# Check if a port is in use. Uses lsof (precise) with ss fallback.\n_port_in_use() {\n  lsof -iTCP:\"$1\" -sTCP:LISTEN >/dev/null 2>&1 || \\\n    ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE \"[:.]$1$\"\n}\n\n# KILL=1 reclaims the port by killing whatever occupies it\n# Otherwise, auto-fallback to next available port\nif _port_in_use \"$HTTP_PORT\"; then\n  if [ \"${KILL:-0}\" = \"1\" ]; then\n    _pid=$(lsof -iTCP:\"${HTTP_PORT}\" -sTCP:LISTEN -t 2>/dev/null | head -1)\n    if [ -n \"$_pid\" ]; then\n      echo \"  Reclaiming port ${HTTP_PORT} (killing PID $_pid)...\"\n      kill \"$_pid\" 2>/dev/null\n      sleep 1\n    fi\n    unset _pid\n  else\n    # Find next available port starting from HTTP_PORT+1\n    _port=$((HTTP_PORT + 1))\n    while _port_in_use \"$_port\"; do\n      _port=$((_port + 1))\n      if [ \"$_port\" -gt \"$((HTTP_PORT + 100))\" ]; then\n        echo \"  WARNING: Could not find free port near ${HTTP_PORT}\"\n        _port=\"$HTTP_PORT\"\n        break\n      fi\n    done\n    if [ \"$_port\" != \"$HTTP_PORT\" ]; then\n      echo \"  Port ${HTTP_PORT} in use, using ${_port} instead\"\n    fi\n    export HTTP_PORT=\"$_port\"\n    unset _port\n  fi\nfi\nunset -f _port_in_use\n\n# === POSTGRESQL SETUP ===\n# PostgreSQL data dir for pgvector persistent memory\nexport PGDATA=\"${PGDATA:-$FLOX_ENV_CACHE/pgdata}\"\nexport PGPORT=\"${PGPORT:-15432}\"\nexport PGHOST=\"$FLOX_ENV_CACHE\"\nexport PGDATABASE=\"${PGDATABASE:-ironclaw}\"\n\n# Initialize PostgreSQL data directory if missing\nif [ ! -d \"$PGDATA\" ]; then\n  echo \"Initializing PostgreSQL data directory...\"\n  initdb --no-locale --encoding=UTF8 -D \"$PGDATA\" >/dev/null 2>&1\n  # Configure for local socket connections only\n  echo \"unix_socket_directories = '$FLOX_ENV_CACHE'\" >> \"$PGDATA/postgresql.conf\"\n  echo \"port = $PGPORT\" >> \"$PGDATA/postgresql.conf\"\n  echo \"listen_addresses = ''\" >> \"$PGDATA/postgresql.conf\"\nfi\n\n# DATABASE_URL detection happens in [profile] (after services start)\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"IronClaw environment ready\"\necho \"\"\n\n# Show API key status\n_has_key=0\nif [ -n \"$ANTHROPIC_API_KEY\" ]; then\n  echo \"  Anthropic API key: set\"\n  _has_key=1\nelse\n  echo \"  Anthropic API key: not set\"\nfi\nif [ -n \"$OPENAI_API_KEY\" ]; then\n  echo \"  OpenAI API key: set\"\n  _has_key=1\nelse\n  echo \"  OpenAI API key: not set\"\nfi\necho \"  IRONCLAW_HOME: $IRONCLAW_HOME\"\necho \"  Webhook: http://${HTTP_HOST}:${HTTP_PORT}\"\necho \"\"\n\nif [ \"$_has_key\" = \"0\" ]; then\n  echo \"  Set an API key or run the onboarding wizard:\"\n  echo \"    export ANTHROPIC_API_KEY=sk-ant-...\"\n  echo \"    ironclaw onboard\"\n  echo \"\"\nfi\n\necho \"Commands:\"\necho \"  ironclaw                     Start interactive REPL\"\necho \"  ironclaw onboard             First-time setup wizard\"\necho \"  ironclaw-info                Show configuration\"\necho \"\"\necho \"With PostgreSQL (pgvector memory):\"\necho \"  flox activate -s             Start PostgreSQL + enable pgvector\"\necho \"  flox activate                libSQL only (no services needed)\"\necho \"\"\necho \"Port conflict? Options:\"\necho \"  HTTP_PORT=9090 flox activate  Use a different port\"\necho \"  KILL=1 flox activate          Kill process on port ${HTTP_PORT} and reclaim it\"\necho \"\"\n\n# First-time setup check\nif [ ! -f \"$IRONCLAW_HOME/.env\" ] && [ ! -f \"$IRONCLAW_HOME/config.toml\" ]; then\n  echo \"First time? Run: ironclaw onboard\"\n  echo \"\"\nfi\n\nunset _has_key\n"
+    },
+    "profile": {
+      "bash": "export PATH=\"$FLOX_ENV_CACHE/cargo-bin/bin:$PATH\"\n\n# Detect PostgreSQL and set DATABASE_URL if running\nif pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1; then\n  export DATABASE_URL=\"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n  export DATABASE_BACKEND=\"postgres\"\n  echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n  echo \"\"\nelif [ -d \"$PGDATA\" ] && flox services status 2>/dev/null | grep -q \"postgres\"; then\n  for _pg_i in $(seq 1 10); do\n    if pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1; then\n      export DATABASE_URL=\"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n      export DATABASE_BACKEND=\"postgres\"\n      echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n      echo \"\"\n      break\n    fi\n    sleep 1\n  done\n  unset _pg_i\n  if [ -z \"$DATABASE_URL\" ]; then\n    echo \"  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment\"\n    echo \"\"\n  fi\nelse\n  echo \"  Database: libSQL (embedded)\"\n  echo \"\"\nfi\n\nironclaw-info() {\n    echo \"IronClaw Environment Configuration\"\n    echo \"\"\n    echo \"IRONCLAW_HOME: ${IRONCLAW_HOME}\"\n    echo \"IRONCLAW_BASE_DIR: ${IRONCLAW_BASE_DIR}\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    if [ -n \"$LLM_BACKEND\" ]; then\n        echo \"  LLM backend: ${LLM_BACKEND}\"\n    fi\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  ironclaw                     Start interactive REPL\"\n    echo \"  ironclaw onboard             First-time setup wizard\"\n    echo \"\"\n    echo \"Database setup (for pgvector memory):\"\n    echo \"  createdb ironclaw\"\n    echo \"  psql ironclaw -c \\\"CREATE EXTENSION IF NOT EXISTS vector;\\\"\"\n    echo \"\"\n    echo \"LLM backend examples:\"\n    echo \"  LLM_BACKEND=anthropic ironclaw\"\n    echo \"  LLM_BACKEND=openai ironclaw\"\n    echo \"  LLM_BACKEND=ollama ironclaw\"\n    echo \"  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw\"\n    echo \"\"\n    echo \"Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,\"\n    echo \"  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more\"\n    echo \"\"\n    echo \"Config: \\$IRONCLAW_HOME/.env\"\n}\nexport -f ironclaw-info\n",
+      "zsh": "export PATH=\"$FLOX_ENV_CACHE/cargo-bin/bin:$PATH\"\n\n# Detect PostgreSQL and set DATABASE_URL if running\nif pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1; then\n  export DATABASE_URL=\"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n  export DATABASE_BACKEND=\"postgres\"\n  echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n  echo \"\"\nelif [ -d \"$PGDATA\" ] && flox services status 2>/dev/null | grep -q \"postgres\"; then\n  for _pg_i in $(seq 1 10); do\n    if pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1; then\n      export DATABASE_URL=\"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n      export DATABASE_BACKEND=\"postgres\"\n      echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n      echo \"\"\n      break\n    fi\n    sleep 1\n  done\n  unset _pg_i\n  if [ -z \"$DATABASE_URL\" ]; then\n    echo \"  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment\"\n    echo \"\"\n  fi\nelse\n  echo \"  Database: libSQL (embedded)\"\n  echo \"\"\nfi\n\nironclaw-info() {\n    echo \"IronClaw Environment Configuration\"\n    echo \"\"\n    echo \"IRONCLAW_HOME: ${IRONCLAW_HOME}\"\n    echo \"IRONCLAW_BASE_DIR: ${IRONCLAW_BASE_DIR}\"\n    echo \"\"\n    echo \"API Keys:\"\n    [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"  Anthropic: set\" || echo \"  Anthropic: not set\"\n    [ -n \"$OPENAI_API_KEY\" ] && echo \"  OpenAI: set\" || echo \"  OpenAI: not set\"\n    if [ -n \"$LLM_BACKEND\" ]; then\n        echo \"  LLM backend: ${LLM_BACKEND}\"\n    fi\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  ironclaw                     Start interactive REPL\"\n    echo \"  ironclaw onboard             First-time setup wizard\"\n    echo \"\"\n    echo \"Database setup (for pgvector memory):\"\n    echo \"  createdb ironclaw\"\n    echo \"  psql ironclaw -c \\\"CREATE EXTENSION IF NOT EXISTS vector;\\\"\"\n    echo \"\"\n    echo \"LLM backend examples:\"\n    echo \"  LLM_BACKEND=anthropic ironclaw\"\n    echo \"  LLM_BACKEND=openai ironclaw\"\n    echo \"  LLM_BACKEND=ollama ironclaw\"\n    echo \"  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw\"\n    echo \"\"\n    echo \"Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,\"\n    echo \"  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more\"\n    echo \"\"\n    echo \"Config: \\$IRONCLAW_HOME/.env\"\n}\n",
+      "fish": "set -gx PATH \"$FLOX_ENV_CACHE/cargo-bin/bin\" $PATH\n\n# Detect PostgreSQL and set DATABASE_URL if running\nif pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1\n    set -gx DATABASE_URL \"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n    set -gx DATABASE_BACKEND \"postgres\"\n    echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n    echo \"\"\nelse if test -d \"$PGDATA\"; and flox services status 2>/dev/null | grep -q \"postgres\"\n    for _pg_i in (seq 1 10)\n        if pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1\n            set -gx DATABASE_URL \"postgres://$PGHOST:$PGPORT/$PGDATABASE\"\n            set -gx DATABASE_BACKEND \"postgres\"\n            echo \"  Database: PostgreSQL (port $PGPORT, pgvector enabled)\"\n            echo \"\"\n            break\n        end\n        sleep 1\n    end\n    if not set -q DATABASE_URL\n        echo \"  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment\"\n        echo \"\"\n    end\nelse\n    echo \"  Database: libSQL (embedded)\"\n    echo \"\"\nend\n\nfunction ironclaw-info\n    echo \"IronClaw Environment Configuration\"\n    echo \"\"\n    echo \"IRONCLAW_HOME: $IRONCLAW_HOME\"\n    echo \"IRONCLAW_BASE_DIR: $IRONCLAW_BASE_DIR\"\n    echo \"\"\n    echo \"API Keys:\"\n    if test -n \"$ANTHROPIC_API_KEY\"\n        echo \"  Anthropic: set\"\n    else\n        echo \"  Anthropic: not set\"\n    end\n    if test -n \"$OPENAI_API_KEY\"\n        echo \"  OpenAI: set\"\n    else\n        echo \"  OpenAI: not set\"\n    end\n    if test -n \"$LLM_BACKEND\"\n        echo \"  LLM backend: $LLM_BACKEND\"\n    end\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  ironclaw                     Start interactive REPL\"\n    echo \"  ironclaw onboard             First-time setup wizard\"\n    echo \"\"\n    echo \"Database setup (for pgvector memory):\"\n    echo \"  createdb ironclaw\"\n    echo \"  psql ironclaw -c \\\"CREATE EXTENSION IF NOT EXISTS vector;\\\"\"\n    echo \"\"\n    echo \"LLM backend examples:\"\n    echo \"  LLM_BACKEND=anthropic ironclaw\"\n    echo \"  LLM_BACKEND=openai ironclaw\"\n    echo \"  LLM_BACKEND=ollama ironclaw\"\n    echo \"  LLM_BACKEND=openai_compatible LLM_BASE_URL=http://localhost:1234/v1 ironclaw\"\n    echo \"\"\n    echo \"Providers: NEAR AI (default), Anthropic, OpenAI, Google Gemini,\"\n    echo \"  GitHub Copilot, Ollama, Mistral, OpenRouter, Together AI, and more\"\n    echo \"\"\n    echo \"Config: \\$IRONCLAW_HOME/.env\"\nend\n"
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ]
+    },
+    "services": {
+      "postgres": {
+        "command": "export PGDATA=\"${PGDATA:-$FLOX_ENV_CACHE/pgdata}\"\nexport PGPORT=\"${PGPORT:-15432}\"\nexport PGHOST=\"$FLOX_ENV_CACHE\"\nexport PGDATABASE=\"${PGDATABASE:-ironclaw}\"\n\n# Start PostgreSQL in the background, then run setup\npostgres -D \"$PGDATA\" -k \"$PGHOST\" -p \"$PGPORT\" &\nPG_PID=$!\n\n# Wait for it to accept connections\nfor i in $(seq 1 30); do\n  pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1 && break\n  sleep 1\ndone\n\n# Create database and pgvector extension if needed\nif pg_isready -h \"$PGHOST\" -p \"$PGPORT\" >/dev/null 2>&1; then\n  if ! psql -h \"$PGHOST\" -p \"$PGPORT\" -lqt 2>/dev/null | grep -qw \"$PGDATABASE\"; then\n    createdb -h \"$PGHOST\" -p \"$PGPORT\" \"$PGDATABASE\" 2>/dev/null\n  fi\n  psql -h \"$PGHOST\" -p \"$PGPORT\" -d \"$PGDATABASE\" -c \"CREATE EXTENSION IF NOT EXISTS vector;\" >/dev/null 2>&1\n  echo \"PostgreSQL ready: $PGDATABASE on port $PGPORT (pgvector enabled)\"\nfi\n\n# Keep service alive by waiting on postgres\nwait $PG_PID\n",
+        "is-daemon": false
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/0rz5012a1mncwvhjxmlxmd1sbl3098qn-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:31.721211Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/ccd4fyjaa0hmvic3a0x0lak1akm1wbf9-bat-0.26.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/gb3ci4ykq5avscr3n9f7xfpj33xdsw4c-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:56.152680Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/g11dl0f63i53kaw2ki0kk8bycy99ax1v-bat-0.26.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/clmnmqx3ibq8n46m6q6p79q71w7idv5f-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:04:59.541381Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/mysappv2jzlb7q13scn0836jwpaf6gc4-bat-0.26.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "bat",
+      "broken": false,
+      "derivation": "/nix/store/n8vbndgcm30iy5x1bapgi89xn0vbwsd4-bat-0.26.1.drv",
+      "description": "Cat(1) clone with syntax highlighting and Git integration",
+      "install_id": "bat",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "bat-0.26.1",
+      "pname": "bat",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:05.907325Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.26.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1n63v53bzw0j9qkivrqcmgx53kng3l7z-bat-0.26.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/9f2i20yq3jp4yhaxk3qnxhazp7syqmvn-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:32.259858Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/gki71gmvlp9d86rqh8b4b6wp7wg396qg-curl-8.18.0-bin",
+        "dev": "/nix/store/2xrq7swcyjrvsbp5wk4qivwbzrqxasxr-curl-8.18.0-dev",
+        "devdoc": "/nix/store/vrff2ib15qhdig8ich94visj28x9m931-curl-8.18.0-devdoc",
+        "man": "/nix/store/wd2w49jdql1n3c6cg4qimqbq5k6m6j4f-curl-8.18.0-man",
+        "out": "/nix/store/7bxrgix4f88r6xvidyl035vxdbn2rnyk-curl-8.18.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/g29rj5wpfqyckm3f1b3jrrslqgaw9rzm-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:56.828607Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/asrq77x05br50nmmv7akp0ry2n1xxrb4-curl-8.18.0-bin",
+        "debug": "/nix/store/b4mmgwziiqa4jirsrw162r794zi48fz6-curl-8.18.0-debug",
+        "dev": "/nix/store/nxarksm7m9ll9p3r87issf0389hwdz3l-curl-8.18.0-dev",
+        "devdoc": "/nix/store/canqrd4xwygamx7qw3j7dd923l7bmg9n-curl-8.18.0-devdoc",
+        "man": "/nix/store/8z4wa6lizr4gzfpmj3928c2wjk1ldslf-curl-8.18.0-man",
+        "out": "/nix/store/qxkiwf9mg5x9jijpmk0hmz9nkd4xlzph-curl-8.18.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/gkm06vy5lkp1n6wlgrr7vvfirf2zgs0g-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:04:59.969284Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/0h4avs7960hxfgmlayshci76pdd7j1zp-curl-8.18.0-bin",
+        "dev": "/nix/store/rpw29w7jmwrp32bp72s805rh0rchp7fh-curl-8.18.0-dev",
+        "devdoc": "/nix/store/4sbv3g3n1nxlq5nfasd194h893k5nkm9-curl-8.18.0-devdoc",
+        "man": "/nix/store/lb59x8lcbiqjph4gfl5a99l8wh1ckvfy-curl-8.18.0-man",
+        "out": "/nix/store/sdf4br1wm1s10y67yz062mc1vmkykm0f-curl-8.18.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "curl",
+      "broken": false,
+      "derivation": "/nix/store/1wrll60slxlmvb56g6zk7amw3pwylcng-curl-8.18.0.drv",
+      "description": "Command line tool for transferring files with URL syntax",
+      "install_id": "curl",
+      "license": "curl",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "curl-8.18.0",
+      "pname": "curl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:06.566385Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "8.18.0",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/6j3b51rypymg5inhr27rcc7in5cxbvjz-curl-8.18.0-bin",
+        "debug": "/nix/store/9gvh3ymdh38n7lkbjd61cwx6ff510wpb-curl-8.18.0-debug",
+        "dev": "/nix/store/m2b7j4s1jlhlnpxhpf2sjwvd2nn0x8hx-curl-8.18.0-dev",
+        "devdoc": "/nix/store/r2xswgdxf2z7h9vnirhzkzj4k721nbhh-curl-8.18.0-devdoc",
+        "man": "/nix/store/gxspg74jdwaxdb80giixl4517nw6q139-curl-8.18.0-man",
+        "out": "/nix/store/dhdysbgmgqp936mvkf5f9s8fh2mk68k5-curl-8.18.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/ahg9ydap0brb8kdmy9b62rwgr0xx8qm0-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:03:32.999299Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/9h82rkslybd153w7rz4ld5vxqz82jf3s-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/g4hra7xls04bs78rmbacvrkjzigs19b0-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/kmhccbchascywfqvimy9m6p2skr4h7nh-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:34:58.157078Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/vzzil4z2363pzav0mgxqyllkpxmk3jry-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/a79mwy2j4i15i2kmvm7j23jn89rrph8m-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/99y3ds3lbh9ymfvcbxdsddd91x6dwcy1-git-with-svn-2.53.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/jx4bdzj3vfhj27isz1whxgzpkz2wpa6j-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:05:00.745256Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/cfmh4xaba4n924k88a25agll7fivwbbm-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/blfmq8dj9108wlqpi9cibvm7qrp5abqx-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gitFull",
+      "broken": false,
+      "derivation": "/nix/store/dk9c3ichl9cgbgk7l0w7dfqf6jvghcyq-git-with-svn-2.53.0.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "git-with-svn-2.53.0",
+      "pname": "gitFull",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:07.879614Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.53.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/44ypzal8ivxpgv03icvf4pkbfyhrsw3i-git-with-svn-2.53.0-debug",
+        "doc": "/nix/store/5dda4wgpms0xyc7ml8imp07a9zb9kyfb-git-with-svn-2.53.0-doc",
+        "out": "/nix/store/s7f41ijzn16w4c3rw219sxflc7j6pz66-git-with-svn-2.53.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/xzhhrkjg60fxcbdkpkmgks5393g0bnpg-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:04:01.081462Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/fvxzw0b4nzrf1rrg40cipn9r4ghdifvc-openssl-3.6.1-bin",
+        "dev": "/nix/store/a1m09nkw4zpqcjhdggiddb333b4z1v0l-openssl-3.6.1-dev",
+        "doc": "/nix/store/r8zh8frv16vn6582arji90vgk4rja637-openssl-3.6.1-doc",
+        "man": "/nix/store/rjw5rf70cvbaf7l7iv468x1m4hwa7qa2-openssl-3.6.1-man",
+        "out": "/nix/store/r3p3sm0hljbrznasz9wzxmpgn3brzh5x-openssl-3.6.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/gd4bqfybqfzc9hrzy2lkzlv83hkbhwmb-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:35:45.022648Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/anfxxkr88ry4wsfqm6in54p2a5radrs2-openssl-3.6.1-bin",
+        "debug": "/nix/store/2i7rbfcgk2ablcsivf6wsc20534bvspq-openssl-3.6.1-debug",
+        "dev": "/nix/store/ampimckfng4zil3amrhajfxhgxfr92wd-openssl-3.6.1-dev",
+        "doc": "/nix/store/07hchbxmk0f8a1kzm6g8ly4a49mgbhp8-openssl-3.6.1-doc",
+        "man": "/nix/store/n090313n6x2vi67ic4k5fnnmbvavcsc0-openssl-3.6.1-man",
+        "out": "/nix/store/v7kiykvis3nb7swg26v78m31vs63z8n1-openssl-3.6.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/kifmy9pn65h90cdzhdfik2583abiqswf-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:05:29.156045Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/7fml52f9issfrvijs2qk6pgh1yzm87rx-openssl-3.6.1-bin",
+        "dev": "/nix/store/1y8av976r39xmy6q3izq9fx370inbz83-openssl-3.6.1-dev",
+        "doc": "/nix/store/5y4jlbzf5jnw3rd4ydczi6gz2vcgzdaq-openssl-3.6.1-doc",
+        "man": "/nix/store/g26nfcllq8yamqhngkkid62l2j6z0agd-openssl-3.6.1-man",
+        "out": "/nix/store/jmngn7k1rmayszm7176zhz7ac223ia27-openssl-3.6.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "openssl",
+      "broken": false,
+      "derivation": "/nix/store/dip8yqvwhqwgyici1w70n0gfm3ql46r1-openssl-3.6.1.drv",
+      "description": "Cryptographic library that implements the SSL and TLS protocols",
+      "install_id": "openssl",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "openssl-3.6.1",
+      "pname": "openssl",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:39:53.625619Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "3.6.1",
+      "outputs_to_install": [
+        "bin",
+        "bin",
+        "bin",
+        "man",
+        "man"
+      ],
+      "outputs": {
+        "bin": "/nix/store/8q9wrmngl1mhvqgg0l018339zz86m184-openssl-3.6.1-bin",
+        "debug": "/nix/store/4bsbm214ybdhfg886j1nhyqhig1jqr71-openssl-3.6.1-debug",
+        "dev": "/nix/store/79xszwqidf98ag703b5c82q3pwg9lyzq-openssl-3.6.1-dev",
+        "doc": "/nix/store/y4pjymdjj68hnbffxr2niafwjy2ngy7s-openssl-3.6.1-doc",
+        "man": "/nix/store/dcwdxd2av5wj077jpj0zk5c4hddc9s44-openssl-3.6.1-man",
+        "out": "/nix/store/bga5xf95jaypy385hvxm4h3yxl3m1566-openssl-3.6.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pkg-config",
+      "broken": false,
+      "derivation": "/nix/store/m90jv33iplawhpc5b6d0dbfx7yq2glx8-pkg-config-wrapper-0.29.2.drv",
+      "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+      "install_id": "pkg-config",
+      "license": "GPL-2.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "pkg-config-wrapper-0.29.2",
+      "pname": "pkg-config",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:04:10.219131Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.29.2",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/52lzrzlh709z5nkpypcxs1rdb58q53mx-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/i819wf9lsx5wwzbp27hsj196lznn8g3n-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/w2b4lad773v6c0lhz86kadhcyxg0vjb8-pkg-config-wrapper-0.29.2"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pkg-config",
+      "broken": false,
+      "derivation": "/nix/store/r0ibplv3qh6rzbsdjlrx56dxzijjrrjy-pkg-config-wrapper-0.29.2.drv",
+      "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+      "install_id": "pkg-config",
+      "license": "GPL-2.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "pkg-config-wrapper-0.29.2",
+      "pname": "pkg-config",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:35:57.470594Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.29.2",
+      "outputs_to_install": [
+        "man",
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/2lq06wb2lylkzp62iy6cdxf82mc6wyr3-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/akl65aihn0wi606lhp2mhwcv15cdirkm-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/fs0gwnv2clqgf23rrlmy7hpdxxi8dipv-pkg-config-wrapper-0.29.2"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pkg-config",
+      "broken": false,
+      "derivation": "/nix/store/wvxg792n1xnkcylj0bwg1acbh3by0zns-pkg-config-wrapper-0.29.2.drv",
+      "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+      "install_id": "pkg-config",
+      "license": "GPL-2.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "pkg-config-wrapper-0.29.2",
+      "pname": "pkg-config",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:05:37.850735Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.29.2",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/7rwk4yjjbm39j08lcwq6x56v26690ig1-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/dfhqy59jzqci9lbyq8lb361dc8zfd9v9-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/7hp4js4p30mqfbi12928jxcsj5a1xhvp-pkg-config-wrapper-0.29.2"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "pkg-config",
+      "broken": false,
+      "derivation": "/nix/store/41c5s0jfm2ymy6zygf41mvww7lspjs59-pkg-config-wrapper-0.29.2.drv",
+      "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+      "install_id": "pkg-config",
+      "license": "GPL-2.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "pkg-config-wrapper-0.29.2",
+      "pname": "pkg-config",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:40:06.076154Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.29.2",
+      "outputs_to_install": [
+        "man",
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/ipyf6xmsjhs0nrl5vpmgwrxl94sp31b1-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/mqbmjcz3vv9gzaffi1bcpmwci9nkhq87-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/d0immrndpxnhx32vcfbxngmnf7hmqyc3-pkg-config-wrapper-0.29.2"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "postgresql",
+      "broken": false,
+      "derivation": "/nix/store/xc7mnmx7ki33z1vf5ammm98dx1j1r8lf-postgresql-17.9.drv",
+      "description": "Powerful, open source object-relational database system",
+      "install_id": "postgresql",
+      "license": "PostgreSQL",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "postgresql-17.9",
+      "pname": "postgresql",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:04:10.879015Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "17.9",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/yzvwbyh0gqrprnw5rdnhjmcmyvrl9ql4-postgresql-17.9-dev",
+        "doc": "/nix/store/gillzna13al7axbhkqyjf7wwfkfbh4nn-postgresql-17.9-doc",
+        "jit": "/nix/store/9wrci7zgca8ygxgcg8qhk69kkk2hvnvg-postgresql-17.9-jit",
+        "lib": "/nix/store/h9xg40fr3hqn9lhckdf1sjp2w7zdl92n-postgresql-17.9-lib",
+        "man": "/nix/store/v9ad61kyx28sfzs48j9077iiv61fqzb0-postgresql-17.9-man",
+        "out": "/nix/store/rcz8zc21n6rx4igsdgngmkwnln4f7dy5-postgresql-17.9",
+        "plperl": "/nix/store/ywrc7vv5mdsz79z4nfid0asnzlwxp3zn-postgresql-17.9-plperl",
+        "plpython3": "/nix/store/jzj6b2zw28dxy8jjfvzlfbmdl8mypv2m-postgresql-17.9-plpython3",
+        "pltcl": "/nix/store/ya921lh5kkcrdgk09y9580prw5yg27f2-postgresql-17.9-pltcl"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "postgresql",
+      "broken": false,
+      "derivation": "/nix/store/nqvs6am9amb3lgdna66s6ipwwmjb7kga-postgresql-17.9.drv",
+      "description": "Powerful, open source object-relational database system",
+      "install_id": "postgresql",
+      "license": "PostgreSQL",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "postgresql-17.9",
+      "pname": "postgresql",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:35:58.587230Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "17.9",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/rlk7xis3dfyll5z1fny70ksi3yqh1yy7-postgresql-17.9-debug",
+        "dev": "/nix/store/gvivc80vkanv4cd41r1fz0dz9qr2bsjq-postgresql-17.9-dev",
+        "doc": "/nix/store/39f586jzgzlkcc3dp8zajyjnf2w2mymr-postgresql-17.9-doc",
+        "jit": "/nix/store/iw7rjv0gjb23fwil2j0zjbghrj8bgd7q-postgresql-17.9-jit",
+        "lib": "/nix/store/b25khikzni3m8q8nyv3mrxa5v63bqsam-postgresql-17.9-lib",
+        "man": "/nix/store/j22nri44hhgyxbg78glds0im2y608cn9-postgresql-17.9-man",
+        "out": "/nix/store/bw97pvf1fg3y7yjvw24g83448v8p48m0-postgresql-17.9",
+        "plperl": "/nix/store/951fcy0jfrwz8rhi8668fqi72wwdj1qa-postgresql-17.9-plperl",
+        "plpython3": "/nix/store/fha23nr7d2i16ns2z7wsrlx65fxpazxh-postgresql-17.9-plpython3",
+        "pltcl": "/nix/store/b9zsqpp7znmvxghjy9ihlk3p75xvd3pz-postgresql-17.9-pltcl"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "postgresql",
+      "broken": false,
+      "derivation": "/nix/store/0abjc41zmyiy12idlj8832cxf8cg57wl-postgresql-17.9.drv",
+      "description": "Powerful, open source object-relational database system",
+      "install_id": "postgresql",
+      "license": "PostgreSQL",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "postgresql-17.9",
+      "pname": "postgresql",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:05:38.485015Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "17.9",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/p99q8ixd6kkw2fr8zpfsmc0m3gwqcjjw-postgresql-17.9-dev",
+        "doc": "/nix/store/87c2fid7ppzyd3n3i5id3iiipybgzcp7-postgresql-17.9-doc",
+        "jit": "/nix/store/f6qm2151lg98kmayd1kddmgqv9wh1m4f-postgresql-17.9-jit",
+        "lib": "/nix/store/shz3ms0ww02df1k2qrzk0mv3g6ilr33j-postgresql-17.9-lib",
+        "man": "/nix/store/q824ybxz07qzwrwk9hkd16y0yl7mlp5i-postgresql-17.9-man",
+        "out": "/nix/store/jgrfz7nzjh9m5ymfv0831aamk9ci5ds9-postgresql-17.9",
+        "plperl": "/nix/store/p51i9h8vwml5nj6i91g0hh2zh93c4iap-postgresql-17.9-plperl",
+        "plpython3": "/nix/store/6a5lqzcdxiqn5nqlfddjdb921z7a35in-postgresql-17.9-plpython3",
+        "pltcl": "/nix/store/cvvvm05xz8735kxb2jqh6gvxfvps1cpw-postgresql-17.9-pltcl"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "postgresql",
+      "broken": false,
+      "derivation": "/nix/store/h8vcm4b8gcwiz1v5fsxzwgv5p2fdi258-postgresql-17.9.drv",
+      "description": "Powerful, open source object-relational database system",
+      "install_id": "postgresql",
+      "license": "PostgreSQL",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "postgresql-17.9",
+      "pname": "postgresql",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:40:07.266184Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "17.9",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/yhvkyzaxm3lcs7kk8qri3ql34p6h7dmc-postgresql-17.9-debug",
+        "dev": "/nix/store/w8vci17bmzkbxclrkjxg2bd3aachf5i8-postgresql-17.9-dev",
+        "doc": "/nix/store/x41xsx8n2j3l53dr6qfr1w7i9q1pvb3b-postgresql-17.9-doc",
+        "jit": "/nix/store/87sz1iy2q7v0fcsrgbkmryrp390v5sl9-postgresql-17.9-jit",
+        "lib": "/nix/store/il7gfijl01sxk16h9pffc5yan70vbqfp-postgresql-17.9-lib",
+        "man": "/nix/store/hgrmddv5rl1axc814n8f27q8gjlxpdz5-postgresql-17.9-man",
+        "out": "/nix/store/zhaly0y0af2m7wyijyhdanm6a9l5lydv-postgresql-17.9",
+        "plperl": "/nix/store/4dnwbih86p5grx6ys7faq29nh9w0krky-postgresql-17.9-plperl",
+        "plpython3": "/nix/store/rr62jngbsjqim8k5r761h985y88zci8w-postgresql-17.9-plpython3",
+        "pltcl": "/nix/store/292bd6aqwdsrd3bkvj8yjgwgg5nqlgjv-postgresql-17.9-pltcl"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustup",
+      "broken": false,
+      "derivation": "/nix/store/mrllnzhn18s6nifwxdcilvfz6352q1zm-rustup-1.29.0.drv",
+      "description": "Rust toolchain installer",
+      "install_id": "rustup",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "rustup-1.29.0",
+      "pname": "rustup",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:05:05.404991Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.29.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/vf4ymfv40jsq1r2bapps3ll8xxqng794-rustup-1.29.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustup",
+      "broken": false,
+      "derivation": "/nix/store/rb5jhmhf2497m28lqi3xq8q2wys470j9-rustup-1.29.0.drv",
+      "description": "Rust toolchain installer",
+      "install_id": "rustup",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "rustup-1.29.0",
+      "pname": "rustup",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T06:37:10.668712Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.29.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/q335jx3dgagxcj79bgxaxa027bq3vf7a-rustup-1.29.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustup",
+      "broken": false,
+      "derivation": "/nix/store/p2naf72z3f5476zdhzzd7qnvixq7s8yz-rustup-1.29.0.drv",
+      "description": "Rust toolchain installer",
+      "install_id": "rustup",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "rustup-1.29.0",
+      "pname": "rustup",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:06:33.139863Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.29.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/psqiilmbpc0d5c12qpswamkhdgzq5dcv-rustup-1.29.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustup",
+      "broken": false,
+      "derivation": "/nix/store/7g1dfqy1rkb3arwmcckaghqkdqrq7jvy-rustup-1.29.0.drv",
+      "description": "Rust toolchain installer",
+      "install_id": "rustup",
+      "license": "[ Apache-2.0, MIT ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "name": "rustup-1.29.0",
+      "pname": "rustup",
+      "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+      "rev_count": 975402,
+      "rev_date": "2026-04-05T21:03:29Z",
+      "scrape_date": "2026-04-07T07:41:17.404133Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.29.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/3jmhpvfwqag9jcxi21l2lrv79ha7h4p5-rustup-1.29.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
