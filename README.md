@@ -1,30 +1,58 @@
-# AI Coding Tools - Flox Environments
+# Agentic Development with Flox
 
-A collection of Flox environments for AI-powered coding tools and CLI interfaces to large language models. Each environment provides a pre-configured setup for its respective tool.
+Turn-key, isolated environments for 50+ AI coding tools, inference servers, and developer utilities. Each environment gives you everything you need -- the tool, its dependencies, its services -- without installing anything on your system.
 
-## Overview
+## Why This Exists
 
-This repository contains Flox environment configurations for various AI coding assistants, code generation tools, and LLM CLI interfaces. These environments handle package dependencies and provide activation hooks with setup guidance.
+AI development tools are multiplying fast. Each has its own runtime (Node, Python, Rust, Go), its own dependencies, its own services. Trying them means polluting your system with global installs, conflicting versions, and orphaned services.
 
-Each environment:
-- Defines dependencies in `manifest.toml`
-- Runs on macOS (Intel/ARM) and Linux (x86/ARM)
-- Provides activation messages with usage instructions
-- Follows Flox conventions for configuration (secrets in `$HOME`)
+These Flox environments fix that:
 
-## Working with Flox Environments
+- **Nothing touches your system.** Every dependency lives inside the environment. When you `exit`, it's gone.
+- **Services are scoped.** Need Ollama? PostgreSQL? A vLLM inference server? They start with the environment and stop when you leave. No stale daemons.
+- **No version conflicts.** Run Python 3.12 for one tool and Python 3.14 for another, side by side.
+- **Try anything risk-free.** Test-drive 50+ AI coding tools without cleanup. Don't like it? Just `exit`.
+- **Composable.** Layer an inference backend with a coding agent with a web UI. Mix and match.
 
-This repository includes [FLOX.md](./FLOX.md) - a reference guide for AI agents and developers working with Flox environments. Similar to CLAUDE.md or other agent-specific instruction files, FLOX.md provides structured guidance for:
+## Quick Start
 
-- Creating and modifying manifest files
-- Installing packages and resolving conflicts
-- Configuring services and background processes
-- Building and publishing packages
-- Composing and layering environments
-- Language-specific development patterns (Python, C/C++, Node.js, CUDA)
-- Platform-specific considerations and troubleshooting
+```bash
+# Install Flox (one time)
+# https://flox.dev/get
 
-AI agents should consult FLOX.md when performing environment management tasks.
+# Clone the repository
+git clone https://github.com/barstoolbluz/agentic-development-with-flox
+cd agentic-development-with-flox
+
+# Pick a tool and go
+cd claude-code
+flox activate
+
+# That's it. The tool, its dependencies, and any services are ready.
+# When you're done:
+exit
+# Everything is cleaned up. Nothing was installed globally.
+```
+
+### With services (inference servers, databases, etc.)
+
+```bash
+cd ollama
+flox activate -s    # -s starts managed services (Ollama server in this case)
+ollama pull gemma4
+# Ollama is running. When you exit, it stops.
+```
+
+### Compose environments
+
+```bash
+# Aider + local Ollama for fully offline AI pair programming
+cd aider
+flox edit
+# Uncomment the Ollama include in [include], then:
+flox activate -s
+aider --model ollama_chat/gemma4
+```
 
 ## Available Environments
 
@@ -67,7 +95,9 @@ AI agents should consult FLOX.md when performing environment management tasks.
 
 ### Local AI/ML Infrastructure
 
-- [**agentic-ollama**](./agentic-ollama) - Ollama for agentic development: local LLM server with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw\*) via `ollama launch` (\*OpenClaw commented out by default in manifest)
+Each of these includes a managed service. Use `flox activate -s` to start the server automatically.
+
+- [**agentic-ollama**](./agentic-ollama) - Ollama with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw) via `ollama launch`
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
 - [**lm-studio**](./lm-studio) - LM Studio local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
@@ -84,8 +114,8 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**catnip**](./catnip) - Multi-agent orchestration for running multiple Claude Code sessions in parallel
 - [**claudebox**](./claudebox) - Lightweight sandbox wrapper for Claude Code with command transparency
 - [**claude-squad**](./claude-squad) - TUI for managing multiple AI coding agents in parallel with tmux isolation
-- [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
+- [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 
@@ -97,261 +127,68 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**flox-mcp-server**](./flox-mcp-server) - MCP server enabling AI assistants to manage Flox environments
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
 
-## Usage
+## How It Works
 
-### Prerequisites
+Each environment is a directory with a `.flox/env/manifest.toml` that declares everything the tool needs:
+
+```
+tool-name/
+├── .flox/env/
+│   ├── manifest.toml    # Packages, services, hooks, config
+│   └── manifest.lock    # Pinned versions for reproducibility
+└── README.md            # Tool-specific docs
+```
+
+When you run `flox activate`:
+
+1. **Packages** are made available on your PATH (from the Nix store -- nothing installed globally)
+2. **Hooks** run setup logic (create venvs, check API keys, initialize databases)
+3. **Profile functions** are loaded (helper commands like `tool-info`, `tool-update`)
+4. **Services** start if you used `flox activate -s` (inference servers, databases, gateways)
+
+When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system.
+
+## Composing Environments
+
+Environments can be combined. Add infrastructure backends to coding tools via `[include]` in the manifest:
+
+```toml
+# Example: AI coding tool + local Ollama + PostgreSQL
+[include]
+environments = [
+  { remote = "flox/ollama" },
+  { remote = "floxrox/postgres-headless" },
+]
+```
+
+Or layer at runtime:
+
+```bash
+flox activate -r floxrox/postgres-headless
+```
+
+Additional composable environments are available from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) -- databases, container runtimes, workflow orchestrators, Python versions, and more.
+
+## Conventions
+
+- **API keys** stay in `$HOME` (e.g., `~/.config/`, env vars). Never stored in project directories.
+- **Services** use non-standard ports to avoid conflicts (e.g., PostgreSQL on 15432).
+- **Helper functions** follow the pattern `tool-info` (show config) and `tool-update` (update the tool).
+- **All environments** run on macOS (Intel/ARM) and Linux (x86/ARM) unless noted.
+
+## For AI Agents
+
+This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
+
+## Prerequisites
 
 - [Flox](https://flox.dev/get) installed
-- API keys for chosen providers (stored in `$HOME` per Flox conventions)
-
-### Basic Usage
-
-```bash
-# Clone repository
-git clone https://github.com/barstoolbluz/agentic-development-with-flox
-cd agentic-development-with-flox
-
-# Navigate to an environment
-cd aichat
-
-# Activate environment
-flox activate
-
-# Follow activation messages for tool-specific setup
-```
-
-### Example: aichat
-
-```bash
-cd aichat
-flox activate
-# First-time users: run 'aichat' and follow interactive setup
-aichat "Write a Python function to validate email addresses"
-```
-
-### Example: amazon-q-cli
-
-```bash
-cd amazon-q-cli
-flox activate
-q login      # Authenticate with AWS Builder ID
-q chat       # Start chat session
-```
-
-## Environment Structure
-
-Each environment directory contains:
-
-```
-environment-name/
-├── .flox/
-│   └── env/
-│       ├── manifest.toml    # Package dependencies and configuration
-│       └── manifest.lock    # Locked package versions
-└── README.md                # Tool-specific documentation
-```
-
-The `manifest.toml` file defines:
-- Package dependencies
-- Environment variables (non-secret)
-- Activation hooks (setup checks, usage messages)
-- Shell profile customizations
-
-## Composable Development Environments
-
-AI coding tools frequently generate code requiring backend infrastructure. This repository includes several local AI/ML infrastructure environments that can be composed with the coding tools:
-
-### Included Infrastructure Environments
-
-**Local LLM Serving**
-- **ollama** - Headless Ollama for local LLM inference with CUDA/GPU support
-- **agentic-ollama** - Ollama for agentic development with integrated CLI coding tools and GPU acceleration
-- **vllm** - Production vLLM inference server with CUDA and OpenAI-compatible API
-- **sglang** - Production SGLang inference server with multi-GPU tensor parallelism
-- **llamacpp** - Production llama.cpp server for GGUF models with GPU offload
-- **nvidia-triton** - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends
-- **lm-studio** - LM Studio local LLM app and inference server with OpenAI/Anthropic-compatible API
-- **gpt4all** - CPU-optimized local LLM inference
-
-**Web Interfaces**
-- **open-webui** - Backend-agnostic Open WebUI frontend (vLLM, SGLang, Triton, llama.cpp, Ollama)
-- **open-webui-with-ollama** - Open WebUI bundled with Ollama for turnkey local LLM chat
-- **comfyui-complete** - ComfyUI image generation with 22 custom nodes, CUDA/MPS support
-
-**MCP Infrastructure**
-- **mcphost** - Model Context Protocol host for AI agent communication
-
-These can be activated directly or composed with coding environments:
-
-```bash
-# Run Ollama for local inference with agentic tools
-cd agentic-ollama && flox activate -s
-
-# Layer with AI coding tools
-cd ../aichat
-flox activate -- cd ../agentic-ollama && flox activate
-```
-
-### Additional environments from floxrox catalog
-
-The following environments from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) can also be composed with AI coding environments:
-
-### Available via `floxrox/<environment-name>`
-
-**Databases (headless)**
-- `postgres-headless`, `mysql-headless`, `mariadb-headless` - Relational databases
-- `redis-headless` - In-memory data store
-- `neo4j-headless` - Graph database
-
-**AI/ML Infrastructure**
-- `ollama-headless` - Local LLM inference with CUDA support
-- `jupyterlab-headless` - Notebook environment for data analysis
-- `open-webui` - Web interface for Ollama (includes ollama-headless)
-
-**Container and Orchestration**
-- `kind-headless` - Kubernetes in Docker for local cluster testing
-- `colima-headless` - Docker-compatible container runtime
-
-**Workflow Orchestration**
-- `airflow-local-dev`, `airflow-k8s-executor`, `airflow-stack` - Apache Airflow
-- `dagster-headless` - Dagster orchestration platform
-- `prefect-headless` - Prefect workflow automation
-- `temporal-headless`, `temporal-ui` - Temporal workflow engine
-- `n8n-headless` - n8n workflow automation
-
-**Python Development**
-- `python310`, `python311`, `python312`, `python313` - Python versions with venv management
-
-**CLI Tools**
-- `xplatform-cli-tools` - AWS CLI, GitHub CLI, Git with 1Password integration
-
-### Composition Methods
-
-**Via manifest includes:**
-```toml
-[include]
-environments = [
-  { owner = "floxrox", name = "postgres-headless" },
-  { owner = "floxrox", name = "redis-headless" }
-]
-```
-
-**Via runtime configuration:**
-```bash
-# Headless environments accept environment variable overrides
-PGPORT=5432 PGUSER=admin REDIS_PORT=6379 flox activate -s
-```
-
-**Transitive composition example (airflow-stack):**
-```toml
-# airflow-stack includes airflow-local-dev and airflow-k8s-executor
-# which transitively include postgres-headless, redis-headless, kind-headless
-[include]
-environments = [
-  { remote = "barstoolbluz/airflow-local-dev" },
-  { remote = "barstoolbluz/airflow-k8s-executor" }
-]
-
-[hook]
-on-activate = '''
-# Override inherited environment variables for production tuning
-export POSTGRES_MAX_CONNECTIONS="200"
-export REDIS_MAXMEMORY="1gb"
-export AIRFLOW_CELERY_WORKERS="4"
-'''
-```
-
-### Configuration Pattern
-
-All headless environments follow a consistent pattern:
-- Runtime configuration via environment variables with defaults (`${VAR:-default}`)
-- Service-based execution (`flox activate -s`)
-- Non-standard ports to avoid conflicts (PostgreSQL: 15432, Redis: 16379)
-- Configuration inspection via `<service>-info` shell functions
-
-This pattern enables programmatic configuration by AI agents and composition without manual intervention.
-
-### Layering vs Composition
-
-Flox supports two distinct environment combination patterns:
-
-**Layering (Runtime)**
-- Activation-time stacking: `flox activate -r floxrox/postgres-headless`
-- Sequential execution - later layers override earlier layers
-- Preserves subshell boundaries between environments
-- Conflicts surface at runtime
-- Use case: Ad-hoc development tools, debugging overlays
-
-**Composition (Build-time)**
-- Declarative merging via `[include]` in manifest
-- Deterministic - environments merge into single namespace
-- Conflicts surface at manifest evaluation
-- Transitive - includes are recursive
-- Use case: Repeatable, shareable infrastructure stacks
-
-**Example - Layering for ad-hoc debugging:**
-```bash
-# Stack debugging tools on top of AI coding environment
-cd aichat
-flox activate -r floxrox/postgres-headless
-# PostgreSQL available for testing AI-generated database code
-```
-
-**Example - Composition for repeatable stack:**
-```toml
-# AI coding environment with persistent database backend
-[include]
-environments = [
-  { owner = "floxrox", name = "postgres-headless" }
-]
-
-[hook]
-on-activate = '''
-# Customize inherited PostgreSQL configuration
-export PGDATABASE="ai_generated_app"
-export POSTGRES_MAX_CONNECTIONS="50"
-'''
-```
-
-Both patterns support environment variable overrides. Composition allows modification of inherited variables via hooks, while layering relies on the order of activation.
-
-## Security Conventions
-
-Per Flox best practices:
-
-- **API keys and credentials**: Must reside in `$HOME` (e.g., `~/.config/`, `~/.aws/`)
-- **Environment variables**: Preferred configuration method for secrets
-- **Project directories**: May contain non-secret configuration; must not contain credentials
-- **`.gitignore`**: Ensures credential files are excluded from version control
-
-## System Requirements
-
-- macOS (Intel/ARM) or Linux (x86/ARM)
-- Flox package manager
-- Internet connection for LLM API access
-- Valid API keys for chosen providers
-
-## Flox Overview
-
-[Flox](https://flox.dev/docs) provides:
-
-- **Declarative environments** - Dependencies and configuration in TOML
-- **Reproducibility** - Consistent environments across systems
-- **Package isolation** - No conflicts between project dependencies
-- **Nixpkgs integration** - Access to 150,000+ packages
+- API keys for your chosen providers (set as environment variables)
 
 ## Attribution
 
-Each tool is developed and maintained by its respective upstream project. See individual environment READMEs for:
-- Upstream project links
-- Original author/maintainer attribution
-- Tool-specific licenses
-- Official documentation
-
-Flox environment configurations in this repository are provided as-is.
+Each tool is developed and maintained by its respective upstream project. See individual environment READMEs for upstream links, licenses, and documentation.
 
 ## License
 
-Flox environment configurations: As-is, no warranty
-
-Individual tools: See respective upstream licenses in environment READMEs
+Flox environment configurations: As-is, no warranty. Individual tools: see respective upstream licenses.
