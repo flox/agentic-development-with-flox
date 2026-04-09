@@ -19,7 +19,7 @@ cd ironclaw
 flox activate
 ```
 
-IronClaw is installed via `cargo install` on first activation (this takes a few minutes).
+IronClaw is provided as a pre-built package from the Flox catalog.
 
 ### 2. Choose a Database Mode
 
@@ -88,6 +88,7 @@ LLM_BACKEND=openai_compatible LLM_BASE_URL=<endpoint>/v1 LLM_API_KEY=<key> ironc
 | `LLM_BASE_URL` | *(provider default)* | Base URL for OpenAI-compatible endpoints |
 | `LLM_API_KEY` | *(not set)* | API key for OpenAI-compatible endpoints |
 | `LLM_MODEL` | *(provider default)* | Model name override |
+| `HTTP_WEBHOOK_SECRET` | *(auto-generated)* | HTTP webhook channel secret (random per activation if not set) |
 | `HTTP_PORT` | `8080` | Webhook server port (auto-fallback if in use) |
 | `HTTP_HOST` | `127.0.0.1` | Webhook server bind address |
 | `KILL` | `0` | Set to `1` to reclaim occupied port |
@@ -127,6 +128,15 @@ PostgreSQL runs on port 15432 (non-standard to avoid conflicts) with socket-only
 ironclaw-info    # Show configuration, API key status, and command reference
 ```
 
+## HTTP Webhook Channel
+
+A random `HTTP_WEBHOOK_SECRET` is generated automatically on each activation if not already set. To use a persistent secret:
+
+```bash
+export HTTP_WEBHOOK_SECRET=your-fixed-secret
+flox activate
+```
+
 ## Port Management
 
 IronClaw's webhook server defaults to port 8080. If the port is in use:
@@ -144,11 +154,11 @@ KILL=1 flox activate
 
 ## Technical Notes
 
-- Rust toolchain provided via rustup; auto-updated to 1.92+ on first activation
-- IronClaw binary installed to `$FLOX_ENV_CACHE/cargo-bin/bin/` and cached
+- IronClaw is installed as a pre-built Flox catalog package (`flox/ironclaw`)
+- Bundled helper scripts: `ironclaw-info`, `ironclaw-pg-init`, `ironclaw-pg-start`, `ironclaw-pg-detect`, `ironclaw-port-check`
 - `IRONCLAW_BASE_DIR` is set to `$IRONCLAW_HOME` for IronClaw's native config lookup
-- PostgreSQL runs on port 15432 (socket-only) as a Flox-managed service
-- Database detection runs in the shell profile (after services start)
+- PostgreSQL runs on port 15432 (socket-only) as a Flox-managed service via `ironclaw-pg-start`
+- Database detection runs in the shell profile (after services start) via `ironclaw-pg-detect`
 
 ## Resources
 
