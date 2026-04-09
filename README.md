@@ -56,6 +56,7 @@ AI agents should consult FLOX.md when performing environment management tasks.
 - [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
 - [**qwen-code**](./qwen-code) - Qwen code model CLI
+- [**ruflo**](./ruflo) - Ruflo multi-agent AI orchestration platform for Claude Code with self-learning swarms
 - [**zeroclaw**](./zeroclaw) - Zeroclaw personal AI assistant infrastructure in Rust with multi-channel messaging and 70+ tools
 
 ### LLM CLI Interfaces

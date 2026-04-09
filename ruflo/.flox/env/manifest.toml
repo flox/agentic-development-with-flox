@@ -1,0 +1,186 @@
+schema-version = "1.11.0"
+
+[install]
+nodejs_22.pkg-path = "nodejs_22"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+npm_config_prefix = "$FLOX_ENV_CACHE/npm-global"
+
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+
+[hook]
+on-activate = '''
+# === RUFLO INSTALLATION ===
+export npm_config_prefix="$FLOX_ENV_CACHE/npm-global"
+export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
+
+# Install ruflo globally if not present
+if [ ! -f "$FLOX_ENV_CACHE/npm-global/bin/ruflo" ]; then
+  echo "Installing ruflo..."
+  npm install -g ruflo@latest --quiet 2>/dev/null
+  echo ""
+fi
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Ruflo environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Set an API key:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo ""
+fi
+
+echo "Commands:"
+echo "  ruflo init --wizard          Interactive first-time setup"
+echo "  ruflo swarm                  Manage agent swarms"
+echo "  ruflo agents                 List and configure agents"
+echo "  ruflo router                 Configure routing policies"
+echo "  ruflo memory                 Manage knowledge graph and vector store"
+echo "  ruflo-info                   Show configuration"
+echo "  ruflo-update                 Update to latest version"
+echo ""
+
+unset _has_key
+'''
+
+[profile]
+bash = '''
+export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
+
+ruflo-info() {
+    echo "Ruflo Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  ruflo init --wizard          Interactive setup"
+    echo "  ruflo swarm                  Manage agent swarms"
+    echo "  ruflo agents                 List/configure agents"
+    echo "  ruflo router                 Configure routing"
+    echo "  ruflo memory                 Knowledge graph + vector store"
+    echo "  ruflo optimize               Run optimization workers"
+    echo "  ruflo audit                  Run security audits"
+    echo "  ruflo session                Persist/restore/export sessions"
+    echo "  ruflo plugins                Manage plugins"
+    echo "  ruflo hooks intelligence --status  Check RuVector status"
+    echo ""
+    echo "Providers: Anthropic (primary), OpenAI, Google Gemini,"
+    echo "  Cohere, Ollama, with automatic failover"
+    echo ""
+    echo "Update: ruflo-update"
+}
+export -f ruflo-info
+
+ruflo-update() {
+    npm install -g ruflo@latest
+}
+export -f ruflo-update
+'''
+
+zsh = '''
+export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
+
+ruflo-info() {
+    echo "Ruflo Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  ruflo init --wizard          Interactive setup"
+    echo "  ruflo swarm                  Manage agent swarms"
+    echo "  ruflo agents                 List/configure agents"
+    echo "  ruflo router                 Configure routing"
+    echo "  ruflo memory                 Knowledge graph + vector store"
+    echo "  ruflo optimize               Run optimization workers"
+    echo "  ruflo audit                  Run security audits"
+    echo "  ruflo session                Persist/restore/export sessions"
+    echo "  ruflo plugins                Manage plugins"
+    echo "  ruflo hooks intelligence --status  Check RuVector status"
+    echo ""
+    echo "Providers: Anthropic (primary), OpenAI, Google Gemini,"
+    echo "  Cohere, Ollama, with automatic failover"
+    echo ""
+    echo "Update: ruflo-update"
+}
+
+ruflo-update() {
+    npm install -g ruflo@latest
+}
+'''
+
+fish = '''
+set -gx PATH "$FLOX_ENV_CACHE/npm-global/bin" $PATH
+
+function ruflo-info
+    echo "Ruflo Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  ruflo init --wizard          Interactive setup"
+    echo "  ruflo swarm                  Manage agent swarms"
+    echo "  ruflo agents                 List/configure agents"
+    echo "  ruflo router                 Configure routing"
+    echo "  ruflo memory                 Knowledge graph + vector store"
+    echo "  ruflo optimize               Run optimization workers"
+    echo "  ruflo audit                  Run security audits"
+    echo "  ruflo session                Persist/restore/export sessions"
+    echo "  ruflo plugins                Manage plugins"
+    echo "  ruflo hooks intelligence --status  Check RuVector status"
+    echo ""
+    echo "Providers: Anthropic (primary), OpenAI, Google Gemini,"
+    echo "  Cohere, Ollama, with automatic failover"
+    echo ""
+    echo "Update: ruflo-update"
+end
+
+function ruflo-update
+    npm install -g ruflo@latest
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
