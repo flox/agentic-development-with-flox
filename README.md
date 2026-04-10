@@ -94,7 +94,7 @@ aider --model ollama_chat/gemma4
 ### LLM CLI Interfaces
 
 - [**aichat**](./aichat) - Multi-provider LLM CLI (OpenAI, Claude, Gemini, Ollama, Groq, Azure, Bedrock, etc.)
-- [**gpt4all**](./gpt4all) - GPT4All local LLM interface
+- [**gpt4all**](./gpt4all) - GPT4All privacy-first local LLM ecosystem with chat GUI **(linux only)**
 
 ### Local AI/ML Infrastructure
 
