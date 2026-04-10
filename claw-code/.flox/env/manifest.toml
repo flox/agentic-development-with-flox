@@ -1,0 +1,100 @@
+schema-version = "1.11.0"
+
+[install]
+claw-code.pkg-path = "flox/claw-code"
+claw-code.pkg-group = "claw-code"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# ANTHROPIC_API_KEY is required at runtime
+# Set in your shell profile or pass at activation time
+
+[hook]
+on-activate = '''
+echo ""
+echo "Claw Code environment ready"
+echo ""
+
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+else
+  echo "  Anthropic API key: NOT SET (required)"
+  echo ""
+  echo "  Set your API key:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo ""
+fi
+
+echo ""
+echo "Commands:"
+echo "  claw                         Start interactive agent"
+echo "  claw prompt \"<prompt>\"       Run a single prompt"
+echo "  claw doctor                  Health check"
+echo "  claw-info                    Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+claw-info() {
+    echo "Claw Code Environment Configuration"
+    echo ""
+    echo "API Key:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: NOT SET (required)"
+    echo ""
+    echo "Commands:"
+    echo "  claw                         Start interactive agent"
+    echo "  claw prompt \"<prompt>\"       Run a single prompt"
+    echo "  claw doctor                  Health check"
+    echo ""
+    echo "Source: https://github.com/instructkr/claw-code"
+}
+export -f claw-info
+'''
+
+zsh = '''
+claw-info() {
+    echo "Claw Code Environment Configuration"
+    echo ""
+    echo "API Key:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: NOT SET (required)"
+    echo ""
+    echo "Commands:"
+    echo "  claw                         Start interactive agent"
+    echo "  claw prompt \"<prompt>\"       Run a single prompt"
+    echo "  claw doctor                  Health check"
+    echo ""
+    echo "Source: https://github.com/instructkr/claw-code"
+}
+'''
+
+fish = '''
+function claw-info
+    echo "Claw Code Environment Configuration"
+    echo ""
+    echo "API Key:"
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: NOT SET (required)"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  claw                         Start interactive agent"
+    echo "  claw prompt \"<prompt>\"       Run a single prompt"
+    echo "  claw doctor                  Health check"
+    echo ""
+    echo "Source: https://github.com/instructkr/claw-code"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]

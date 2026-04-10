@@ -64,6 +64,7 @@ aider --model ollama_chat/gemma4
 - [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
 - [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent
 - [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
+- [**claw-code**](./claw-code) - Claw Code Rust-based CLI for Claude AI with tool execution and session persistence
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
 - [**code**](./code) - Every Code fast local coding agent with multi-agent orchestration
 - [**codex**](./codex) - OpenAI Codex CLI coding agent
@@ -100,14 +101,14 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 
 - [**agentic-ollama**](./agentic-ollama) - Ollama with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw) via `ollama launch`
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
-- [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API
+- [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API (x86_64-linux)
 - [**lm-studio**](./lm-studio) - LM Studio local LLM desktop app and inference server with OpenAI/Anthropic-compatible API
-- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends
+- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends (x86_64-linux)
 - [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
-- [**sglang**](./sglang) - Production SGLang inference server with CUDA, multi-GPU tensor parallelism
-- [**vllm**](./vllm) - Production vLLM inference server with CUDA, OpenAI-compatible API
+- [**sglang**](./sglang) - Production SGLang inference server with CUDA, multi-GPU tensor parallelism (x86_64-linux)
+- [**vllm**](./vllm) - Production vLLM inference server with CUDA, OpenAI-compatible API (x86_64-linux)
 
 ### Developer Tools
 
