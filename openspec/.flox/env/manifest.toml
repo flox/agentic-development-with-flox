@@ -1,0 +1,115 @@
+schema-version = "1.11.0"
+
+[install]
+# OpenSpec from nixpkgs (maintained by numtide)
+# NOT flox/openspec — that entry is stale at 0.16.0
+openspec.pkg-path = "openspec"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Telemetry opt-out (anonymous command names + version only)
+# OPENSPEC_TELEMETRY = "0"
+# DO_NOT_TRACK = "1"
+
+[hook]
+on-activate = '''
+echo ""
+echo "OpenSpec environment ready"
+echo ""
+echo "Commands:"
+echo "  openspec init                Initialize in current project"
+echo "  openspec update              Refresh AI agent slash commands"
+echo "  openspec config profile      Switch workflow profile (default/expanded)"
+echo "  openspec-info                Show configuration"
+echo ""
+echo "Slash commands (in your AI assistant):"
+echo "  /opsx:propose \"<idea>\"       AI creates change folder with proposal/specs/design/tasks"
+echo "  /opsx:apply                  AI implements the tasks"
+echo "  /opsx:archive                AI archives completed change"
+echo ""
+'''
+
+[profile]
+bash = '''
+openspec-info() {
+    echo "OpenSpec Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  openspec init                Initialize in current project"
+    echo "  openspec update              Refresh AI agent instructions/slash commands"
+    echo "  openspec config profile      Switch workflow profile"
+    echo ""
+    echo "Slash commands (in supported AI assistants):"
+    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
+    echo "  /opsx:apply                  Implement the tasks"
+    echo "  /opsx:archive                Archive completed change"
+    echo ""
+    echo "Expanded profile adds:"
+    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
+    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
+    echo ""
+    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
+    echo ""
+    echo "Source: https://github.com/Fission-AI/OpenSpec"
+}
+export -f openspec-info
+'''
+
+zsh = '''
+openspec-info() {
+    echo "OpenSpec Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  openspec init                Initialize in current project"
+    echo "  openspec update              Refresh AI agent instructions/slash commands"
+    echo "  openspec config profile      Switch workflow profile"
+    echo ""
+    echo "Slash commands (in supported AI assistants):"
+    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
+    echo "  /opsx:apply                  Implement the tasks"
+    echo "  /opsx:archive                Archive completed change"
+    echo ""
+    echo "Expanded profile adds:"
+    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
+    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
+    echo ""
+    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
+    echo ""
+    echo "Source: https://github.com/Fission-AI/OpenSpec"
+}
+'''
+
+fish = '''
+function openspec-info
+    echo "OpenSpec Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  openspec init                Initialize in current project"
+    echo "  openspec update              Refresh AI agent instructions/slash commands"
+    echo "  openspec config profile      Switch workflow profile"
+    echo ""
+    echo "Slash commands (in supported AI assistants):"
+    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
+    echo "  /opsx:apply                  Implement the tasks"
+    echo "  /opsx:archive                Archive completed change"
+    echo ""
+    echo "Expanded profile adds:"
+    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
+    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
+    echo ""
+    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
+    echo ""
+    echo "Source: https://github.com/Fission-AI/OpenSpec"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]

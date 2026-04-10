@@ -119,6 +119,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**claude-squad**](./claude-squad) - TUI for managing multiple AI coding agents in parallel with tmux isolation
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
+- [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 
