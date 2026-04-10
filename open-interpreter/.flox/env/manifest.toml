@@ -1,0 +1,167 @@
+schema-version = "1.11.0"
+
+[install]
+# Bootstrap wrapper — on first run installs open-interpreter into a persistent venv via uv
+open-interpreter.pkg-path = "flox/open-interpreter"
+open-interpreter.pkg-group = "open-interpreter"
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# API keys - set in your shell profile or pass at activation time
+# OPENAI_API_KEY = ""
+# ANTHROPIC_API_KEY = ""
+
+[hook]
+on-activate = '''
+echo ""
+echo "Open Interpreter environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+if [ -n "$OPENAI_API_KEY" ]; then
+  echo "  OpenAI API key: set"
+  _has_key=1
+else
+  echo "  OpenAI API key: not set"
+fi
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "  Anthropic API key: set"
+  _has_key=1
+else
+  echo "  Anthropic API key: not set"
+fi
+echo ""
+
+if [ "$_has_key" = "0" ]; then
+  echo "  Set an API key:"
+  echo "    export OPENAI_API_KEY=sk-..."
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo ""
+  echo "  Or use a local model:"
+  echo "    interpreter --local"
+  echo "    interpreter --api_base http://localhost:1234/v1 --api_key fake"
+  echo ""
+fi
+
+echo "Commands:"
+echo "  interpreter                  Start interactive chat"
+echo "  i                            Shorthand for interpreter"
+echo "  interpreter --model <model>  Use a specific model"
+echo "  interpreter --local          Use a local Llamafile model"
+echo "  interpreter -y               Auto-run code (skip confirmation)"
+echo "  interpreter-info             Show configuration"
+echo ""
+echo "First run installs dependencies into a persistent venv (one time)."
+echo ""
+
+unset _has_key
+'''
+
+[profile]
+bash = '''
+interpreter-info() {
+    echo "Open Interpreter Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    echo ""
+    echo "Commands:"
+    echo "  interpreter                  Start interactive chat"
+    echo "  i                            Shorthand"
+    echo "  interpreter --model <model>  Use a specific model"
+    echo "  interpreter --local          Use a local model"
+    echo "  interpreter -y               Auto-run code"
+    echo "  interpreter --profiles       Open profiles directory"
+    echo "  interpreter --profile <name> Use a specific profile"
+    echo ""
+    echo "In-chat commands:"
+    echo "  %reset     Reset conversation"
+    echo "  %undo      Undo last message"
+    echo "  %tokens    Show token usage"
+    echo "  %verbose   Toggle debug mode"
+    echo "  %help      Show help"
+    echo ""
+    echo "Providers: OpenAI, Anthropic, Cohere, Ollama, LM Studio,"
+    echo "  Llamafile, and any LiteLLM-supported provider"
+}
+export -f interpreter-info
+'''
+
+zsh = '''
+interpreter-info() {
+    echo "Open Interpreter Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    echo ""
+    echo "Commands:"
+    echo "  interpreter                  Start interactive chat"
+    echo "  i                            Shorthand"
+    echo "  interpreter --model <model>  Use a specific model"
+    echo "  interpreter --local          Use a local model"
+    echo "  interpreter -y               Auto-run code"
+    echo "  interpreter --profiles       Open profiles directory"
+    echo "  interpreter --profile <name> Use a specific profile"
+    echo ""
+    echo "In-chat commands:"
+    echo "  %reset     Reset conversation"
+    echo "  %undo      Undo last message"
+    echo "  %tokens    Show token usage"
+    echo "  %verbose   Toggle debug mode"
+    echo "  %help      Show help"
+    echo ""
+    echo "Providers: OpenAI, Anthropic, Cohere, Ollama, LM Studio,"
+    echo "  Llamafile, and any LiteLLM-supported provider"
+}
+'''
+
+fish = '''
+function interpreter-info
+    echo "Open Interpreter Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$OPENAI_API_KEY"
+        echo "  OpenAI: set"
+    else
+        echo "  OpenAI: not set"
+    end
+    if test -n "$ANTHROPIC_API_KEY"
+        echo "  Anthropic: set"
+    else
+        echo "  Anthropic: not set"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  interpreter                  Start interactive chat"
+    echo "  i                            Shorthand"
+    echo "  interpreter --model <model>  Use a specific model"
+    echo "  interpreter --local          Use a local model"
+    echo "  interpreter -y               Auto-run code"
+    echo "  interpreter --profiles       Open profiles directory"
+    echo "  interpreter --profile <name> Use a specific profile"
+    echo ""
+    echo "In-chat commands:"
+    echo "  %reset     Reset conversation"
+    echo "  %undo      Undo last message"
+    echo "  %tokens    Show token usage"
+    echo "  %verbose   Toggle debug mode"
+    echo "  %help      Show help"
+    echo ""
+    echo "Providers: OpenAI, Anthropic, Cohere, Ollama, LM Studio,"
+    echo "  Llamafile, and any LiteLLM-supported provider"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
