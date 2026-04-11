@@ -4,7 +4,7 @@ schema-version = "1.11.0"
 ## Install Packages --------------------------------------------------
 [install]
 # OpenClaw via separate flake (nixpkgs marks it insecure; the flake overrides that).
-openclaw.flake = "github:barstoolbluz/openclaw-nix"
+openclaw.pkg-path = "flox/openclaw"
 
 
 ## Environment Variables ---------------------------------------------
