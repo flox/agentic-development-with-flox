@@ -8,11 +8,13 @@ lmstudio.pkg-group = "lmstudio"
 # general-purpose tools
 bat.pkg-path = "bat"
 bat.pkg-group = "tools"
+bat.outputs = "all"
 curl.pkg-path = "curl"
 curl.pkg-group = "tools"
 curl.outputs = "all"
 jq.pkg-path = "jq"
 jq.pkg-group = "tools"
+jq.outputs = "all"
 
 # agentic cli tools
 claude-code.pkg-path = "claude-code"
@@ -31,8 +33,6 @@ flox-mcp-server.pkg-path = "flox/flox-mcp-server"
 flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 flox-mcp-server.pkg-group = "mcp"
 flox-mcp-server.outputs = "all"
-strace.pkg-path = "strace"
-strace.systems = ["aarch64-linux", "x86_64-linux"]
 
 [vars]
 # Server configuration - override at activation time
