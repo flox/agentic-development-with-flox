@@ -1,0 +1,748 @@
+schema-version = "1.11.0"
+
+[install]
+# LM Studio
+lmstudio.pkg-path = "flox/lmstudio"
+lmstudio.pkg-group = "lmstudio"
+
+# general-purpose tools
+bat.pkg-path = "bat"
+bat.pkg-group = "tools"
+curl.pkg-path = "curl"
+curl.pkg-group = "tools"
+curl.outputs = "all"
+jq.pkg-path = "jq"
+jq.pkg-group = "tools"
+
+# agentic cli tools
+claude-code.pkg-path = "claude-code"
+claude-code.pkg-group = "agentic"
+claude-code.outputs = "all"
+codex.pkg-path = "codex"
+codex.pkg-group = "agentic"
+codex.outputs = "all"
+opencode.pkg-path = "opencode"
+opencode.pkg-group = "agentic"
+opencode.outputs = "all"
+#openclaw.flake = "github:barstoolbluz/openclaw-nix"	# uncomment to use openclaw
+
+# flox mcp server
+flox-mcp-server.pkg-path = "flox/flox-mcp-server"
+flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+flox-mcp-server.pkg-group = "mcp"
+flox-mcp-server.outputs = "all"
+strace.pkg-path = "strace"
+strace.systems = ["aarch64-linux", "x86_64-linux"]
+
+[vars]
+# Server configuration - override at activation time
+# LMS_PORT         - API server port (default: 1234)
+# LMS_HOST         - API server bind address (default: 127.0.0.1)
+# LMS_GUI          - Launch GUI on activation: true/false (default: false)
+# LMS_CORS_ORIGIN  - CORS allowed origins (default: *)
+
+[hook]
+on-activate = '''
+# === SERVER CONFIGURATION ===
+export LMS_PORT="${LMS_PORT:-1234}"
+export LMS_HOST="${LMS_HOST:-127.0.0.1}"
+export LMS_GUI="${LMS_GUI:-false}"
+export LMS_CORS_ORIGIN="${LMS_CORS_ORIGIN:-*}"
+
+# Constructed base URL for helper functions
+export LMS_API_BASE="http://${LMS_HOST}:${LMS_PORT}"
+
+# === DATA DIRECTORIES ===
+export LMS_LOG_DIR="$FLOX_ENV_CACHE/logs"
+mkdir -p "$LMS_LOG_DIR"
+
+# === GPU DETECTION ===
+export _FLOX_ENV_CUDA_DETECTION=0
+if command -v nvidia-smi >/dev/null 2>&1; then
+  if nvidia-smi -L 2>/dev/null | grep -q "GPU"; then
+    export _FLOX_ENV_CUDA_DETECTION=1
+  fi
+fi
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "LM Studio + Agentic Tools environment ready"
+echo ""
+echo "Server:"
+echo "  API: ${LMS_API_BASE}"
+echo "  GUI: ${LMS_GUI}"
+if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+  echo "  GPU: Available (CUDA detected)"
+else
+  echo "  GPU: Not detected (CPU mode)"
+fi
+echo ""
+echo "Quick Start:"
+echo "  flox activate -s                          Start LM Studio server"
+echo "  lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF"
+echo "  lms load llama-3.1-8b-instruct            Load a model"
+echo "  lms-launch claude                         Launch Claude Code"
+echo "  lms-launch codex                          Launch Codex"
+echo "  lms-launch opencode                       Launch OpenCode"
+echo ""
+echo "Commands:"
+echo "  lms-launch <tool> [--model <m>] [args]    Launch agentic tool via LM Studio"
+echo "  lms-models                                List loaded models"
+echo "  lmstudio-info                             Show configuration"
+echo "  lmstudio-health                           Test API endpoint"
+echo "  helpf                                     View full README documentation"
+echo ""
+
+# Fetch README.md if not present
+README_FILE="$FLOX_ENV_PROJECT/README.md"
+if [ ! -f "$README_FILE" ]; then
+  if curl -fsSL https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md -o "$README_FILE" 2>/dev/null; then
+    echo "Downloaded README.md (use 'helpf' to view)"
+  fi
+fi
+'''
+
+[services.lm-studio]
+command = """
+# lms daemon up is the long-lived foreground process (LM Studio inference core).
+# Once it's ready, lms server start enables the HTTP API on top of it.
+# We background the daemon, wait for it, start the server, then wait on the daemon PID.
+
+lms daemon up >> "$LMS_LOG_DIR/lm-studio.log" 2>&1 &
+DAEMON_PID=$!
+
+# Wait for daemon to become ready
+for i in $(seq 1 30); do
+  if lms status >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+if ! lms status >/dev/null 2>&1; then
+  echo "ERROR: LM Studio daemon failed to start after 30s" >&2
+  echo "Check logs: $LMS_LOG_DIR/lm-studio.log" >&2
+  exit 1
+fi
+
+# Enable the API server
+lms server start --port "$LMS_PORT" --host "$LMS_HOST" --cors-origin "$LMS_CORS_ORIGIN" >> "$LMS_LOG_DIR/lm-studio.log" 2>&1
+
+echo "LM Studio daemon + API server running on http://${LMS_HOST}:${LMS_PORT}"
+
+# Keep the service alive by waiting on the daemon process
+wait $DAEMON_PID
+"""
+is-daemon = false
+
+[profile]
+bash = '''
+lms-launch() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: lms-launch <tool> [--model <model>] [extra args...]"
+        echo ""
+        echo "Launch an agentic CLI tool connected to the local LM Studio server."
+        echo ""
+        echo "Tools:"
+        echo "  claude      Claude Code (Anthropic CLI agent)"
+        echo "  codex       Codex (OpenAI CLI agent)"
+        echo "  opencode    OpenCode (open-source AI agent)"
+        echo ""
+        echo "Options:"
+        echo "  --model <model>   Specify which loaded model to use"
+        echo "  Any additional arguments are passed through to the tool."
+        echo ""
+        echo "Examples:"
+        echo "  lms-launch claude"
+        echo "  lms-launch claude --model llama-3.1-8b-instruct"
+        echo "  lms-launch codex"
+        echo "  lms-launch opencode"
+        echo ""
+        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
+        return 0
+    fi
+
+    local tool="$1"
+    shift
+
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    # Health check
+    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "Error: LM Studio API is not responding at ${BASE}"
+        echo ""
+        echo "Make sure the server is running:"
+        echo "  flox activate -s"
+        echo ""
+        echo "Check status:"
+        echo "  flox services status"
+        echo "  flox services logs lm-studio"
+        return 1
+    fi
+
+    case "$tool" in
+        claude)
+            echo "Launching Claude Code against LM Studio at ${BASE} ..."
+            ANTHROPIC_API_BASE_URL="${BASE}" \
+            ANTHROPIC_API_KEY="lm-studio" \
+                claude "$@"
+            ;;
+        codex)
+            echo "Launching Codex against LM Studio at ${BASE} ..."
+            OPENAI_BASE_URL="${BASE}/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                codex "$@"
+            ;;
+        opencode)
+            echo "Launching OpenCode against LM Studio at ${BASE} ..."
+            OPENAI_BASE_URL="${BASE}/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                opencode "$@"
+            ;;
+        *)
+            echo "Unknown tool: $tool"
+            echo ""
+            echo "Supported tools: claude, codex, opencode"
+            echo "Run 'lms-launch' without arguments for usage."
+            return 1
+            ;;
+    esac
+}
+export -f lms-launch
+
+lms-models() {
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "LM Studio API is not responding at ${BASE}"
+        echo "  Try: flox services status"
+        return 1
+    fi
+
+    echo "Loaded models (${BASE}):"
+    echo ""
+    curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null || \
+        curl -sf "${BASE}/v1/models" 2>/dev/null
+}
+export -f lms-models
+
+lmstudio-info() {
+    echo "LM Studio + Agentic Tools Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${LMS_HOST}"
+    echo "  Port: ${LMS_PORT}"
+    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
+    echo "  GUI:  ${LMS_GUI}"
+    echo "  CORS: ${LMS_CORS_ORIGIN}"
+    echo ""
+    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    fi
+    echo ""
+    echo "Agentic Tools:"
+    echo "  lms-launch claude       Launch Claude Code via LM Studio"
+    echo "  lms-launch codex        Launch Codex via LM Studio"
+    echo "  lms-launch opencode     Launch OpenCode via LM Studio"
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>         Download a model from Hugging Face"
+    echo "  lms load <model>        Load a model into memory"
+    echo "  lms-models              List loaded models via API"
+    echo "  lms chat                Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status    Check service status"
+    echo "  flox services logs      View service logs"
+    echo "  lmstudio-health         Test API endpoint"
+    echo ""
+    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+}
+export -f lmstudio-info
+
+lmstudio-health() {
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    if curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "LM Studio API is healthy at ${BASE}"
+        echo ""
+        echo "Loaded models:"
+        curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null || \
+            curl -sf "${BASE}/v1/models" 2>/dev/null
+        return 0
+    else
+        echo "LM Studio API is not responding at ${BASE}"
+        echo "  Try: flox services status"
+        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
+        return 1
+    fi
+}
+export -f lmstudio-health
+
+helpf() {
+    local README_FILE="$FLOX_ENV_PROJECT/README.md"
+    local README_URL="https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+
+    if [ "$1" = "--help" ]; then
+        echo "Usage: helpf [OPTIONS]"
+        echo ""
+        echo "View environment documentation"
+        echo ""
+        echo "Options:"
+        echo "  --force    Force download fresh copy from GitHub"
+        echo "  --help     Show this help message"
+        echo ""
+        echo "The README is cached locally and only downloaded if missing."
+        return 0
+    fi
+
+    if [ "$1" = "--force" ]; then
+        echo "Fetching latest README.md from GitHub..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"; then
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        fi
+    elif [ ! -f "$README_FILE" ]; then
+        echo "README.md not found, downloading..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"; then
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        fi
+    fi
+
+    if [ -f "$README_FILE" ]; then
+        bat --style=auto --paging=always "$README_FILE"
+    else
+        echo "README.md not found at $README_FILE"
+        return 1
+    fi
+}
+export -f helpf
+
+# Optionally launch GUI on activation
+if [ "${LMS_GUI}" = "true" ]; then
+    lm-studio &
+fi
+'''
+
+zsh = '''
+lms-launch() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: lms-launch <tool> [--model <model>] [extra args...]"
+        echo ""
+        echo "Launch an agentic CLI tool connected to the local LM Studio server."
+        echo ""
+        echo "Tools:"
+        echo "  claude      Claude Code (Anthropic CLI agent)"
+        echo "  codex       Codex (OpenAI CLI agent)"
+        echo "  opencode    OpenCode (open-source AI agent)"
+        echo ""
+        echo "Options:"
+        echo "  --model <model>   Specify which loaded model to use"
+        echo "  Any additional arguments are passed through to the tool."
+        echo ""
+        echo "Examples:"
+        echo "  lms-launch claude"
+        echo "  lms-launch claude --model llama-3.1-8b-instruct"
+        echo "  lms-launch codex"
+        echo "  lms-launch opencode"
+        echo ""
+        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
+        return 0
+    fi
+
+    local tool="$1"
+    shift
+
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    # Health check
+    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "Error: LM Studio API is not responding at ${BASE}"
+        echo ""
+        echo "Make sure the server is running:"
+        echo "  flox activate -s"
+        echo ""
+        echo "Check status:"
+        echo "  flox services status"
+        echo "  flox services logs lm-studio"
+        return 1
+    fi
+
+    case "$tool" in
+        claude)
+            echo "Launching Claude Code against LM Studio at ${BASE} ..."
+            ANTHROPIC_API_BASE_URL="${BASE}" \
+            ANTHROPIC_API_KEY="lm-studio" \
+                claude "$@"
+            ;;
+        codex)
+            echo "Launching Codex against LM Studio at ${BASE} ..."
+            OPENAI_BASE_URL="${BASE}/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                codex "$@"
+            ;;
+        opencode)
+            echo "Launching OpenCode against LM Studio at ${BASE} ..."
+            OPENAI_BASE_URL="${BASE}/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                opencode "$@"
+            ;;
+        *)
+            echo "Unknown tool: $tool"
+            echo ""
+            echo "Supported tools: claude, codex, opencode"
+            echo "Run 'lms-launch' without arguments for usage."
+            return 1
+            ;;
+    esac
+}
+
+lms-models() {
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "LM Studio API is not responding at ${BASE}"
+        echo "  Try: flox services status"
+        return 1
+    fi
+
+    echo "Loaded models (${BASE}):"
+    echo ""
+    curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null || \
+        curl -sf "${BASE}/v1/models" 2>/dev/null
+}
+
+lmstudio-info() {
+    echo "LM Studio + Agentic Tools Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${LMS_HOST}"
+    echo "  Port: ${LMS_PORT}"
+    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
+    echo "  GUI:  ${LMS_GUI}"
+    echo "  CORS: ${LMS_CORS_ORIGIN}"
+    echo ""
+    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    fi
+    echo ""
+    echo "Agentic Tools:"
+    echo "  lms-launch claude       Launch Claude Code via LM Studio"
+    echo "  lms-launch codex        Launch Codex via LM Studio"
+    echo "  lms-launch opencode     Launch OpenCode via LM Studio"
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>         Download a model from Hugging Face"
+    echo "  lms load <model>        Load a model into memory"
+    echo "  lms-models              List loaded models via API"
+    echo "  lms chat                Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status    Check service status"
+    echo "  flox services logs      View service logs"
+    echo "  lmstudio-health         Test API endpoint"
+    echo ""
+    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+}
+
+lmstudio-health() {
+    local HOST="${LMS_HOST:-127.0.0.1}"
+    local PORT="${LMS_PORT:-1234}"
+    local BASE="http://${HOST}:${PORT}"
+
+    if curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
+        echo "LM Studio API is healthy at ${BASE}"
+        echo ""
+        echo "Loaded models:"
+        curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null || \
+            curl -sf "${BASE}/v1/models" 2>/dev/null
+        return 0
+    else
+        echo "LM Studio API is not responding at ${BASE}"
+        echo "  Try: flox services status"
+        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
+        return 1
+    fi
+}
+
+helpf() {
+    local README_FILE="$FLOX_ENV_PROJECT/README.md"
+    local README_URL="https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+
+    if [ "$1" = "--help" ]; then
+        echo "Usage: helpf [OPTIONS]"
+        echo ""
+        echo "View environment documentation"
+        echo ""
+        echo "Options:"
+        echo "  --force    Force download fresh copy from GitHub"
+        echo "  --help     Show this help message"
+        echo ""
+        echo "The README is cached locally and only downloaded if missing."
+        return 0
+    fi
+
+    if [ "$1" = "--force" ]; then
+        echo "Fetching latest README.md from GitHub..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"; then
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        fi
+    elif [ ! -f "$README_FILE" ]; then
+        echo "README.md not found, downloading..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"; then
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        fi
+    fi
+
+    if [ -f "$README_FILE" ]; then
+        bat --style=auto --paging=always "$README_FILE"
+    else
+        echo "README.md not found at $README_FILE"
+        return 1
+    fi
+}
+
+# Optionally launch GUI on activation
+if [ "${LMS_GUI}" = "true" ]; then
+    lm-studio &
+fi
+'''
+
+fish = '''
+function lms-launch
+    if test (count $argv) -eq 0
+        echo "Usage: lms-launch <tool> [--model <model>] [extra args...]"
+        echo ""
+        echo "Launch an agentic CLI tool connected to the local LM Studio server."
+        echo ""
+        echo "Tools:"
+        echo "  claude      Claude Code (Anthropic CLI agent)"
+        echo "  codex       Codex (OpenAI CLI agent)"
+        echo "  opencode    OpenCode (open-source AI agent)"
+        echo ""
+        echo "Options:"
+        echo "  --model <model>   Specify which loaded model to use"
+        echo "  Any additional arguments are passed through to the tool."
+        echo ""
+        echo "Examples:"
+        echo "  lms-launch claude"
+        echo "  lms-launch claude --model llama-3.1-8b-instruct"
+        echo "  lms-launch codex"
+        echo "  lms-launch opencode"
+        echo ""
+        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
+        return 0
+    end
+
+    set -l tool $argv[1]
+    set -e argv[1]
+
+    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
+    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
+    set -l BASE "http://$HOST:$PORT"
+
+    # Health check
+    if not curl -sf "$BASE/v1/models" >/dev/null 2>&1
+        echo "Error: LM Studio API is not responding at $BASE"
+        echo ""
+        echo "Make sure the server is running:"
+        echo "  flox activate -s"
+        echo ""
+        echo "Check status:"
+        echo "  flox services status"
+        echo "  flox services logs lm-studio"
+        return 1
+    end
+
+    switch $tool
+        case claude
+            echo "Launching Claude Code against LM Studio at $BASE ..."
+            ANTHROPIC_API_BASE_URL="$BASE" \
+            ANTHROPIC_API_KEY="lm-studio" \
+                claude $argv
+        case codex
+            echo "Launching Codex against LM Studio at $BASE ..."
+            OPENAI_BASE_URL="$BASE/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                codex $argv
+        case opencode
+            echo "Launching OpenCode against LM Studio at $BASE ..."
+            OPENAI_BASE_URL="$BASE/v1" \
+            OPENAI_API_KEY="lm-studio" \
+                opencode $argv
+        case '*'
+            echo "Unknown tool: $tool"
+            echo ""
+            echo "Supported tools: claude, codex, opencode"
+            echo "Run 'lms-launch' without arguments for usage."
+            return 1
+    end
+end
+
+function lms-models
+    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
+    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
+    set -l BASE "http://$HOST:$PORT"
+
+    if not curl -sf "$BASE/v1/models" >/dev/null 2>&1
+        echo "LM Studio API is not responding at $BASE"
+        echo "  Try: flox services status"
+        return 1
+    end
+
+    echo "Loaded models ($BASE):"
+    echo ""
+    curl -sf "$BASE/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null; or \
+        curl -sf "$BASE/v1/models" 2>/dev/null
+end
+
+function lmstudio-info
+    echo "LM Studio + Agentic Tools Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: $LMS_HOST"
+    echo "  Port: $LMS_PORT"
+    echo "  API:  http://$LMS_HOST:$LMS_PORT"
+    echo "  GUI:  $LMS_GUI"
+    echo "  CORS: $LMS_CORS_ORIGIN"
+    echo ""
+    if test "$_FLOX_ENV_CUDA_DETECTION" = "1"
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    end
+    echo ""
+    echo "Agentic Tools:"
+    echo "  lms-launch claude       Launch Claude Code via LM Studio"
+    echo "  lms-launch codex        Launch Codex via LM Studio"
+    echo "  lms-launch opencode     Launch OpenCode via LM Studio"
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>         Download a model from Hugging Face"
+    echo "  lms load <model>        Load a model into memory"
+    echo "  lms-models              List loaded models via API"
+    echo "  lms chat                Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status    Check service status"
+    echo "  flox services logs      View service logs"
+    echo "  lmstudio-health         Test API endpoint"
+    echo ""
+    echo "Logs: $LMS_LOG_DIR/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+end
+
+function lmstudio-health
+    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
+    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
+    set -l BASE "http://$HOST:$PORT"
+
+    if curl -sf "$BASE/v1/models" >/dev/null 2>&1
+        echo "LM Studio API is healthy at $BASE"
+        echo ""
+        echo "Loaded models:"
+        curl -sf "$BASE/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null; or \
+            curl -sf "$BASE/v1/models" 2>/dev/null
+        return 0
+    else
+        echo "LM Studio API is not responding at $BASE"
+        echo "  Try: flox services status"
+        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
+        return 1
+    end
+end
+
+function helpf
+    set README_FILE "$FLOX_ENV_PROJECT/README.md"
+    set README_URL "https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+
+    if test "$argv[1]" = "--help"
+        echo "Usage: helpf [OPTIONS]"
+        echo ""
+        echo "View environment documentation"
+        echo ""
+        echo "Options:"
+        echo "  --force    Force download fresh copy from GitHub"
+        echo "  --help     Show this help message"
+        echo ""
+        echo "The README is cached locally and only downloaded if missing."
+        return 0
+    end
+
+    if test "$argv[1]" = "--force"
+        echo "Fetching latest README.md from GitHub..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        end
+    else if not test -f "$README_FILE"
+        echo "README.md not found, downloading..."
+        if curl -fsSL "$README_URL" -o "$README_FILE"
+            echo "Downloaded README.md"
+        else
+            echo "Failed to download README.md"
+            return 1
+        end
+    end
+
+    if test -f "$README_FILE"
+        bat --style=auto --paging=always "$README_FILE"
+    else
+        echo "README.md not found at $README_FILE"
+        return 1
+    end
+end
+
+# Optionally launch GUI on activation
+if test "$LMS_GUI" = "true"
+    lm-studio &
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
