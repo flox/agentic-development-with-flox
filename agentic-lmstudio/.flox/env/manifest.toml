@@ -103,36 +103,7 @@ fi
 '''
 
 [services.lm-studio]
-command = """
-# lms daemon up is the long-lived foreground process (LM Studio inference core).
-# Once it's ready, lms server start enables the HTTP API on top of it.
-# We background the daemon, wait for it, start the server, then wait on the daemon PID.
-
-lms daemon up >> "$LMS_LOG_DIR/lm-studio.log" 2>&1 &
-DAEMON_PID=$!
-
-# Wait for daemon to become ready
-for i in $(seq 1 30); do
-  if lms status >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-if ! lms status >/dev/null 2>&1; then
-  echo "ERROR: LM Studio daemon failed to start after 30s" >&2
-  echo "Check logs: $LMS_LOG_DIR/lm-studio.log" >&2
-  exit 1
-fi
-
-# Enable the API server
-lms server start --port "$LMS_PORT" --host "$LMS_HOST" --cors-origin "$LMS_CORS_ORIGIN" >> "$LMS_LOG_DIR/lm-studio.log" 2>&1
-
-echo "LM Studio daemon + API server running on http://${LMS_HOST}:${LMS_PORT}"
-
-# Keep the service alive by waiting on the daemon process
-wait $DAEMON_PID
-"""
+command = "lms-service"
 is-daemon = false
 
 [profile]
@@ -212,24 +183,6 @@ lms-launch() {
 }
 export -f lms-launch
 
-lms-models() {
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "LM Studio API is not responding at ${BASE}"
-        echo "  Try: flox services status"
-        return 1
-    fi
-
-    echo "Loaded models (${BASE}):"
-    echo ""
-    curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null || \
-        curl -sf "${BASE}/v1/models" 2>/dev/null
-}
-export -f lms-models
-
 lmstudio-info() {
     echo "LM Studio + Agentic Tools Configuration"
     echo ""
@@ -270,27 +223,6 @@ lmstudio-info() {
     echo "  LMS_GUI=true flox activate"
 }
 export -f lmstudio-info
-
-lmstudio-health() {
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    if curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "LM Studio API is healthy at ${BASE}"
-        echo ""
-        echo "Loaded models:"
-        curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null || \
-            curl -sf "${BASE}/v1/models" 2>/dev/null
-        return 0
-    else
-        echo "LM Studio API is not responding at ${BASE}"
-        echo "  Try: flox services status"
-        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
-        return 1
-    fi
-}
-export -f lmstudio-health
 
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
@@ -417,23 +349,6 @@ lms-launch() {
     esac
 }
 
-lms-models() {
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "LM Studio API is not responding at ${BASE}"
-        echo "  Try: flox services status"
-        return 1
-    fi
-
-    echo "Loaded models (${BASE}):"
-    echo ""
-    curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null || \
-        curl -sf "${BASE}/v1/models" 2>/dev/null
-}
-
 lmstudio-info() {
     echo "LM Studio + Agentic Tools Configuration"
     echo ""
@@ -472,26 +387,6 @@ lmstudio-info() {
     echo "  LMS_HOST=0.0.0.0 flox activate -s"
     echo "  LMS_PORT=8080 flox activate -s"
     echo "  LMS_GUI=true flox activate"
-}
-
-lmstudio-health() {
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    if curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "LM Studio API is healthy at ${BASE}"
-        echo ""
-        echo "Loaded models:"
-        curl -sf "${BASE}/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null || \
-            curl -sf "${BASE}/v1/models" 2>/dev/null
-        return 0
-    else
-        echo "LM Studio API is not responding at ${BASE}"
-        echo "  Try: flox services status"
-        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
-        return 1
-    fi
 }
 
 helpf() {
@@ -614,23 +509,6 @@ function lms-launch
     end
 end
 
-function lms-models
-    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
-    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
-    set -l BASE "http://$HOST:$PORT"
-
-    if not curl -sf "$BASE/v1/models" >/dev/null 2>&1
-        echo "LM Studio API is not responding at $BASE"
-        echo "  Try: flox services status"
-        return 1
-    end
-
-    echo "Loaded models ($BASE):"
-    echo ""
-    curl -sf "$BASE/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)  (\(.owned_by // "unknown"))"' 2>/dev/null; or \
-        curl -sf "$BASE/v1/models" 2>/dev/null
-end
-
 function lmstudio-info
     echo "LM Studio + Agentic Tools Configuration"
     echo ""
@@ -669,26 +547,6 @@ function lmstudio-info
     echo "  LMS_HOST=0.0.0.0 flox activate -s"
     echo "  LMS_PORT=8080 flox activate -s"
     echo "  LMS_GUI=true flox activate"
-end
-
-function lmstudio-health
-    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
-    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
-    set -l BASE "http://$HOST:$PORT"
-
-    if curl -sf "$BASE/v1/models" >/dev/null 2>&1
-        echo "LM Studio API is healthy at $BASE"
-        echo ""
-        echo "Loaded models:"
-        curl -sf "$BASE/v1/models" 2>/dev/null | jq -r '.data[] | "  \(.id)"' 2>/dev/null; or \
-            curl -sf "$BASE/v1/models" 2>/dev/null
-        return 0
-    else
-        echo "LM Studio API is not responding at $BASE"
-        echo "  Try: flox services status"
-        echo "  Logs: $LMS_LOG_DIR/lm-studio.log"
-        return 1
-    end
 end
 
 function helpf
