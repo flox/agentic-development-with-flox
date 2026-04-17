@@ -156,8 +156,9 @@ lms-launch() {
     case "$tool" in
         claude)
             echo "Launching Claude Code against LM Studio at ${BASE} ..."
-            ANTHROPIC_API_BASE_URL="${BASE}" \
-            ANTHROPIC_API_KEY="lm-studio" \
+            ANTHROPIC_BASE_URL="${BASE}" \
+            ANTHROPIC_AUTH_TOKEN="lmstudio" \
+            ANTHROPIC_API_KEY="" \
                 claude "$@"
             ;;
         codex)
@@ -323,8 +324,9 @@ lms-launch() {
     case "$tool" in
         claude)
             echo "Launching Claude Code against LM Studio at ${BASE} ..."
-            ANTHROPIC_API_BASE_URL="${BASE}" \
-            ANTHROPIC_API_KEY="lm-studio" \
+            ANTHROPIC_BASE_URL="${BASE}" \
+            ANTHROPIC_AUTH_TOKEN="lmstudio" \
+            ANTHROPIC_API_KEY="" \
                 claude "$@"
             ;;
         codex)
@@ -487,8 +489,9 @@ function lms-launch
     switch $tool
         case claude
             echo "Launching Claude Code against LM Studio at $BASE ..."
-            ANTHROPIC_API_BASE_URL="$BASE" \
-            ANTHROPIC_API_KEY="lm-studio" \
+            ANTHROPIC_BASE_URL="$BASE" \
+            ANTHROPIC_AUTH_TOKEN="lmstudio" \
+            ANTHROPIC_API_KEY="" \
                 claude $argv
         case codex
             echo "Launching Codex against LM Studio at $BASE ..."
