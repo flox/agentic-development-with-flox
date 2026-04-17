@@ -1,0 +1,235 @@
+schema-version = "1.11.0"
+
+[install]
+lmstudio.pkg-path = "flox/lmstudio"
+lmstudio.pkg-group = "lmstudio"
+curl.pkg-path = "curl"
+curl.pkg-group = "tools"
+jq.pkg-path = "jq"
+jq.pkg-group = "tools"
+bat.pkg-path = "bat"
+bat.pkg-group = "tools"
+
+[vars]
+# Server configuration - override at activation time
+# LMS_PORT         - API server port (default: 1234)
+# LMS_HOST         - API server bind address (default: 127.0.0.1)
+# LMS_GUI          - Launch GUI on activation: true/false (default: false)
+# LMS_CORS_ORIGIN  - CORS allowed origins (default: *)
+
+[hook]
+on-activate = '''
+# === SERVER CONFIGURATION ===
+export LMS_PORT="${LMS_PORT:-1234}"
+export LMS_HOST="${LMS_HOST:-127.0.0.1}"
+export LMS_GUI="${LMS_GUI:-false}"
+export LMS_CORS_ORIGIN="${LMS_CORS_ORIGIN:-*}"
+
+# === DATA DIRECTORIES ===
+export LMS_LOG_DIR="$FLOX_ENV_CACHE/logs"
+mkdir -p "$LMS_LOG_DIR"
+
+# === GPU DETECTION ===
+export _FLOX_ENV_CUDA_DETECTION=0
+if command -v nvidia-smi >/dev/null 2>&1; then
+  if nvidia-smi -L 2>/dev/null | grep -q "GPU"; then
+    export _FLOX_ENV_CUDA_DETECTION=1
+  fi
+fi
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "LM Studio environment ready"
+echo ""
+echo "Server:"
+echo "  API: http://${LMS_HOST}:${LMS_PORT}"
+echo "  GUI: ${LMS_GUI}"
+if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+  echo "  GPU: Available (CUDA detected)"
+else
+  echo "  GPU: Not detected (CPU mode)"
+fi
+echo ""
+echo "Quick Start:"
+echo "  flox activate -s                          Start headless server"
+echo "  lms get zai-org/glm-4.7-flash"
+echo "  lms load <model> --context-length 65536   Load model with context window"
+echo "  lms-models                                List loaded models"
+echo "  lmstudio-health                           Test API endpoint"
+echo ""
+echo "Using with AI coding tools:"
+echo "  ANTHROPIC_BASE_URL=http://localhost:1234 ANTHROPIC_AUTH_TOKEN=x ANTHROPIC_API_KEY= claude --model <m>"
+echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x codex --model <m>"
+echo "  Or use the agentic-lmstudio environment which bundles these tools."
+echo ""
+echo "Commands:"
+echo "  lmstudio-info                             Show configuration"
+echo "  LMS_GUI=true flox activate                Launch with GUI"
+echo ""
+'''
+
+[services.lm-studio]
+command = "lms-service"
+is-daemon = false
+
+[profile]
+bash = '''
+lmstudio-info() {
+    echo "LM Studio Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${LMS_HOST}"
+    echo "  Port: ${LMS_PORT}"
+    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
+    echo "  GUI:  ${LMS_GUI}"
+    echo "  CORS: ${LMS_CORS_ORIGIN}"
+    echo ""
+    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    fi
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>                 Download a model from Hugging Face"
+    echo "  lms load <model> --context-length 65536"
+    echo "                                  Load model with context window"
+    echo "  lms load <model> --gpu max      Load with full GPU offload (Linux)"
+    echo "  lms-models                      List loaded models via API"
+    echo "  lms chat                        Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status            Check service status"
+    echo "  flox services logs              View service logs"
+    echo "  lmstudio-health                 Test API endpoint"
+    echo ""
+    echo "Using with AI Coding Tools:"
+    echo "  ANTHROPIC_BASE_URL=http://localhost:1234 ANTHROPIC_AUTH_TOKEN=x ANTHROPIC_API_KEY= claude --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x codex --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x opencode --model <m>"
+    echo ""
+    echo "  Or use the agentic-lmstudio environment which bundles these tools."
+    echo ""
+    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+}
+export -f lmstudio-info
+
+# Optionally launch GUI on activation
+if [ "${LMS_GUI}" = "true" ]; then
+    lm-studio &
+fi
+'''
+
+zsh = '''
+lmstudio-info() {
+    echo "LM Studio Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: ${LMS_HOST}"
+    echo "  Port: ${LMS_PORT}"
+    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
+    echo "  GUI:  ${LMS_GUI}"
+    echo "  CORS: ${LMS_CORS_ORIGIN}"
+    echo ""
+    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    fi
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>                 Download a model from Hugging Face"
+    echo "  lms load <model> --context-length 65536"
+    echo "                                  Load model with context window"
+    echo "  lms load <model> --gpu max      Load with full GPU offload (Linux)"
+    echo "  lms-models                      List loaded models via API"
+    echo "  lms chat                        Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status            Check service status"
+    echo "  flox services logs              View service logs"
+    echo "  lmstudio-health                 Test API endpoint"
+    echo ""
+    echo "Using with AI Coding Tools:"
+    echo "  ANTHROPIC_BASE_URL=http://localhost:1234 ANTHROPIC_AUTH_TOKEN=x ANTHROPIC_API_KEY= claude --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x codex --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x opencode --model <m>"
+    echo ""
+    echo "  Or use the agentic-lmstudio environment which bundles these tools."
+    echo ""
+    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+}
+
+# Optionally launch GUI on activation
+if [ "${LMS_GUI}" = "true" ]; then
+    lm-studio &
+fi
+'''
+
+fish = '''
+function lmstudio-info
+    echo "LM Studio Environment Configuration"
+    echo ""
+    echo "Server:"
+    echo "  Host: $LMS_HOST"
+    echo "  Port: $LMS_PORT"
+    echo "  API:  http://$LMS_HOST:$LMS_PORT"
+    echo "  GUI:  $LMS_GUI"
+    echo "  CORS: $LMS_CORS_ORIGIN"
+    echo ""
+    if test "$_FLOX_ENV_CUDA_DETECTION" = "1"
+        echo "GPU: Available (CUDA detected)"
+    else
+        echo "GPU: Not detected"
+    end
+    echo ""
+    echo "Model Management:"
+    echo "  lms get <model>                 Download a model from Hugging Face"
+    echo "  lms load <model> --context-length 65536"
+    echo "                                  Load model with context window"
+    echo "  lms load <model> --gpu max      Load with full GPU offload (Linux)"
+    echo "  lms-models                      List loaded models via API"
+    echo "  lms chat                        Interactive terminal chat"
+    echo ""
+    echo "Service Management:"
+    echo "  flox services status            Check service status"
+    echo "  flox services logs              View service logs"
+    echo "  lmstudio-health                 Test API endpoint"
+    echo ""
+    echo "Using with AI Coding Tools:"
+    echo "  ANTHROPIC_BASE_URL=http://localhost:1234 ANTHROPIC_AUTH_TOKEN=x ANTHROPIC_API_KEY= claude --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x codex --model <m>"
+    echo "  OPENAI_BASE_URL=http://localhost:1234/v1 OPENAI_API_KEY=x opencode --model <m>"
+    echo ""
+    echo "  Or use the agentic-lmstudio environment which bundles these tools."
+    echo ""
+    echo "Logs: $LMS_LOG_DIR/lm-studio.log"
+    echo ""
+    echo "Runtime Override Examples:"
+    echo "  LMS_HOST=0.0.0.0 flox activate -s"
+    echo "  LMS_PORT=8080 flox activate -s"
+    echo "  LMS_GUI=true flox activate"
+end
+
+# Optionally launch GUI on activation
+if test "$LMS_GUI" = "true"
+    lm-studio &
+end
+'''
+
+[options]
+systems = [
+   "aarch64-darwin",
+   "aarch64-linux",
+   "x86_64-linux",
+ ]
