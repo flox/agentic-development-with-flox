@@ -2,19 +2,21 @@
 
 Local LLM inference paired with agentic CLI coding tools. Run models on your own hardware with LM Studio and use them as the backend for Claude Code, Codex, and OpenCode.
 
-Unlike Ollama's built-in `ollama launch` integration, LM Studio exposes OpenAI-compatible and Anthropic-compatible API endpoints. This environment provides `lms-launch`, a helper that configures each agentic tool to use the local LM Studio server automatically.
+LM Studio exposes OpenAI-compatible and Anthropic-compatible API endpoints. This environment provides `lms-launch`, a helper that configures each agentic tool to use the local LM Studio server instead of cloud providers.
 
 ## Features
 
 - **Local LLM Inference** - Run models locally with llama.cpp (all platforms) or MLX (Apple Silicon)
-- **Agentic CLI Tools** - Claude Code, Codex, and OpenCode pre-installed and ready to connect
-- **`lms-launch` Helper** - One command to wire any agentic tool to your local LM Studio server
-- **OpenAI-Compatible API** - Local server on port 1234 with drop-in replacement for OpenAI SDK clients
+- **GPU Acceleration** - NVIDIA CUDA on Linux (auto-detected), Metal on macOS (native)
+- **Agentic CLI Tools** - Claude Code, Codex, and OpenCode pre-installed
+- **`lms-launch` Helper** - One command to wire any agentic tool to the local server
+- **OpenAI-Compatible API** - Local server on port 1234, drop-in replacement for OpenAI SDK clients
 - **Anthropic-Compatible API** - `/v1/messages` endpoint for Claude Code compatibility
+- **Context Window Control** - Set context length per model at load time
 - **Model Discovery** - Search and download models from Hugging Face with quantization selection
 - **Tool Calling** - Function calling and structured output (JSON schema) support
 - **MCP Support** - Flox MCP server for environment management from AI agents
-- **Headless Service** - Runs as a Flox-managed service via `lms daemon` + `lms server`
+- **Headless Service** - Runs as a Flox-managed service via `lms-service`
 - **Cross-Platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
@@ -23,31 +25,54 @@ Unlike Ollama's built-in `ollama launch` integration, LM Studio exposes OpenAI-c
 
 ```bash
 cd agentic-lmstudio
-flox activate
+flox activate -s
 ```
 
 ### 2. Download a Model
 
 ```bash
-lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
+lms get zai-org/glm-4.7-flash
 ```
 
-Or use the GUI: `LMS_GUI=true flox activate`
+Or browse interactively: `lms get` (no arguments)
 
-### 3. Start the Server and Load a Model
+### 3. Load a Model with Context Window
 
 ```bash
-flox activate -s
-lms load llama-3.1-8b-instruct
+lms load zai-org/glm-4.7-flash --context-length 65536
 ```
+
+The `--context-length` flag sets the maximum context window. Larger values use more VRAM/RAM. Common values: `4096`, `8192`, `32768`, `65536`, `131072`.
 
 ### 4. Launch an Agentic Tool
 
 ```bash
-lms-launch claude
-lms-launch codex
-lms-launch opencode
+lms-launch claude --model zai-org/glm-4.7-flash
+lms-launch codex --model zai-org/glm-4.7-flash
+lms-launch opencode --model zai-org/glm-4.7-flash
 ```
+
+**Always pass `--model`** -- without it, tools default to their cloud provider (e.g., Claude Sonnet, GPT-4.1) instead of the local LM Studio model.
+
+Use `lms-models` to see which models are currently loaded.
+
+## GPU Support
+
+### Linux (NVIDIA CUDA)
+
+The lmstudio package automatically detects and passes through NVIDIA GPU drivers into its sandbox. No extra configuration needed -- if `nvidia-smi` works on your host, LM Studio will use your GPU.
+
+On first run, LM Studio may default to CPU inference. If this happens, the CUDA backend can be selected via LM Studio's backend preferences (`~/.lmstudio/.internal/backend-preferences-v1.json`).
+
+Use `--gpu max` when loading to offload all layers to GPU:
+
+```bash
+lms load zai-org/glm-4.7-flash --context-length 65536 --gpu max
+```
+
+### macOS (Metal)
+
+Metal acceleration is native on Apple Silicon. All inference runs on GPU by default -- no configuration needed.
 
 ## Recommended Models
 
@@ -55,69 +80,67 @@ Models with strong tool-use / function-calling support work best for agentic wor
 
 | Model | Sizes | Strengths |
 |-------|-------|-----------|
-| Llama 3.1 Instruct | 8B, 70B | Strong tool use, large context, general purpose |
+| GLM-4.7-Flash | 9B | Fast tool calling, large context, strong reasoning |
+| Gemma 4 E4B | 4B | Efficient, good for constrained hardware |
 | Qwen 2.5 Coder Instruct | 7B, 14B, 32B | Purpose-built for code generation and tool calling |
+| Llama 3.1 Instruct | 8B, 70B | Strong tool use, large context, general purpose |
 | DeepSeek Coder V2 | 16B, 236B | Code generation specialist with function calling |
 | Mistral Instruct | 7B | Fast, general purpose, good tool support |
-| Gemma 2 Instruct | 9B, 27B | Efficient reasoning with tool use |
-| Phi-3.5 Mini Instruct | 3.8B | Small but capable, runs on limited hardware |
 
 Download with:
 ```bash
-lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
+lms get zai-org/glm-4.7-flash
 lms get bartowski/Qwen2.5-Coder-14B-Instruct-GGUF
+lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
 ```
 
 ## The `lms-launch` Command
 
-`lms-launch` is the core helper that bridges LM Studio with agentic CLI tools. It sets the correct environment variables for each tool and launches it against the local server.
+`lms-launch` bridges LM Studio with agentic CLI tools. It sets the correct environment variables for each tool and launches it against the local server.
 
 ### Usage
 
 ```bash
-lms-launch <tool> [--model <model>] [extra args...]
+lms-launch <tool> --model <model> [extra args...]
 ```
 
 ### Supported Tools
 
 | Tool | Command | API Used |
 |------|---------|----------|
-| Claude Code | `lms-launch claude` | Anthropic-compatible (`/v1/messages`) |
-| Codex | `lms-launch codex` | OpenAI-compatible (`/v1/chat/completions`) |
-| OpenCode | `lms-launch opencode` | OpenAI-compatible (`/v1/chat/completions`) |
+| Claude Code | `lms-launch claude --model <m>` | Anthropic-compatible (`/v1/messages`) |
+| Codex | `lms-launch codex --model <m>` | OpenAI-compatible (`/v1/chat/completions`) |
+| OpenCode | `lms-launch opencode --model <m>` | OpenAI-compatible (`/v1/chat/completions`) |
 
 ### How It Works
 
 For each tool, `lms-launch` sets the provider environment variables to point at the local LM Studio server:
 
-- **Claude Code**: `ANTHROPIC_API_BASE_URL=http://localhost:1234` + `ANTHROPIC_API_KEY=lm-studio`
+- **Claude Code**: `ANTHROPIC_BASE_URL=http://localhost:1234` + `ANTHROPIC_AUTH_TOKEN=lmstudio`
 - **Codex**: `OPENAI_BASE_URL=http://localhost:1234/v1` + `OPENAI_API_KEY=lm-studio`
 - **OpenCode**: `OPENAI_BASE_URL=http://localhost:1234/v1` + `OPENAI_API_KEY=lm-studio`
 
-Before launching, it performs a health check to verify the server is running and provides helpful diagnostics if not.
+Before launching, it performs a health check to verify the server is running and provides diagnostics if not.
 
 ### Examples
 
 ```bash
-# Launch Claude Code with default settings
-lms-launch claude
+# Launch Claude Code against a local model
+lms-launch claude --model zai-org/glm-4.7-flash
 
-# Launch Claude Code and pass a model flag through
-lms-launch claude --model llama-3.1-8b-instruct
+# Launch Codex against a local model
+lms-launch codex --model zai-org/glm-4.7-flash
 
-# Launch Codex
-lms-launch codex
-
-# Launch OpenCode
-lms-launch opencode
+# Launch OpenCode against a local model
+lms-launch opencode --model zai-org/glm-4.7-flash
 
 # Pass extra arguments through to the tool
-lms-launch claude --verbose
+lms-launch claude --model zai-org/glm-4.7-flash --verbose
 ```
 
 ## Environment Variables
 
-All configuration is done via environment variables with sensible defaults. Override at activation time.
+All configuration via environment variables with sensible defaults. Override at activation time.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -132,7 +155,7 @@ All configuration is done via environment variables with sensible defaults. Over
 
 ```bash
 flox activate -s
-# Daemon + API server start, listening on 127.0.0.1:1234
+# Service starts LM Studio + API server on 127.0.0.1:1234
 ```
 
 ### Network Accessible
@@ -155,17 +178,18 @@ LMS_GUI=true flox activate
 # GUI launches in background; use flox activate -s to also start the API server
 ```
 
-### Agentic Development Workflow
+### Full Agentic Workflow
 
 ```bash
-# Terminal 1: Start the server
+# Start the environment with services
 cd agentic-lmstudio && flox activate -s
 
-# Terminal 2: Download and load a model, then launch an agent
-flox activate
-lms get bartowski/Qwen2.5-Coder-14B-Instruct-GGUF
-lms load qwen2.5-coder-14b-instruct
-lms-launch claude --model qwen2.5-coder-14b-instruct
+# Download and load a model
+lms get zai-org/glm-4.7-flash
+lms load zai-org/glm-4.7-flash --context-length 65536
+
+# Launch an agent against the local model
+lms-launch claude --model zai-org/glm-4.7-flash
 ```
 
 ## Commands
@@ -173,11 +197,11 @@ lms-launch claude --model qwen2.5-coder-14b-instruct
 ### Agentic Tool Launcher
 
 ```bash
-lms-launch <tool> [args]   # Launch an agentic tool via LM Studio
-lms-launch                  # Show usage and supported tools
+lms-launch <tool> --model <m> [args]   # Launch an agentic tool via LM Studio
+lms-launch                              # Show usage and supported tools
 ```
 
-### Helper Functions
+### Helper Commands
 
 ```bash
 lmstudio-info              # Show current configuration and available commands
@@ -189,9 +213,11 @@ helpf                      # View full README documentation
 ### Model Management
 
 ```bash
-lms get <model>            # Download a model from Hugging Face
-lms load <model>           # Load a model into memory
-lms chat                   # Interactive terminal chat
+lms get <model>                           # Download a model from Hugging Face
+lms load <model> --context-length 65536   # Load a model with context window
+lms load <model> --gpu max                # Load with full GPU offload (Linux)
+lms ps                                    # Show loaded models and their status
+lms chat                                  # Interactive terminal chat
 ```
 
 ### Service Management
@@ -204,6 +230,24 @@ flox services stop         # Stop all services
 flox services restart      # Restart all services
 ```
 
+## How the Service Works
+
+The `lms-service` script (shipped with the lmstudio package) handles headless operation:
+
+**Linux:**
+1. Starts a virtual framebuffer (Xvfb) since Electron requires X11 even headless
+2. Passes through NVIDIA GPU drivers into the bubblewrap sandbox
+3. Launches `lm-studio --run-as-service` in the background
+4. Waits for initialization, then starts the API server via `lms server start`
+5. Keeps the process alive for Flox service management
+
+**macOS:**
+1. Launches `lm-studio --run-as-service` in the background
+2. Waits for initialization, then starts the API server via `lms server start`
+3. Keeps the process alive for Flox service management
+
+No Xvfb or GPU driver passthrough is needed on macOS -- Metal acceleration is native.
+
 ## API Endpoints
 
 The local server (default port 1234) exposes:
@@ -215,7 +259,6 @@ The local server (default port 1234) exposes:
 | `/v1/embeddings` | OpenAI | Generate embeddings |
 | `/v1/models` | OpenAI | List loaded models |
 | `/v1/messages` | Anthropic | Anthropic-compatible messages API |
-| `/api/v1/` | Native | Stateful chat and model management |
 
 ## Composition Examples
 
@@ -245,12 +288,12 @@ environments = [
 
 ## Supported Platforms
 
-| Platform | Status |
-|----------|--------|
-| Linux x86_64 | Supported |
-| Linux aarch64 | Supported |
-| macOS Apple Silicon | Supported |
-| macOS Intel | Not available |
+| Platform | GPU | Status |
+|----------|-----|--------|
+| Linux x86_64 | NVIDIA CUDA (auto-detected) | Supported |
+| Linux aarch64 | NVIDIA CUDA (auto-detected) | Supported |
+| macOS Apple Silicon | Metal (native) | Supported |
+| macOS Intel | N/A | Not available |
 
 ## Troubleshooting
 
@@ -268,8 +311,8 @@ flox services restart
 # Check what's loaded
 lms-models
 
-# Load a model
-lms load llama-3.1-8b-instruct
+# Load a model with context window
+lms load zai-org/glm-4.7-flash --context-length 65536
 ```
 
 ### `lms-launch` Says API Not Responding
@@ -280,9 +323,32 @@ The LM Studio server must be running before launching an agentic tool:
 # Start the server first
 flox activate -s
 
-# Wait a moment for startup, then launch
-lms-launch claude
+# Wait for startup (service logs will show "API server started")
+flox services logs lm-studio
+
+# Then launch
+lms-launch claude --model zai-org/glm-4.7-flash
 ```
+
+### Tool Uses Cloud Provider Instead of Local Model
+
+Always pass `--model` to `lms-launch`. Without it, tools use their default cloud provider:
+
+```bash
+# Wrong -- Claude Code will use Claude Sonnet via Anthropic's API
+lms-launch claude
+
+# Correct -- Claude Code uses the local model via LM Studio
+lms-launch claude --model zai-org/glm-4.7-flash
+```
+
+### GPU Not Detected (Linux)
+
+If LM Studio defaults to CPU on a system with an NVIDIA GPU:
+
+1. Verify the GPU is visible: `nvidia-smi`
+2. Check that the CUDA backend is selected in `~/.lmstudio/.internal/backend-preferences-v1.json`
+3. Load with explicit GPU offload: `lms load <model> --gpu max`
 
 ### Daemon Failed to Start
 
@@ -291,17 +357,8 @@ lms-launch claude
 lms status
 
 # Check logs
-cat $FLOX_ENV_CACHE/logs/lm-studio.log
+cat ~/.lmstudio/logs/lm-studio.log
 ```
-
-### Tool Fails to Connect
-
-If an agentic tool launches but fails to connect to the model:
-
-1. Verify a model is loaded: `lms-models`
-2. Test the API directly: `lmstudio-health`
-3. Check that the model supports tool/function calling
-4. Try a different model known for good tool support (e.g., Llama 3.1 Instruct, Qwen 2.5 Coder)
 
 ## Resources
 

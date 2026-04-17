@@ -100,6 +100,7 @@ aider --model ollama_chat/gemma4
 
 Each of these includes a managed service. Use `flox activate -s` to start the server automatically.
 
+- [**agentic-lmstudio**](./agentic-lmstudio) - LM Studio with integrated CLI coding tools (Claude Code, Codex, OpenCode) via `lms-launch`, NVIDIA CUDA and Metal GPU support
 - [**agentic-ollama**](./agentic-ollama) - Ollama with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw) via `ollama launch`
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API **(x86_64-linux only)**
