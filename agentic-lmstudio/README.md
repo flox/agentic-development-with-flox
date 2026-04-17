@@ -42,7 +42,7 @@ Or browse interactively: `lms get` (no arguments)
 lms load zai-org/glm-4.7-flash --context-length 65536
 ```
 
-The `--context-length` flag sets the maximum context window. Larger values use more VRAM/RAM. Common values: `4096`, `8192`, `32768`, `65536`, `131072`.
+The `--context-length` flag sets the maximum context window. Larger values use more VRAM/RAM. Common values: `4096`, `8192`, `32768`, `65536`, `131072`. (Note: GLM 4.7 Flash supports up to 200000.)
 
 ### 4. Launch an Agentic Tool
 
@@ -54,7 +54,7 @@ lms-launch opencode --model zai-org/glm-4.7-flash
 
 **Always pass `--model`** -- without it, tools default to their cloud provider (e.g., Claude Sonnet, GPT-4.1) instead of the local LM Studio model.
 
-Use `lms-models` to see which models are currently loaded.
+Use `lms ls` or `lms-models` to see which models are currently loaded.
 
 ## GPU Support
 
