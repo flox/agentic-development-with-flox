@@ -79,7 +79,7 @@ fi
 echo ""
 echo "Quick Start:"
 echo "  flox activate -s                          Start LM Studio server"
-echo "  lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF"
+echo "  lms get zai-org/glm-4.7-flash"
 echo "  lms load <model> --context-length 65536   Load model with context window"
 echo "  lms-launch claude --model <model>         Launch Claude Code (local)"
 echo "  lms-launch codex --model <model>          Launch Codex (local)"
@@ -99,7 +99,7 @@ echo ""
 # Fetch README.md if not present
 README_FILE="$FLOX_ENV_PROJECT/README.md"
 if [ ! -f "$README_FILE" ]; then
-  if curl -fsSL https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md -o "$README_FILE" 2>/dev/null; then
+  if curl -fsSL https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md -o "$README_FILE" 2>/dev/null; then
     echo "Downloaded README.md (use 'helpf' to view)"
   fi
 fi
@@ -234,7 +234,7 @@ export -f lmstudio-info
 
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
-    local README_URL="https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+    local README_URL="https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md"
 
     if [ "$1" = "--help" ]; then
         echo "Usage: helpf [OPTIONS]"
@@ -404,7 +404,7 @@ lmstudio-info() {
 
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
-    local README_URL="https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+    local README_URL="https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md"
 
     if [ "$1" = "--help" ]; then
         echo "Usage: helpf [OPTIONS]"
@@ -569,7 +569,7 @@ end
 
 function helpf
     set README_FILE "$FLOX_ENV_PROJECT/README.md"
-    set README_URL "https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/agentic-lmstudio/README.md"
+    set README_URL "https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md"
 
     if test "$argv[1]" = "--help"
         echo "Usage: helpf [OPTIONS]"
