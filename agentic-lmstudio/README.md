@@ -138,6 +138,14 @@ lms-launch opencode --model zai-org/glm-4.7-flash
 lms-launch claude --model zai-org/glm-4.7-flash --verbose
 ```
 
+### First-Run Setup
+
+**Codex**: On first launch, Codex prompts you to choose an API key provider. Select **"Provide your own API key"** and enter `lm-studio` (the default key set by `lms-launch`). This only needs to be done once -- Codex remembers the choice for subsequent runs.
+
+**Claude Code**: No first-run setup needed. `lms-launch` sets the environment variables automatically.
+
+**OpenCode**: No first-run setup needed. `lms-launch` sets the environment variables automatically.
+
 ## Environment Variables
 
 All configuration via environment variables with sensible defaults. Override at activation time.

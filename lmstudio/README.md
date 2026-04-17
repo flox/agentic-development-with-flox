@@ -105,6 +105,8 @@ OPENAI_API_KEY=lm-studio \
 
 **Always pass `--model`** -- without it, tools default to their cloud provider instead of the local model.
 
+**Codex first-run**: On first launch, Codex prompts you to choose an API key provider. Select **"Provide your own API key"** and enter `lm-studio` (the key from the env var above). This only needs to be done once.
+
 For an environment that bundles these tools with the `lms-launch` helper, see [agentic-lmstudio](../agentic-lmstudio).
 
 ## Recommended Models
