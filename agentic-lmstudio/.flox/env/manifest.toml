@@ -2,9 +2,8 @@ schema-version = "1.11.0"
 
 [install]
 # LM Studio
-#lmstudio.pkg-path = "flox/lmstudio"
-#lmstudio.pkg-group = "lmstudio"
-lmstudio.store-path = "/nix/store/y5qi0d100k65f3pmfb05ip1kw39ynh3w-lmstudio-0.4.10-1+9678129"
+lmstudio.pkg-path = "flox/lmstudio"
+lmstudio.pkg-group = "lmstudio"
 
 # general-purpose tools
 bat.pkg-path = "bat"
@@ -27,7 +26,8 @@ codex.outputs = "all"
 opencode.pkg-path = "opencode"
 opencode.pkg-group = "agentic"
 opencode.outputs = "all"
-#openclaw.flake = "github:barstoolbluz/openclaw-nix"	# uncomment to use openclaw
+#openclaw.pkg-path = "flox/openclaw"	# uncomment to use openclaw
+#openclaw.pkg-group = "agentic"
 
 # flox mcp server
 flox-mcp-server.pkg-path = "flox/flox-mcp-server"
