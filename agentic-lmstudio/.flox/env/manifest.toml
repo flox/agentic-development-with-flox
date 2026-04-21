@@ -2,8 +2,9 @@ schema-version = "1.11.0"
 
 [install]
 # LM Studio
-lmstudio.pkg-path = "flox/lmstudio"
-lmstudio.pkg-group = "lmstudio"
+#lmstudio.pkg-path = "flox/lmstudio"
+#lmstudio.pkg-group = "lmstudio"
+lmstudio.store-path = "/nix/store/y5qi0d100k65f3pmfb05ip1kw39ynh3w-lmstudio-0.4.10-1+9678129"
 
 # general-purpose tools
 bat.pkg-path = "bat"
@@ -30,16 +31,17 @@ opencode.outputs = "all"
 
 # flox mcp server
 flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+flox-mcp-server.systems = ["aarch64-darwin", "x86_64-linux"]
 flox-mcp-server.pkg-group = "mcp"
 flox-mcp-server.outputs = "all"
 
 [vars]
 # Server configuration - override at activation time
-# LMS_PORT         - API server port (default: 1234)
-# LMS_HOST         - API server bind address (default: 127.0.0.1)
-# LMS_GUI          - Launch GUI on activation: true/false (default: false)
-# LMS_CORS_ORIGIN  - CORS allowed origins (default: *)
+# LMS_PORT           - API server port (default: 1234)
+# LMS_HOST           - API server bind address (default: 127.0.0.1)
+# LMS_GUI            - Launch GUI on activation: true/false (default: false)
+# LMS_CORS_ORIGIN    - CORS allowed origins (default: *)
+# LMS_CONTEXT_LENGTH - Default context window for lms-launch auto-load (default: 131072)
 
 [hook]
 on-activate = '''
@@ -48,6 +50,7 @@ export LMS_PORT="${LMS_PORT:-1234}"
 export LMS_HOST="${LMS_HOST:-127.0.0.1}"
 export LMS_GUI="${LMS_GUI:-false}"
 export LMS_CORS_ORIGIN="${LMS_CORS_ORIGIN:-*}"
+export LMS_CONTEXT_LENGTH="${LMS_CONTEXT_LENGTH:-131072}"
 
 # Constructed base URL for helper functions
 export LMS_API_BASE="http://${LMS_HOST}:${LMS_PORT}"
@@ -78,19 +81,19 @@ else
 fi
 echo ""
 echo "Quick Start:"
-echo "  flox activate -s                          Start LM Studio server"
-echo "  lms get zai-org/glm-4.7-flash"
-echo "  lms load <model> --context-length 65536   Load model with context window"
-echo "  lms-launch claude --model <model>         Launch Claude Code (local)"
-echo "  lms-launch codex --model <model>          Launch Codex (local)"
-echo "  lms-launch opencode --model <model>       Launch OpenCode (local)"
+echo "  flox activate -s                                  Start LM Studio server"
+echo "  lms-launch claude --model zai-org/glm-4.7-flash   Download, load, launch"
 echo ""
-echo "  NOTE: Always pass --model to lms-launch, otherwise tools use their"
-echo "        default cloud provider instead of the local LM Studio model."
+echo "  Context window: ${LMS_CONTEXT_LENGTH} (override: --context-length or LMS_CONTEXT_LENGTH)"
+if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
+  echo "  GPU: auto-detected (override: --gpu max|off)"
+else
+  echo "  GPU: not detected (override: --gpu max|off)"
+fi
 echo ""
 echo "Commands:"
-echo "  lms-launch <tool> --model <m> [args]      Launch agentic tool via LM Studio"
-echo "  lms-models                                List loaded models"
+echo "  lms-launch <tool> --model <m> [args]      Download, load, and launch tool"
+echo "  lms ls                                    List loaded models"
 echo "  lmstudio-info                             Show configuration"
 echo "  lmstudio-health                           Test API endpoint"
 echo "  helpf                                     View full README documentation"
@@ -111,126 +114,24 @@ is-daemon = false
 
 [profile]
 bash = '''
-lms-launch() {
-    if [ $# -eq 0 ]; then
-        echo "Usage: lms-launch <tool> --model <model> [extra args...]"
-        echo ""
-        echo "Launch an agentic CLI tool connected to the local LM Studio server."
-        echo ""
-        echo "Tools:"
-        echo "  claude      Claude Code (Anthropic CLI agent)"
-        echo "  codex       Codex (OpenAI CLI agent)"
-        echo "  opencode    OpenCode (open-source AI agent)"
-        echo ""
-        echo "Options:"
-        echo "  --model <model>   Model to use (REQUIRED — without this, tools"
-        echo "                    default to their cloud provider, not LM Studio)"
-        echo "  Any additional arguments are passed through to the tool."
-        echo ""
-        echo "Examples:"
-        echo "  lms-launch claude --model google/gemma-4-e4b"
-        echo "  lms-launch codex --model google/gemma-4-e4b"
-        echo "  lms-launch opencode --model google/gemma-4-e4b"
-        echo ""
-        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
-        echo "Use 'lms-models' to see which models are currently loaded."
-        return 0
+# Wait for API server if services are starting
+if [ "${FLOX_ACTIVATE_START_SERVICES:-}" = "true" ]; then
+  printf "Waiting for LM Studio API"
+  _lms_ready=false
+  for _i in $(seq 1 30); do
+    if curl -sf "http://${LMS_HOST}:${LMS_PORT}/v1/models" >/dev/null 2>&1; then
+      _lms_ready=true
+      break
     fi
-
-    local tool="$1"
-    shift
-
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    # Health check
-    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "Error: LM Studio API is not responding at ${BASE}"
-        echo ""
-        echo "Make sure the server is running:"
-        echo "  flox activate -s"
-        echo ""
-        echo "Check status:"
-        echo "  flox services status"
-        echo "  flox services logs lm-studio"
-        return 1
-    fi
-
-    case "$tool" in
-        claude)
-            echo "Launching Claude Code against LM Studio at ${BASE} ..."
-            ANTHROPIC_BASE_URL="${BASE}" \
-            ANTHROPIC_AUTH_TOKEN="lmstudio" \
-            ANTHROPIC_API_KEY="" \
-                claude "$@"
-            ;;
-        codex)
-            echo "Launching Codex against LM Studio at ${BASE} ..."
-            OPENAI_BASE_URL="${BASE}/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                codex "$@"
-            ;;
-        opencode)
-            echo "Launching OpenCode against LM Studio at ${BASE} ..."
-            OPENAI_BASE_URL="${BASE}/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                opencode "$@"
-            ;;
-        *)
-            echo "Unknown tool: $tool"
-            echo ""
-            echo "Supported tools: claude, codex, opencode"
-            echo "Run 'lms-launch' without arguments for usage."
-            return 1
-            ;;
-    esac
-}
-export -f lms-launch
-
-lmstudio-info() {
-    echo "LM Studio + Agentic Tools Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: ${LMS_HOST}"
-    echo "  Port: ${LMS_PORT}"
-    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
-    echo "  GUI:  ${LMS_GUI}"
-    echo "  CORS: ${LMS_CORS_ORIGIN}"
-    echo ""
-    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
-        echo "GPU: Available (CUDA detected)"
-    else
-        echo "GPU: Not detected"
-    fi
-    echo ""
-    echo "Agentic Tools:"
-    echo "  lms-launch claude --model <m>   Launch Claude Code (local model)"
-    echo "  lms-launch codex --model <m>    Launch Codex (local model)"
-    echo "  lms-launch opencode --model <m> Launch OpenCode (local model)"
-    echo ""
-    echo "  NOTE: --model is required — without it, tools use their cloud provider."
-    echo ""
-    echo "Model Management:"
-    echo "  lms get <model>                 Download a model from Hugging Face"
-    echo "  lms load <model> --context-length 65536"
-    echo "                                  Load model with context window"
-    echo "  lms-models                      List loaded models via API"
-    echo "  lms chat                        Interactive terminal chat"
-    echo ""
-    echo "Service Management:"
-    echo "  flox services status            Check service status"
-    echo "  flox services logs              View service logs"
-    echo "  lmstudio-health                 Test API endpoint"
-    echo ""
-    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
-    echo ""
-    echo "Runtime Override Examples:"
-    echo "  LMS_HOST=0.0.0.0 flox activate -s"
-    echo "  LMS_PORT=8080 flox activate -s"
-    echo "  LMS_GUI=true flox activate"
-}
-export -f lmstudio-info
+    printf "."
+    sleep 2
+  done
+  if [ "$_lms_ready" = "true" ]; then
+    echo " ready!"
+  else
+    echo " not responding (check: flox services logs lm-studio)"
+  fi
+fi
 
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
@@ -283,124 +184,24 @@ fi
 '''
 
 zsh = '''
-lms-launch() {
-    if [ $# -eq 0 ]; then
-        echo "Usage: lms-launch <tool> --model <model> [extra args...]"
-        echo ""
-        echo "Launch an agentic CLI tool connected to the local LM Studio server."
-        echo ""
-        echo "Tools:"
-        echo "  claude      Claude Code (Anthropic CLI agent)"
-        echo "  codex       Codex (OpenAI CLI agent)"
-        echo "  opencode    OpenCode (open-source AI agent)"
-        echo ""
-        echo "Options:"
-        echo "  --model <model>   Model to use (REQUIRED — without this, tools"
-        echo "                    default to their cloud provider, not LM Studio)"
-        echo "  Any additional arguments are passed through to the tool."
-        echo ""
-        echo "Examples:"
-        echo "  lms-launch claude --model google/gemma-4-e4b"
-        echo "  lms-launch codex --model google/gemma-4-e4b"
-        echo "  lms-launch opencode --model google/gemma-4-e4b"
-        echo ""
-        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
-        echo "Use 'lms-models' to see which models are currently loaded."
-        return 0
+# Wait for API server if services are starting
+if [ "${FLOX_ACTIVATE_START_SERVICES:-}" = "true" ]; then
+  printf "Waiting for LM Studio API"
+  _lms_ready=false
+  for _i in $(seq 1 30); do
+    if curl -sf "http://${LMS_HOST}:${LMS_PORT}/v1/models" >/dev/null 2>&1; then
+      _lms_ready=true
+      break
     fi
-
-    local tool="$1"
-    shift
-
-    local HOST="${LMS_HOST:-127.0.0.1}"
-    local PORT="${LMS_PORT:-1234}"
-    local BASE="http://${HOST}:${PORT}"
-
-    # Health check
-    if ! curl -sf "${BASE}/v1/models" >/dev/null 2>&1; then
-        echo "Error: LM Studio API is not responding at ${BASE}"
-        echo ""
-        echo "Make sure the server is running:"
-        echo "  flox activate -s"
-        echo ""
-        echo "Check status:"
-        echo "  flox services status"
-        echo "  flox services logs lm-studio"
-        return 1
-    fi
-
-    case "$tool" in
-        claude)
-            echo "Launching Claude Code against LM Studio at ${BASE} ..."
-            ANTHROPIC_BASE_URL="${BASE}" \
-            ANTHROPIC_AUTH_TOKEN="lmstudio" \
-            ANTHROPIC_API_KEY="" \
-                claude "$@"
-            ;;
-        codex)
-            echo "Launching Codex against LM Studio at ${BASE} ..."
-            OPENAI_BASE_URL="${BASE}/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                codex "$@"
-            ;;
-        opencode)
-            echo "Launching OpenCode against LM Studio at ${BASE} ..."
-            OPENAI_BASE_URL="${BASE}/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                opencode "$@"
-            ;;
-        *)
-            echo "Unknown tool: $tool"
-            echo ""
-            echo "Supported tools: claude, codex, opencode"
-            echo "Run 'lms-launch' without arguments for usage."
-            return 1
-            ;;
-    esac
-}
-
-lmstudio-info() {
-    echo "LM Studio + Agentic Tools Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: ${LMS_HOST}"
-    echo "  Port: ${LMS_PORT}"
-    echo "  API:  http://${LMS_HOST}:${LMS_PORT}"
-    echo "  GUI:  ${LMS_GUI}"
-    echo "  CORS: ${LMS_CORS_ORIGIN}"
-    echo ""
-    if [ "$_FLOX_ENV_CUDA_DETECTION" = "1" ]; then
-        echo "GPU: Available (CUDA detected)"
-    else
-        echo "GPU: Not detected"
-    fi
-    echo ""
-    echo "Agentic Tools:"
-    echo "  lms-launch claude --model <m>   Launch Claude Code (local model)"
-    echo "  lms-launch codex --model <m>    Launch Codex (local model)"
-    echo "  lms-launch opencode --model <m> Launch OpenCode (local model)"
-    echo ""
-    echo "  NOTE: --model is required — without it, tools use their cloud provider."
-    echo ""
-    echo "Model Management:"
-    echo "  lms get <model>                 Download a model from Hugging Face"
-    echo "  lms load <model> --context-length 65536"
-    echo "                                  Load model with context window"
-    echo "  lms-models                      List loaded models via API"
-    echo "  lms chat                        Interactive terminal chat"
-    echo ""
-    echo "Service Management:"
-    echo "  flox services status            Check service status"
-    echo "  flox services logs              View service logs"
-    echo "  lmstudio-health                 Test API endpoint"
-    echo ""
-    echo "Logs: ${LMS_LOG_DIR}/lm-studio.log"
-    echo ""
-    echo "Runtime Override Examples:"
-    echo "  LMS_HOST=0.0.0.0 flox activate -s"
-    echo "  LMS_PORT=8080 flox activate -s"
-    echo "  LMS_GUI=true flox activate"
-}
+    printf "."
+    sleep 2
+  done
+  if [ "$_lms_ready" = "true" ]; then
+    echo " ready!"
+  else
+    echo " not responding (check: flox services logs lm-studio)"
+  fi
+fi
 
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
@@ -452,119 +253,23 @@ fi
 '''
 
 fish = '''
-function lms-launch
-    if test (count $argv) -eq 0
-        echo "Usage: lms-launch <tool> --model <model> [extra args...]"
-        echo ""
-        echo "Launch an agentic CLI tool connected to the local LM Studio server."
-        echo ""
-        echo "Tools:"
-        echo "  claude      Claude Code (Anthropic CLI agent)"
-        echo "  codex       Codex (OpenAI CLI agent)"
-        echo "  opencode    OpenCode (open-source AI agent)"
-        echo ""
-        echo "Options:"
-        echo "  --model <model>   Model to use (REQUIRED — without this, tools"
-        echo "                    default to their cloud provider, not LM Studio)"
-        echo "  Any additional arguments are passed through to the tool."
-        echo ""
-        echo "Examples:"
-        echo "  lms-launch claude --model google/gemma-4-e4b"
-        echo "  lms-launch codex --model google/gemma-4-e4b"
-        echo "  lms-launch opencode --model google/gemma-4-e4b"
-        echo ""
-        echo "The LM Studio server must be running (flox activate -s) with a model loaded."
-        echo "Use 'lms-models' to see which models are currently loaded."
-        return 0
+# Wait for API server if services are starting
+if test "$FLOX_ACTIVATE_START_SERVICES" = "true"
+  printf "Waiting for LM Studio API"
+  set _lms_ready false
+  for _i in (seq 1 30)
+    if curl -sf "http://$LMS_HOST:$LMS_PORT/v1/models" >/dev/null 2>&1
+      set _lms_ready true
+      break
     end
-
-    set -l tool $argv[1]
-    set -e argv[1]
-
-    set -l HOST (test -n "$LMS_HOST"; and echo "$LMS_HOST"; or echo "127.0.0.1")
-    set -l PORT (test -n "$LMS_PORT"; and echo "$LMS_PORT"; or echo "1234")
-    set -l BASE "http://$HOST:$PORT"
-
-    # Health check
-    if not curl -sf "$BASE/v1/models" >/dev/null 2>&1
-        echo "Error: LM Studio API is not responding at $BASE"
-        echo ""
-        echo "Make sure the server is running:"
-        echo "  flox activate -s"
-        echo ""
-        echo "Check status:"
-        echo "  flox services status"
-        echo "  flox services logs lm-studio"
-        return 1
-    end
-
-    switch $tool
-        case claude
-            echo "Launching Claude Code against LM Studio at $BASE ..."
-            ANTHROPIC_BASE_URL="$BASE" \
-            ANTHROPIC_AUTH_TOKEN="lmstudio" \
-            ANTHROPIC_API_KEY="" \
-                claude $argv
-        case codex
-            echo "Launching Codex against LM Studio at $BASE ..."
-            OPENAI_BASE_URL="$BASE/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                codex $argv
-        case opencode
-            echo "Launching OpenCode against LM Studio at $BASE ..."
-            OPENAI_BASE_URL="$BASE/v1" \
-            OPENAI_API_KEY="lm-studio" \
-                opencode $argv
-        case '*'
-            echo "Unknown tool: $tool"
-            echo ""
-            echo "Supported tools: claude, codex, opencode"
-            echo "Run 'lms-launch' without arguments for usage."
-            return 1
-    end
-end
-
-function lmstudio-info
-    echo "LM Studio + Agentic Tools Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: $LMS_HOST"
-    echo "  Port: $LMS_PORT"
-    echo "  API:  http://$LMS_HOST:$LMS_PORT"
-    echo "  GUI:  $LMS_GUI"
-    echo "  CORS: $LMS_CORS_ORIGIN"
-    echo ""
-    if test "$_FLOX_ENV_CUDA_DETECTION" = "1"
-        echo "GPU: Available (CUDA detected)"
-    else
-        echo "GPU: Not detected"
-    end
-    echo ""
-    echo "Agentic Tools:"
-    echo "  lms-launch claude --model <m>   Launch Claude Code (local model)"
-    echo "  lms-launch codex --model <m>    Launch Codex (local model)"
-    echo "  lms-launch opencode --model <m> Launch OpenCode (local model)"
-    echo ""
-    echo "  NOTE: --model is required — without it, tools use their cloud provider."
-    echo ""
-    echo "Model Management:"
-    echo "  lms get <model>                 Download a model from Hugging Face"
-    echo "  lms load <model> --context-length 65536"
-    echo "                                  Load model with context window"
-    echo "  lms-models                      List loaded models via API"
-    echo "  lms chat                        Interactive terminal chat"
-    echo ""
-    echo "Service Management:"
-    echo "  flox services status            Check service status"
-    echo "  flox services logs              View service logs"
-    echo "  lmstudio-health                 Test API endpoint"
-    echo ""
-    echo "Logs: $LMS_LOG_DIR/lm-studio.log"
-    echo ""
-    echo "Runtime Override Examples:"
-    echo "  LMS_HOST=0.0.0.0 flox activate -s"
-    echo "  LMS_PORT=8080 flox activate -s"
-    echo "  LMS_GUI=true flox activate"
+    printf "."
+    sleep 2
+  end
+  if test "$_lms_ready" = "true"
+    echo " ready!"
+  else
+    echo " not responding (check: flox services logs lm-studio)"
+  end
 end
 
 function helpf

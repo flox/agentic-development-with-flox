@@ -9,7 +9,7 @@ LM Studio exposes OpenAI-compatible and Anthropic-compatible API endpoints. This
 - **Local LLM Inference** - Run models locally with llama.cpp (all platforms) or MLX (Apple Silicon)
 - **GPU Acceleration** - NVIDIA CUDA on Linux (auto-detected), Metal on macOS (native)
 - **Agentic CLI Tools** - Claude Code, Codex, and OpenCode pre-installed
-- **`lms-launch` Helper** - One command to wire any agentic tool to the local server
+- **`lms-launch` Helper** - One command to download, load, and launch any agentic tool
 - **OpenAI-Compatible API** - Local server on port 1234, drop-in replacement for OpenAI SDK clients
 - **Anthropic-Compatible API** - `/v1/messages` endpoint for Claude Code compatibility
 - **Context Window Control** - Set context length per model at load time
@@ -28,31 +28,33 @@ cd agentic-lmstudio
 flox activate -s
 ```
 
-### 2. Download a Model
-
-```bash
-lms get zai-org/glm-4.7-flash
-```
-
-Or browse interactively: `lms get` (no arguments)
-
-### 3. Load a Model with Context Window
-
-```bash
-lms load zai-org/glm-4.7-flash --context-length 65536
-```
-
-The `--context-length` flag sets the maximum context window. Larger values use more VRAM/RAM. Common values: `4096`, `8192`, `32768`, `65536`, `131072`. (Note: GLM 4.7 Flash supports up to 200000.)
-
-### 4. Launch an Agentic Tool
+### 2. Launch an Agentic Tool
 
 ```bash
 lms-launch claude --model zai-org/glm-4.7-flash
+```
+
+That's it. `lms-launch` automatically downloads the model (if needed), loads it with a 131072 context window (if not already loaded), and launches the tool.
+
+Other tools work the same way:
+
+```bash
 lms-launch codex --model zai-org/glm-4.7-flash
 lms-launch opencode --model zai-org/glm-4.7-flash
 ```
 
-**Always pass `--model`** -- without it, tools default to their cloud provider (e.g., Claude Sonnet, GPT-4.1) instead of the local LM Studio model.
+### Options
+
+```bash
+# Custom context window (default: 131072, or set LMS_CONTEXT_LENGTH)
+lms-launch claude --model zai-org/glm-4.7-flash --context-length 65536
+
+# Explicit GPU offload (auto-detected on CUDA systems)
+lms-launch claude --model zai-org/glm-4.7-flash --gpu max
+
+# Extra arguments pass through to the tool
+lms-launch claude --model zai-org/glm-4.7-flash --verbose
+```
 
 Use `lms ls` or `lms-models` to see which models are currently loaded.
 
@@ -96,12 +98,12 @@ lms get bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
 
 ## The `lms-launch` Command
 
-`lms-launch` bridges LM Studio with agentic CLI tools. It sets the correct environment variables for each tool and launches it against the local server.
+`lms-launch` is a one-command workflow that downloads, loads, and launches an agentic CLI tool against a local LM Studio model.
 
 ### Usage
 
 ```bash
-lms-launch <tool> --model <model> [extra args...]
+lms-launch <tool> --model <model> [options] [extra args...]
 ```
 
 ### Supported Tools
@@ -112,27 +114,41 @@ lms-launch <tool> --model <model> [extra args...]
 | Codex | `lms-launch codex --model <m>` | OpenAI-compatible (`/v1/chat/completions`) |
 | OpenCode | `lms-launch opencode --model <m>` | OpenAI-compatible (`/v1/chat/completions`) |
 
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--model <model>` | _(required)_ | Model to use |
+| `--context-length <n>` | `131072` | Context window size (override with `LMS_CONTEXT_LENGTH`) |
+| `--gpu <mode>` | `max` if CUDA detected | GPU offload mode (`max`, `off`, etc.) |
+
+Extra arguments are passed through to the tool.
+
 ### How It Works
 
-For each tool, `lms-launch` sets the provider environment variables to point at the local LM Studio server:
+1. **Health check** -- verifies the LM Studio API server is running
+2. **Model check** -- queries `/v1/models` to see if the model is already loaded
+3. **Auto-load** -- if not loaded, runs `lms load` with the specified context length and GPU settings
+4. **Auto-download** -- if `lms load` fails (model not on disk), runs `lms get` to download it, then retries the load
+5. **Launch** -- sets the provider environment variables and launches the tool
+
+Provider environment variables set per tool:
 
 - **Claude Code**: `ANTHROPIC_BASE_URL=http://localhost:1234` + `ANTHROPIC_AUTH_TOKEN=lmstudio`
 - **Codex**: `OPENAI_BASE_URL=http://localhost:1234/v1` + `OPENAI_API_KEY=lm-studio`
 - **OpenCode**: `OPENAI_BASE_URL=http://localhost:1234/v1` + `OPENAI_API_KEY=lm-studio`
 
-Before launching, it performs a health check to verify the server is running and provides diagnostics if not.
-
 ### Examples
 
 ```bash
-# Launch Claude Code against a local model
+# One command: download, load, and launch
 lms-launch claude --model zai-org/glm-4.7-flash
 
-# Launch Codex against a local model
-lms-launch codex --model zai-org/glm-4.7-flash
+# Custom context window
+lms-launch codex --model zai-org/glm-4.7-flash --context-length 65536
 
-# Launch OpenCode against a local model
-lms-launch opencode --model zai-org/glm-4.7-flash
+# Explicit GPU offload
+lms-launch opencode --model zai-org/glm-4.7-flash --gpu max
 
 # Pass extra arguments through to the tool
 lms-launch claude --model zai-org/glm-4.7-flash --verbose
@@ -156,6 +172,7 @@ All configuration via environment variables with sensible defaults. Override at 
 | `LMS_HOST` | `127.0.0.1` | API server bind address |
 | `LMS_GUI` | `false` | Launch GUI on activation (`true`/`false`) |
 | `LMS_CORS_ORIGIN` | `*` | CORS allowed origins |
+| `LMS_CONTEXT_LENGTH` | `131072` | Default context window for `lms-launch` auto-load |
 
 ## Usage Examples
 
@@ -192,11 +209,7 @@ LMS_GUI=true flox activate
 # Start the environment with services
 cd agentic-lmstudio && flox activate -s
 
-# Download and load a model
-lms get zai-org/glm-4.7-flash
-lms load zai-org/glm-4.7-flash --context-length 65536
-
-# Launch an agent against the local model
+# Download, load, and launch — all in one command
 lms-launch claude --model zai-org/glm-4.7-flash
 ```
 
@@ -205,7 +218,7 @@ lms-launch claude --model zai-org/glm-4.7-flash
 ### Agentic Tool Launcher
 
 ```bash
-lms-launch <tool> --model <m> [args]   # Launch an agentic tool via LM Studio
+lms-launch <tool> --model <m> [opts]   # Download, load, and launch tool
 lms-launch                              # Show usage and supported tools
 ```
 
@@ -319,7 +332,10 @@ flox services restart
 # Check what's loaded
 lms-models
 
-# Load a model with context window
+# lms-launch auto-downloads and loads, so just run:
+lms-launch claude --model zai-org/glm-4.7-flash
+
+# Or load manually:
 lms load zai-org/glm-4.7-flash --context-length 65536
 ```
 
@@ -340,10 +356,10 @@ lms-launch claude --model zai-org/glm-4.7-flash
 
 ### Tool Uses Cloud Provider Instead of Local Model
 
-Always pass `--model` to `lms-launch`. Without it, tools use their default cloud provider:
+`--model` is required. Without it, `lms-launch` shows an error:
 
 ```bash
-# Wrong -- Claude Code will use Claude Sonnet via Anthropic's API
+# Error -- --model is required
 lms-launch claude
 
 # Correct -- Claude Code uses the local model via LM Studio
