@@ -1,6 +1,6 @@
 # Agentic Development with Flox
 
-Turn-key, isolated environments for 50+ AI coding tools, inference servers, and developer utilities. Each environment gives you everything you need -- the tool, its dependencies, its services -- without installing anything on your system.
+Turn-key, isolated environments for 50+ AI coding tools, inference servers, and developer utilities. Each environment gives you everything you need -- the tool, its dependencies, its services -- without installing anything globally on your system.
 
 ## Why This Exists
 
@@ -8,7 +8,7 @@ AI development tools are multiplying fast. Each has its own runtime (Node, Pytho
 
 These Flox environments fix that:
 
-- **Nothing touches your system.** Every dependency lives inside the environment. When you `exit`, it's gone.
+- **Nothing touches your global system.** Dependencies are only accessible within activated Flox environments. When you `exit` an environment, it (and the dependencies defined within it) are gone.
 - **Services are scoped.** Need Ollama? PostgreSQL? A vLLM inference server? They start with the environment and stop when you leave. No stale daemons.
 - **No version conflicts.** Run Python 3.12 for one tool and Python 3.14 for another, side by side.
 - **Try anything risk-free.** Test-drive 50+ AI coding tools without cleanup. Don't like it? Just `exit`.
@@ -21,7 +21,7 @@ These Flox environments fix that:
 # https://flox.dev/get
 
 # Clone the repository
-git clone https://github.com/barstoolbluz/agentic-development-with-flox
+git clone https://github.com/floxrox/agentic-development-with-flox
 cd agentic-development-with-flox
 
 # Pick a tool and go
