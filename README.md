@@ -76,6 +76,7 @@ aider --model ollama_chat/gemma4
 - [**forge**](./forge) - Forge AI coding agent by Antinomy
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
+- [**hermes-agent**](./hermes-agent) - Hermes self-improving AI agent with persistent learning, 200+ models, and messaging gateway support
 - [**ironclaw**](./ironclaw) - IronClaw secure personal AI assistant in Rust with WASM sandboxing and pgvector memory
 - [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development

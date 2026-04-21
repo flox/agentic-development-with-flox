@@ -1,0 +1,41 @@
+schema-version = "1.11.0"
+
+[install]
+hermes-agent.pkg-path = "flox/hermes-agent"
+hermes-agent.pkg-group = "hermes-agent"
+
+[vars]
+# Provider API keys — set the one(s) you need
+# OPENROUTER_API_KEY = ""
+# OPENAI_API_KEY = ""
+# ANTHROPIC_API_KEY = ""
+# NOUS_API_KEY = ""
+
+[hook]
+on-activate = '''
+echo ""
+echo "Hermes Agent — self-improving AI agent by Nous Research"
+echo ""
+echo "Usage:"
+echo "  hermes                 Interactive terminal UI"
+echo "  hermes setup           Full setup wizard"
+echo "  hermes model           Choose LLM provider/model"
+echo "  hermes tools           Configure enabled tools"
+echo "  hermes gateway         Messaging platform mode (Telegram, Discord, etc.)"
+echo "  hermes doctor          Diagnose issues"
+echo ""
+echo "First run will clone the repo and install into a venv (~1-2 min)."
+echo "Use 'hermes --reset' to force a fresh install."
+echo ""
+'''
+
+[profile]
+# common = ''''''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+  "x86_64-darwin",
+]
