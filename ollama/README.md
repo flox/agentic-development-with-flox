@@ -502,7 +502,7 @@ OLLAMA_MODELS=/shared/models flox activate -s
 
 ### macOS
 
-- Uses standard `ollama` package from nixpkgs
+- Uses the `flox/ollama` package from the Flox catalog (Apple Silicon)
 - CPU-only inference
 - Metal GPU acceleration (automatic)
 

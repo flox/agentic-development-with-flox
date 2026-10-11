@@ -128,7 +128,6 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 ### MCP and Integration
 
 - [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
-- [**claude-code-router**](./claude-code-router) - Middleware proxy routing Claude Code requests to multiple AI providers
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
 
