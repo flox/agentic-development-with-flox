@@ -160,3 +160,6 @@ llamacpp.command = "llamacpp-preflight && llamacpp-resolve-model && llamacpp-ser
 
 ## Other Environment Options -----------------------------------------
 [options]
+systems = [
+  "x86_64-linux",
+]

@@ -18,7 +18,7 @@ A Flox environment for [Crush](https://github.com/charmbracelet/crush), a glamor
 The environment includes:
 
 - `crush` - AI coding agent for the terminal
-- `flox-mcp` - Flox MCP Server for managing Flox environments via Model Context Protocol
+- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
 
 ## Getting Started
 
@@ -201,47 +201,39 @@ crush --version           # Display version information
 - Team-specific knowledge bases
 - External tool integrations
 
-### Flox MCP Server Integration
+### Flox Skills
 
-This environment includes the **Flox MCP Server** (`flox-mcp`), which enables Crush to manage Flox environments directly. When configured as an MCP server, Crush gains the ability to:
+This environment ships the [Flox skills](https://github.com/flox/flox-skills) and registers them with Crush automatically, so Crush knows how to create, onboard, and debug Flox environments:
 
-- **Initialize environments**: Create new Flox environments in any directory
-- **Search packages**: Query the Flox catalog of 150,000+ packages
-- **Install packages**: Add packages to environments declaratively
-- **Run commands**: Execute commands within Flox environments
-- **Query system info**: Get environment and system information
+- **flox** - create and manage environments, install packages, set up services, build, containerize, and publish
+- **floxify** - onboard an existing repository to Flox (detects runtimes, services, and build tools)
+- **flox-debug** - diagnose catalog resolution problems (wrong versions, "constraints too tight")
 
-**Configuring Crush to use Flox MCP Server:**
-
-Add to your Crush configuration (`~/.local/share/crush/crush.json` on Unix, `%LOCALAPPDATA%\crush\crush.json` on Windows):
+On every activation the environment exports `FLOX_SKILLS_DIR` and makes sure your Crush configuration (`~/.local/share/crush/crush.json`) contains:
 
 ```json
 {
-  "mcp": {
-    "flox": {
-      "type": "stdio",
-      "command": "flox-mcp"
-    }
+  "options": {
+    "skills_paths": ["$FLOX_SKILLS_DIR"]
   }
 }
 ```
+
+Crush expands `$FLOX_SKILLS_DIR` at startup, so the skills load only while this environment is active.
 
 **Example usage in Crush:**
 
 ```
 You: Create a new Flox environment for a Python data science project
 
-Crush: [uses flox-mcp to initialize environment and install packages]
-# Creates .flox/env/manifest.toml with python, pandas, numpy, jupyter, etc.
+Crush: [loads the flox skill, then writes .flox/env/manifest.toml with python, pandas, numpy, jupyter, etc.]
 
-You: Add scikit-learn to the environment
+You: Get this repo running with Flox
 
-Crush: [uses flox-mcp to search and install scikit-learn]
+Crush: [loads the floxify skill, detects the project's runtimes and services, and writes a manifest]
 ```
 
-**Accessing MCP tools in Crush:** Press `Ctrl+P` to open the command prompt, then press `Tab` to switch to the "MCP" tab.
-
-**Note:** The Flox MCP Server is available on aarch64-darwin, aarch64-linux, and x86_64-linux platforms.
+> Earlier versions of this environment configured the now-deprecated Flox MCP server (`flox-mcp`). Activation removes that `mcp.flox` entry from `crush.json` automatically.
 
 ### Multi-Model Architecture
 
@@ -471,7 +463,7 @@ cat ~/.config/crush/config.json
 ## System Compatibility
 
 This environment works on:
-- macOS (Apple Silicon and Intel)
+- macOS (Apple Silicon)
 - Linux (x86_64 and ARM64)
 - Windows (x86_64)
 - FreeBSD, OpenBSD, NetBSD

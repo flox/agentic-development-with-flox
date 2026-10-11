@@ -7,7 +7,7 @@ kiro-fhs.systems = ["x86_64-linux"]
 
 # Use standard kiro on other platforms
 kiro.pkg-path = "kiro"
-kiro.systems = ["aarch64-darwin", "x86_64-darwin"]
+kiro.systems = ["aarch64-darwin"]
 
 git.pkg-path = "gitFull"
 git.outputs = "all"
@@ -112,6 +112,5 @@ end
 [options]
 systems = [
   "aarch64-darwin",
-  "x86_64-darwin",
   "x86_64-linux",
 ]

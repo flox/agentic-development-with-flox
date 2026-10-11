@@ -12,7 +12,7 @@ A Flox environment for [Claude Code Router](https://github.com/musistudio/claude
 - **Request transformation**: Built-in transformers for provider API compatibility
 - **Centralized API key management**: Configure all providers in one place
 - **Service management**: Automatic daemon management via Flox services
-- **Cross-platform compatibility**: Linux and macOS (ARM64, x86_64)
+- **Cross-platform compatibility**: Linux (x86_64, ARM64) and macOS (Apple Silicon)
 - **Interactive TUI configuration**: Gum-powered setup wizard
 - **Runtime configuration**: Override settings via environment variables
 
@@ -576,7 +576,7 @@ ccr ui     # Web UI shows full configuration
 
 This environment works on:
 - Linux (ARM64, x86_64)
-- macOS (ARM64, x86_64)
+- macOS (Apple Silicon)
 
 ## Security Considerations
 

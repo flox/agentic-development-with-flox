@@ -16,8 +16,7 @@
       "systems": [
         "aarch64-darwin",
         "aarch64-linux",
-        "x86_64-linux",
-        "x86_64-darwin"
+        "x86_64-linux"
       ]
     }
   },
@@ -81,37 +80,6 @@
         "out": "/nix/store/36ix84iajfbn59aa1yhc6ggp3hpm8vni-hermes-agent-0.10.0+57cbb83"
       },
       "system": "aarch64-linux",
-      "group": "hermes-agent",
-      "priority": 5
-    },
-    {
-      "attr_path": "hermes-agent",
-      "broken": false,
-      "derivation": "/nix/store/smlczk0jcqgr28m4rhcqzw7ix0f4vaah-hermes-agent-0.10.0+57cbb83.drv",
-      "description": "Self-improving AI agent with persistent learning from Nous Research",
-      "install_id": "hermes-agent",
-      "license": "MIT",
-      "locked_url": "git@github.com:barstoolbluz/nix-ai-tools.git?rev=f6b14c9161659cec2c59dffc8bc6d94f6b29cb12",
-      "name": "hermes-agent-0.10.0+57cbb83",
-      "pname": "hermes-agent",
-      "rev": "f6b14c9161659cec2c59dffc8bc6d94f6b29cb12",
-      "rev_count": 224,
-      "rev_date": "2026-04-21T10:38:50Z",
-      "scrape_date": "2026-04-21T10:41:56.688379203Z",
-      "stabilities": [
-        "unstable",
-        "staging",
-        "stable"
-      ],
-      "unfree": false,
-      "version": "0.10.0+57cbb83",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/vg5yq6yvwwyfl237xg4xmkjv41ifz849-hermes-agent-0.10.0+57cbb83"
-      },
-      "system": "x86_64-darwin",
       "group": "hermes-agent",
       "priority": 5
     },

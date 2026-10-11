@@ -7,7 +7,7 @@ TUI for managing multiple AI coding agents in parallel. Each agent runs in its o
 - **Agent profiles** - Switch between Claude, Codex, Gemini, Aider, or custom agents
 - **Git integration** - Review diffs, commit, push branches, create PRs from the TUI
 - **Background execution** - Tasks run in the background with optional auto-accept mode
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

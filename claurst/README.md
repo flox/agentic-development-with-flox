@@ -7,7 +7,7 @@ Multi-provider terminal coding agent built in Rust. A clean-room reimplementatio
 - **Memory consolidation** - Short-term session history and long-term markdown files
 - **Fast and lightweight** - <100ms startup, ~50MB peak memory
 - **No telemetry** - Zero tracking or data collection
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

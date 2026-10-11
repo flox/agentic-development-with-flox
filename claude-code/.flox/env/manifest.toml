@@ -5,8 +5,7 @@
 ##               https://flox.dev/docs/concepts/manifest
 ##
 ## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
@@ -18,11 +17,12 @@ version = 1
 claude-code.pkg-path = "flox/claude-code"
 openssl.pkg-path = "openssl"
 openssl.pkg-group = "openssl"
+openssl.outputs = "all"
+jq.pkg-path = "jq"
 
-# Flox MCP Server - enables Claude Code to manage Flox environments
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
-flox-mcp-server.pkg-group = "mcp"
+# Flox skills (flox, floxify, flox-debug) - teach Claude Code to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 
 ## Environment Variables ---------------------------------------------
 ##  ... available for use in the activated environment
@@ -37,10 +37,44 @@ flox-mcp-server.pkg-group = "mcp"
 ## -------------------------------------------------------------------
 [hook]
 on-activate = '''
-# Register Flox MCP server with Claude Code (idempotent)
-if ! claude mcp list 2>/dev/null | grep -q "^flox:"; then
-    claude mcp add --scope user flox -- flox-mcp
+# Load the Flox skills plugin into every claude session started from this
+# environment, via a PATH shim that adds --plugin-dir. Skipped when the
+# flox@flox-skills plugin is already installed and enabled globally.
+setup_claude_flox_skills() {
+    local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
+    local real_claude="$FLOX_ENV/bin/claude"
+    local shim_dir="$FLOX_ENV_CACHE/bin"
+    [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
+
+    mkdir -p "$shim_dir"
+    cat > "$shim_dir/claude" << EOF
+#!/usr/bin/env bash
+if grep -qs '"flox@flox-skills"' "\$HOME/.claude/plugins/installed_plugins.json" && grep -Eqs '"flox@flox-skills"[[:space:]]*:[[:space:]]*true' "\$HOME/.claude/settings.json"; then
+    exec "$real_claude" "\$@"
 fi
+exec "$real_claude" --plugin-dir "$plugin_dir" "\$@"
+EOF
+    chmod +x "$shim_dir/claude"
+    case ":$PATH:" in
+        *":$shim_dir:"*) ;;
+        *) export PATH="$shim_dir:$PATH" ;;
+    esac
+}
+
+# Remove the deprecated user-scope "flox" MCP server (command flox-mcp) that
+# earlier versions of this environment registered. Servers named "flox" that
+# run anything else, and project-scoped servers, are left alone.
+remove_claude_flox_mcp() {
+    jq -e '.mcpServers.flox.command == "flox-mcp"' "$HOME/.claude.json" >/dev/null 2>&1 || return 0
+    if claude mcp remove --scope user flox >/dev/null 2>&1; then
+        echo "Removed deprecated Flox MCP server from Claude Code (replaced by Flox skills)"
+    else
+        echo "Could not remove the deprecated Flox MCP server; run: claude mcp remove --scope user flox" >&2
+    fi
+}
+
+setup_claude_flox_skills
+remove_claude_flox_mcp
 '''
 
 ## Profile script ----------------------------------------------------
@@ -83,7 +117,6 @@ fi
 systems = [
   "aarch64-darwin",
   "aarch64-linux",
-  "x86_64-darwin",
   "x86_64-linux",
 ]
 # Uncomment to disable CUDA detection.

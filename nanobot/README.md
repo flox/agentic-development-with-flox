@@ -8,7 +8,7 @@ Ultra-lightweight personal AI agent with multi-channel chat integration, persist
 - **Scheduled tasks** - Natural language and cron-based task scheduling with heartbeat
 - **MCP support** - Model Context Protocol for external tool servers
 - **OpenAI-compatible API** - Expose a local `/v1/chat/completions` endpoint
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

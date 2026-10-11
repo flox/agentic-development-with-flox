@@ -25,7 +25,7 @@ schema-version = "1.11.0"
 # open-webui-frontend.pkg-path = "flox/open-webui-frontend"
 # Testing local build:
 open-webui-frontend.pkg-path = "flox/open-webui-frontend"
-open-webui-frontend.systems = ["x86_64-linux", "x86_64-darwin", "aarch64-darwin"]
+open-webui-frontend.systems = ["x86_64-linux", "aarch64-darwin"]
 uv.pkg-path = "uv"
 gum.pkg-path = "gum"
 python311.pkg-path = "python311Full"
@@ -105,5 +105,9 @@ common = '''
 '''
 
 [options]
+systems = [
+  "aarch64-darwin",
+  "x86_64-linux",
+]
 #systems = ["x86_64-linux"]
 #cuda-detection = false

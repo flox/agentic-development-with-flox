@@ -11,13 +11,14 @@ A Flox environment for [GitHub Copilot CLI](https://github.com/github/copilot-cl
 - **Multi-model support**: Claude Sonnet 4.5 (default), Claude Sonnet 4, GPT-5
 - **MCP extensibility**: Supports Model Context Protocol servers and custom extensions
 - **Inline help**: Built-in slash commands for authentication, model switching, feedback
-- **Cross-platform**: Works on Linux and macOS (ARM64, x86_64)
+- **Cross-platform**: Works on Linux (x86_64, ARM64) and macOS (Apple Silicon)
 
 ## Included Tools
 
 The environment includes:
 
 - `copilot` - GitHub Copilot CLI (also available as `github-copilot`)
+- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
 
 ## Getting Started
 
@@ -167,10 +168,19 @@ copilot --version           # Display version information
 - Additional context sources
 - Specialized language support
 - Team-specific patterns and rules
-- **Flox package management** via MCP server
 
 **MCP Server Configuration:**
-While GitHub Copilot CLI's exact MCP configuration method isn't fully documented, it supports MCP servers through its `/mcp` command. The Flox MCP server (`flox-mcp`) is automatically available in this environment when activated on supported systems.
+Use the `/mcp` command inside a session to view and manage MCP servers.
+
+### Flox Skills
+
+This environment adds the [Flox skills](https://github.com/flox/flox-skills) to Copilot's skill search path (`COPILOT_SKILLS_DIRS`) on activation, so Copilot knows how to create, onboard, and debug Flox environments:
+
+- **flox** - create and manage environments, install packages, set up services, build, containerize, and publish
+- **floxify** - onboard an existing repository to Flox (detects runtimes, services, and build tools)
+- **flox-debug** - diagnose catalog resolution problems (wrong versions, "constraints too tight")
+
+Run `/skills` inside a session to confirm they are loaded. Nothing is written to your Copilot configuration; the skills are available only while this environment is active.
 
 ### Context Awareness
 
@@ -391,7 +401,7 @@ git remote -v
 ## System Compatibility
 
 This environment works on:
-- macOS (Apple Silicon and Intel)
+- macOS (Apple Silicon)
 - Linux (x86_64 and ARM64)
 
 ## Security Considerations

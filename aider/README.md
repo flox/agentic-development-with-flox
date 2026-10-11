@@ -5,7 +5,7 @@ AI pair programming in your terminal. Aider lets you collaborate with LLMs to ed
 - **aider-chat-full** (includes voice and browser UI dependencies)
 - **Multi-provider** - Anthropic, OpenAI, DeepSeek, Google Gemini, Ollama, and more
 - **Git-native** - Automatic commits with descriptive messages, easy undo
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

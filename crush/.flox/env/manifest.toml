@@ -13,10 +13,9 @@ openssl.outputs = "all"
 curl.pkg-path = "curl"
 curl.outputs = "all"
 
-# Flox MCP Server - enables Crush to manage Flox environments
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
-flox-mcp-server.outputs = "all"
+# Flox skills (flox, floxify, flox-debug) - teach Crush to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 
 
 ## Environment Variables ---------------------------------------------
@@ -41,6 +40,10 @@ WIZARD_IN_PROGRESS="$HOME/.config/crush/.wizard_in_progress"
 
 mkdir -p "$CONFIG_DIR" "$SECRETS_DIR" "$(dirname "$SETUP_MARKER")"
 chmod 700 "$SECRETS_DIR"
+
+# Flox skills location; crush.json references it as "$FLOX_SKILLS_DIR" so the
+# path only resolves while this environment is active
+export FLOX_SKILLS_DIR="$FLOX_ENV/share/flox/codex/flox"
 
 # =============================================================================
 # OS Detection
@@ -158,7 +161,8 @@ Crush is a glamorous AI coding agent for the terminal from Charm.
 This wizard will help you configure:
   $(gum style --foreground 212 '•') LLM provider(s) with encrypted API key storage
   $(gum style --foreground 212 '•') Local Ollama models (optional)
-  $(gum style --foreground 212 '•') Flox MCP Server integration (optional)
+
+Flox skills (flox, floxify, flox-debug) are enabled automatically.
 
 $(gum style --foreground 240 'Configuration:') $CONFIG_FILE
 $(gum style --foreground 240 'Encrypted secrets:') $SECRETS_DIR"
@@ -304,26 +308,10 @@ Select which models to configure for Crush."
     return 1
 }
 
-configure_flox_mcp() {
-    if ! command -v flox-mcp >/dev/null 2>&1; then
-        return 1
-    fi
-
-    show_box "Flox MCP Server Integration" "The Flox MCP Server enables Crush to manage Flox environments:
-
-  $(gum style --foreground 212 '•') Initialize and manage Flox environments
-  $(gum style --foreground 212 '•') Search and install packages from 150,000+ packages
-  $(gum style --foreground 212 '•') Run commands in isolated environments
-  $(gum style --foreground 212 '•') Query environment and system information"
-
-    gum confirm "Enable Flox MCP Server integration?" --default=true
-}
-
 # =============================================================================
 # Config Generation
 # =============================================================================
 generate_config() {
-    local enable_mcp="$1"
     local config="{}"
 
     # Load existing config to preserve other settings
@@ -386,14 +374,35 @@ generate_config() {
             '.providers.ollama = {"type": "openai-compat", "base_url": $url, "models": $models}')
     fi
 
-    # Add MCP configuration if enabled
-    if [[ "$enable_mcp" == "true" ]]; then
-        config=$(echo "$config" | jq '.mcp.flox = {"type": "stdio", "command": "flox-mcp"}')
-    fi
-
     # Write config
     echo "$config" | jq '.' > "$CONFIG_FILE"
     chmod 600 "$CONFIG_FILE"
+}
+
+# =============================================================================
+# Flox Skills (replaces the deprecated Flox MCP server)
+# =============================================================================
+# Idempotently add "$FLOX_SKILLS_DIR" to options.skills_paths and drop the
+# "flox" MCP server entry written by earlier versions of this environment
+ensure_crush_flox_skills() {
+    [[ -f "$CONFIG_FILE" ]] || return 0
+    local skills_ref='$FLOX_SKILLS_DIR'
+    local filter='(.options.skills_paths // []) | index($p) != null'
+    if jq -e --arg p "$skills_ref" "$filter" "$CONFIG_FILE" >/dev/null 2>&1 \
+        && ! jq -e '.mcp.flox.command == "flox-mcp"' "$CONFIG_FILE" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    local tmp
+    tmp=$(mktemp)
+    if jq --arg p "$skills_ref" '
+        .options.skills_paths = (((.options.skills_paths // []) - [$p]) + [$p])
+        | if .mcp.flox.command == "flox-mcp" then del(.mcp.flox) else . end
+        | if .mcp == {} then del(.mcp) else . end
+    ' "$CONFIG_FILE" > "$tmp"; then
+        cat "$tmp" > "$CONFIG_FILE"
+    fi
+    rm -f "$tmp"
 }
 
 # =============================================================================
@@ -493,27 +502,19 @@ run_setup_wizard() {
         esac
     done <<< "$providers"
 
-    # Flox MCP Server
-    local enable_mcp="false"
-    if configure_flox_mcp; then
-        enable_mcp="true"
-    fi
-
     # Generate configuration
-    generate_config "$enable_mcp"
+    generate_config
+    ensure_crush_flox_skills
 
     # Mark complete
     rm -f "$WIZARD_IN_PROGRESS"
     touch "$SETUP_MARKER"
 
     # Show completion
-    local mcp_status="Disabled"
-    [[ "$enable_mcp" == "true" ]] && mcp_status="$(gum style --foreground 42 'Enabled')"
-
     show_box "Setup Complete!" "Crush has been configured successfully!
 
 $(gum style --foreground 212 'Providers:') ${configured_providers:-None configured}
-$(gum style --foreground 212 'Flox MCP:') $mcp_status
+$(gum style --foreground 212 'Flox skills:') $(gum style --foreground 42 'Enabled')
 $(gum style --foreground 212 'Config:') $CONFIG_FILE
 $(gum style --foreground 212 'Secrets:') Encrypted in $SECRETS_DIR
 
@@ -534,11 +535,8 @@ show_status() {
     done
     grep -q "^ollama_endpoint=" "$SECRETS_CONFIG" 2>/dev/null && providers="${providers:+$providers, }ollama"
 
-    local mcp_status="disabled"
-    [[ -f "$CONFIG_FILE" ]] && jq -e '.mcp.flox' "$CONFIG_FILE" >/dev/null 2>&1 && mcp_status="enabled"
-
     gum style --foreground 212 "Crush ready"
-    echo "   providers=[${providers:-none}] mcp=$mcp_status"
+    echo "   providers=[${providers:-none}] flox-skills=enabled"
     echo ""
     gum style --foreground 240 "   RESET=true flox activate to reconfigure"
 }
@@ -564,6 +562,7 @@ elif [[ -f "$WIZARD_IN_PROGRESS" ]]; then
 elif [[ ! -f "$SETUP_MARKER" ]] || [[ ! -f "$CONFIG_FILE" ]]; then
     run_setup_wizard
 else
+    ensure_crush_flox_skills
     show_status
 fi
 '''
@@ -639,6 +638,5 @@ crush_reset() {
 systems = [
   "aarch64-darwin",
   "aarch64-linux",
-  "x86_64-darwin",
   "x86_64-linux",
 ]

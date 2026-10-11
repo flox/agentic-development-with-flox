@@ -9,6 +9,7 @@ A Flox environment for [Codex CLI](https://github.com/openai/codex), a lightweig
 - **Command execution with approval**: Shell command safety with review system
 - **Memory system**: AGENTS.md files provide persistent context across sessions
 - **MCP server integration**: Extend functionality with Model Context Protocol servers
+- **Flox skills**: `flox`, `floxify`, and `flox-debug` agent skills for creating and managing Flox environments
 - **Execution policies**: Define rules for command restrictions and safety
 - **Zero Data Retention**: Optional privacy mode prevents data storage
 - **Multi-mode operation**: Interactive or non-interactive (for scripting/automation)
@@ -19,7 +20,8 @@ A Flox environment for [Codex CLI](https://github.com/openai/codex), a lightweig
 
 The environment includes:
 
-- `codex` - OpenAI's local AI coding agent
+- `codex` - OpenAI's local AI coding agent (the Flox build, `flox/codex`, which can load skills from the environment)
+- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`)
 
 ## Getting Started
 
@@ -143,6 +145,22 @@ Optional configuration includes:
 - Custom preferences
 
 **Helper:** Use `codex-config` to edit configuration
+
+### Flox Skills
+
+On activation the environment exports `CODEX_FLOX_SKILL_ROOTS`, which the Flox build of Codex reads to load the [Flox skills](https://github.com/flox/flox-skills):
+
+- **flox** - create and manage environments, install packages, set up services, build, containerize, and publish
+- **floxify** - onboard an existing repository to Flox (detects runtimes, services, and build tools)
+- **flox-debug** - diagnose catalog resolution problems (wrong versions, "constraints too tight")
+
+Nothing is written to `~/.codex`; the skills are available only while this environment is active. To check that Codex sees them:
+
+```bash
+codex debug prompt-input "hi" | grep -o 'flox[a-z-]*/SKILL.md' | sort -u
+```
+
+> Earlier versions of this environment added the now-deprecated Flox MCP server (`[mcp_servers.flox]`) to `~/.codex/config.toml`. Activation removes that table automatically.
 
 ### Execution Policies
 
@@ -367,7 +385,7 @@ flox list
 ## System Compatibility
 
 This environment works on:
-- macOS (Apple Silicon and Intel)
+- macOS (Apple Silicon)
 - Linux (x86_64 and ARM64)
 
 ## Security Considerations

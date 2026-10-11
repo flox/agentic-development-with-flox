@@ -8,7 +8,7 @@ Multi-agent AI orchestration platform for Claude Code. Coordinates 100+ speciali
 - **Intelligent routing** - Q-Learning router with 8 experts, 130+ skills, complexity-based dispatch
 - **310+ MCP tools** - Native Claude Code integration via Model Context Protocol
 - **Token optimization** - 30-50% API cost reduction through caching and WASM Agent Booster
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

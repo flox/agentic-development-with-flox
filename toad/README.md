@@ -7,7 +7,7 @@ Unified terminal interface (TUI) for AI coding agents by Will McGugan (creator o
 - **Rich TUI** - Integrated shell, markdown editor, fuzzy file picker, beautiful diffs
 - **Web mode** - Serve as a web application with `toad serve`
 - **Concurrent sessions** - Run multiple agent sessions, resume with Ctrl+R
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

@@ -316,7 +316,6 @@ curl http://localhost:8080/api/chat/completions \
 ### Supported Platforms
 - Linux x86_64 (with CUDA support)
 - Linux ARM64 (with CUDA support)
-- macOS x86_64
 - macOS ARM64 (Apple Silicon)
 
 ### Service Configuration

@@ -1,4 +1,4 @@
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
@@ -9,8 +9,12 @@ version = 1
 [install]
 gemini-cli.pkg-path = "gemini-cli"
 gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-vscode-ide-companion"
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+jq.pkg-path = "jq"
+jq.outputs = "all"
+
+# Flox skills (flox, floxify, flox-debug) - teach Gemini CLI to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 
 
 ## Environment Variables ---------------------------------------------
@@ -23,50 +27,47 @@ flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Set up MCP server configuration for Flox
-setup_mcp_config() {
-    local settings_dir="$HOME/.gemini"
-    local settings_file="$settings_dir/settings.json"
-
-    # Create directory if it doesn't exist
-    if [ ! -d "$settings_dir" ]; then
-        mkdir -p "$settings_dir"
-        echo "Created ~/.gemini directory for settings"
-    fi
-
-    # Check if settings.json exists
-    if [ ! -f "$settings_file" ]; then
-        # Create initial settings with Flox MCP server
-        cat > "$settings_file" << 'EOF'
-{
-  "mcpServers": {
-    "flox": {
-      "command": "flox-mcp",
-      "args": [],
-      "description": "MCP server for managing Flox environments and packages",
-      "trust": false
-    }
-  }
-}
-EOF
-        echo "Created MCP configuration with Flox server at ~/.gemini/settings.json"
-    else
-        # Check if Flox MCP server is already configured
-        if ! grep -q '"flox"' "$settings_file" 2>/dev/null; then
-            echo "Existing settings.json found. To add Flox MCP server, add this to mcpServers:"
-            echo '
-    "flox": {
-      "command": "flox-mcp",
-      "args": [],
-      "description": "MCP server for managing Flox environments and packages",
-      "trust": false
-    }'
+# Link the Flox skills into ~/.gemini/skills (Gemini CLI has no
+# environment-scoped skill path). Links that point at a Flox skills package are
+# refreshed on each activation; skills you added yourself (directories, or
+# symlinks pointing anywhere else) are never replaced.
+link_gemini_flox_skills() {
+    local skills_src="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dst="$HOME/.gemini/skills"
+    local skill name target
+    [ -d "$skills_src" ] || return 0
+    mkdir -p "$skills_dst"
+    for skill in "$skills_src"/*/; do
+        name=$(basename "$skill")
+        target="$skills_dst/$name"
+        if [ -L "$target" ]; then
+            case "$(readlink "$target")" in
+                */share/flox/codex/flox/"$name") ;;
+                *) continue ;;
+            esac
+        elif [ -e "$target" ]; then
+            continue
         fi
-    fi
+        ln -sfn "$skills_src/$name" "$target"
+    done
 }
 
-# Run setup
-setup_mcp_config
+# Remove the deprecated "flox" MCP server added to ~/.gemini/settings.json
+# by earlier versions of this environment
+remove_gemini_flox_mcp() {
+    local settings_file="$HOME/.gemini/settings.json"
+    local tmp
+    jq -e '.mcpServers.flox.command == "flox-mcp"' "$settings_file" >/dev/null 2>&1 || return 0
+    tmp=$(mktemp)
+    if jq 'del(.mcpServers.flox)' "$settings_file" > "$tmp"; then
+        cat "$tmp" > "$settings_file"
+        echo "Removed deprecated Flox MCP server from ~/.gemini/settings.json (replaced by Flox skills)"
+    fi
+    rm -f "$tmp"
+}
+
+link_gemini_flox_skills
+remove_gemini_flox_mcp
 
 echo ""
 echo "Gemini CLI - AI Agent in Your Terminal"
@@ -83,9 +84,9 @@ echo "  gemini -p \"prompt\"          # Non-interactive mode"
 echo "  gemini --output-format json # JSON output for scripting"
 echo "  gemini -m gemini-2.5-flash  # Specify model"
 echo ""
-echo "MCP Server:"
-echo "  Flox MCP server configured in ~/.gemini/settings.json"
-echo "  Use Flox tools in your prompts to manage environments and packages"
+echo "Flox skills:"
+echo "  flox, floxify, and flox-debug linked into ~/.gemini/skills"
+echo "  /skills list                # Verify inside a Gemini session"
 echo ""
 echo "Optional enhancements:"
 echo "  GEMINI.md                   # Project context file (see README)"
@@ -149,11 +150,10 @@ echo ""
 ## Other Environment Options -----------------------------------------
 [options]
 # Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

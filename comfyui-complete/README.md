@@ -117,7 +117,6 @@ The manifest uses Flox **pkg-groups** to select platform-appropriate packages. O
 | x86_64-linux | flox-cuda (priority 0) | flox-cuda (priority 3) | flox-cuda (priority 33) |
 | aarch64-linux | flox-cuda (priority 0) | flox-cuda (priority 3) | -- |
 | aarch64-darwin | nixpkgs (priority 6) | nixpkgs (priority 7) | -- |
-| x86_64-darwin | nixpkgs (priority 6) | nixpkgs (priority 7) | -- |
 
 **torch itself** is bundled inside `comfyui-complete` (CPU, from nixpkgs). The `comfyui-start` script builds a selective PYTHONPATH that places the Flox environment's CUDA torch *before* the bundled CPU torch, so GPU acceleration works without wrapping.
 

@@ -12,8 +12,7 @@ A Flox environment that pairs Ollama's local LLM inference with CLI-based agenti
 - **OpenCode** - Open-source AI coding agent with TUI
 - **OpenClaw** - Self-hosted AI assistant/agent (optional, uncomment in manifest)
 
-**Supporting Tools:**
-- **Flox MCP Server** - Model Context Protocol server for AI agent environment management
+**Flox Skills** - `flox`, `floxify`, and `flox-debug` agent skills, loaded automatically into Claude Code, Codex, and OpenCode (including sessions started with `ollama launch`) so they can create, onboard, and debug Flox environments. Nothing is written to the tools' global configuration.
 
 ## Quick Start
 

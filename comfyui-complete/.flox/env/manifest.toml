@@ -89,24 +89,26 @@ cuda-torchaudio.outputs = "all"
 
 # fallback for other platforms
 torchvision.pkg-path = "python313Packages.torchvision"
-torchvision.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
+torchvision.systems = ["aarch64-linux", "aarch64-darwin"]
 torchvision.priority = 6
 torchvision.pkg-group = "torchvision"
 torchvision.outputs = "all"
 
 torchaudio.pkg-path = "python313Packages.torchaudio"
-torchaudio.systems = ["aarch64-linux", "x86_64-darwin", "aarch64-darwin"]
+torchaudio.systems = ["aarch64-linux", "aarch64-darwin"]
 torchaudio.priority = 7
 torchaudio.pkg-group = "torchaudio"
 torchaudio.outputs = "all"
 
 # torchsde - not in nixpkgs, required by ComfyUI samplers
-# Using local build with scipy/numpy removed from deps to prevent profile merge conflicts
-# To switch back to published: torchsde.pkg-path = "flox/torchsde-python313"
-torchsde.store-path = "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879"
+# Published build (no bundled torch). Low priority so the environment's own
+# scipy/numpy win any profile merge conflicts.
+torchsde.pkg-path = "flox/torchsde-python313"
+torchsde.pkg-group = "torchsde"
+torchsde.priority = 10
 
 # Scientific packages: use bundled nixpkgs versions from comfyui-complete.
-# Do NOT add flox-cuda scipy/numpy here when using store-path — version
+# Do NOT add flox-cuda scipy/numpy here — version
 # differences between nixpkgs and flox-cuda create Frankenstein merges.
 # (The published flox/comfyui-complete is built within flox-cuda so it matches.)
 
@@ -207,5 +209,5 @@ command = "comfyui-start"
 
 
 [options]
-systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux", "x86_64-darwin"]
+systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 cuda-detection = true

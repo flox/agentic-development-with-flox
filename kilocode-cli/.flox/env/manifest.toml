@@ -8,7 +8,7 @@ schema-version = "1.11.0"
 ## -------------------------------------------------------------------
 [install]
 kilocode-cli.pkg-path = "kilocode-cli"
-kilocode-cli.systems = ["x86_64-linux", "aarch64-darwin", "x86_64-darwin"]
+kilocode-cli.systems = ["x86_64-linux", "aarch64-darwin"]
 kilocode-cli.pkg-group = "kilocode-cli"
 kilocode-cli.outputs = "all"
 # gum.pkg-path = "gum"
@@ -104,11 +104,9 @@ echo ""
 ## Other Environment Options -----------------------------------------
 [options]
 # Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
+systems = [
+  "aarch64-darwin",
+  "x86_64-linux",
+]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

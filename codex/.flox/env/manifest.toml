@@ -5,8 +5,7 @@
 ##   https://flox.dev/docs/reference/command-reference/manifest.toml/
 ##
 ## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
@@ -15,11 +14,13 @@ version = 1
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-codex.pkg-path = "codex"
+# Flox build of Codex: loads skills from CODEX_FLOX_SKILL_ROOTS
+codex.pkg-path = "flox/codex"
+codex.pkg-group = "codex"
 
-# Flox MCP Server - enables Codex to manage Flox environments
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
+# Flox skills (flox, floxify, flox-debug) - teach Codex to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 
 
 ## Environment Variables ---------------------------------------------
@@ -33,45 +34,35 @@ flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Set up MCP server configuration for Flox
-setup_mcp_config() {
-    local config_dir="$HOME/.codex"
-    local config_file="$config_dir/config.toml"
+# Point the Flox build of Codex at the Flox skills (colon-separated roots;
+# any roots you set yourself are kept)
+setup_codex_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    [ -d "$skills_dir" ] || return 0
+    case ":${CODEX_FLOX_SKILL_ROOTS:-}:" in
+        *":$skills_dir:"*) ;;
+        *) export CODEX_FLOX_SKILL_ROOTS="$skills_dir${CODEX_FLOX_SKILL_ROOTS:+:$CODEX_FLOX_SKILL_ROOTS}" ;;
+    esac
+}
+setup_codex_flox_skills
 
-    # Create directory if it doesn't exist
-    mkdir -p "$config_dir"
-
-    # Check if config.toml exists
-    if [ ! -f "$config_file" ]; then
-        # Create initial config with Flox MCP server
-        cat > "$config_file" << 'EOF'
-# Codex configuration
-# See https://github.com/openai/codex for options
-
-[mcp_servers.flox]
-command = "flox-mcp"
-args = []
-description = "MCP server for managing Flox environments and packages"
-EOF
-        echo "Created MCP configuration with Flox server at ~/.codex/config.toml"
-    else
-        # Check if Flox MCP server is already configured
-        if ! grep -q '\[mcp_servers\.flox\]' "$config_file" 2>/dev/null; then
-            # Append Flox MCP server configuration
-            cat >> "$config_file" << 'EOF'
-
-[mcp_servers.flox]
-command = "flox-mcp"
-args = []
-description = "MCP server for managing Flox environments and packages"
-EOF
-            echo "Added Flox MCP server to existing ~/.codex/config.toml"
-        fi
-    fi
+# Remove the deprecated [mcp_servers.flox] table added to ~/.codex/config.toml
+# by earlier versions of this environment
+remove_codex_flox_mcp() {
+    local config_file="$HOME/.codex/config.toml"
+    local tmp
+    grep -q '^\[mcp_servers\.flox\]' "$config_file" 2>/dev/null || return 0
+    grep -q 'command = "flox-mcp"' "$config_file" || return 0
+    tmp=$(mktemp)
+    awk '
+        /^\[/ { skip = ($0 == "[mcp_servers.flox]") }
+        !skip
+    ' "$config_file" > "$tmp" && cat "$tmp" > "$config_file"
+    rm -f "$tmp"
+    echo "Removed deprecated Flox MCP server from ~/.codex/config.toml (replaced by Flox skills)"
 }
 
-# Run setup
-setup_mcp_config
+remove_codex_flox_mcp
 
 echo ""
 echo "Codex CLI - Local AI Coding Agent from OpenAI"
@@ -91,14 +82,14 @@ echo "Configuration (optional):"
 echo "  codex-config                # Edit ~/.codex/config.toml"
 echo "  codex-policy                # Manage execution policies"
 echo ""
-echo "MCP Server:"
-echo "  Flox MCP server configured in ~/.codex/config.toml"
-echo "  Use Flox tools in your prompts to manage environments and packages"
+echo "Flox skills:"
+echo "  flox, floxify, and flox-debug skills are loaded automatically"
+echo "  Ask Codex to create or floxify environments, add packages, or debug resolution"
 echo ""
 echo "Features:"
 echo "  • Executes shell commands with approval system"
 echo "  • Memory system via AGENTS.md files"
-echo "  • MCP server integration with Flox"
+echo "  • Flox skills for managing Flox environments"
 echo "  • Zero Data Retention option"
 echo ""
 '''
@@ -280,11 +271,10 @@ end
 ## Other Environment Options -----------------------------------------
 [options]
 # Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

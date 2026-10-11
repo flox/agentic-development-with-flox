@@ -79,5 +79,10 @@ gateway.command = "openclaw gateway"
 
 ## Other Environment Options -----------------------------------------
 [options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

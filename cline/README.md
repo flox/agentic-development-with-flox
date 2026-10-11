@@ -7,7 +7,7 @@ Autonomous AI coding agent for the terminal. Cline can create/edit files, run te
 - **Human-in-the-loop** - Approve actions before execution, or auto-approve with `-y`
 - **Headless mode** - JSON output for CI/CD pipelines and scripting
 - **ACP mode** - Editor integration with Zed, Neovim, JetBrains via Agent Client Protocol
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

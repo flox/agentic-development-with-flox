@@ -7,7 +7,7 @@ A natural language interface for computers. Lets LLMs run code (Python, JavaScri
 - **Interactive chat** - Terminal-based conversational interface
 - **Local models** - Run fully offline with Llamafile or any OpenAI-compatible server
 - **YAML profiles** - Configurable per-project settings
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

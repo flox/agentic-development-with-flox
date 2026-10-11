@@ -2,13 +2,13 @@
 
 Backend-agnostic [Open WebUI](https://github.com/open-webui/open-webui) runtime.
 Works with any OpenAI-compatible inference server — vLLM, SGLang, Triton, llama.cpp, etc.
-Runs on Linux (x86_64) and macOS (Intel & Apple Silicon).
+Runs on Linux (x86_64) and macOS (Apple Silicon).
 
 ## Prerequisites
 
 - [Flox](https://flox.dev) — a reproducible environment manager
 - A running OpenAI-compatible inference backend (vLLM, SGLang, Triton, llama.cpp, Ollama, etc.)
-- Supported platforms: `x86_64-linux`, `x86_64-darwin` (Intel Mac), `aarch64-darwin` (Apple Silicon Mac)
+- Supported platforms: `x86_64-linux`, `aarch64-darwin` (Apple Silicon Mac)
 
 ## Quick start
 

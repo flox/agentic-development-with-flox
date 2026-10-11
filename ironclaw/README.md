@@ -8,7 +8,7 @@ Secure personal AI assistant built in Rust by NEAR AI. Features WASM-sandboxed t
 - **Multi-channel** - REPL, HTTP webhooks, Web Gateway, Telegram, Slack via WASM channels
 - **Routines engine** - Cron schedules, event triggers, webhook handlers, heartbeat system
 - **Dynamic tools** - Build new WASM tools from natural language descriptions
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

@@ -13,30 +13,18 @@
         "outputs": "all"
       },
       "codex": {
-        "pkg-path": "codex",
-        "pkg-group": "agentic",
-        "outputs": "all"
+        "pkg-path": "flox/codex",
+        "pkg-group": "codex"
       },
       "curl": {
         "pkg-path": "curl",
         "pkg-group": "tools",
         "outputs": "all"
       },
-      "flox-mcp-server": {
-        "pkg-path": "flox/flox-mcp-server",
-        "pkg-group": "mcp",
-        "systems": [
-          "aarch64-darwin",
-          "aarch64-linux",
-          "x86_64-linux"
-        ],
-        "outputs": "all"
-      },
       "ollama": {
         "pkg-path": "ollama",
         "priority": 1,
         "systems": [
-          "x86_64-darwin",
           "aarch64-darwin"
         ]
       },
@@ -53,10 +41,14 @@
         "pkg-path": "opencode",
         "pkg-group": "agentic",
         "outputs": "all"
+      },
+      "skills-flox": {
+        "pkg-path": "flox/skills-flox",
+        "pkg-group": "flox-skills"
       }
     },
     "hook": {
-      "on-activate": "# === MODEL STORAGE ===\n# Use Ollama's default location (~/.ollama/models) unless user overrides\n# To use project-local storage: OLLAMA_MODELS=$FLOX_ENV_CACHE/models flox activate\nexport OLLAMA_MODELS=\"${OLLAMA_MODELS:-$HOME/.ollama/models}\"\n\n# Create models directory if using custom location\nif [ \"$OLLAMA_MODELS\" = \"$FLOX_ENV_CACHE/models\" ]; then\n  mkdir -p \"$OLLAMA_MODELS\"\nfi\n\n# === SERVER CONFIGURATION ===\nexport OLLAMA_HOST=\"${OLLAMA_HOST:-127.0.0.1:11434}\"\nexport OLLAMA_ORIGINS=\"${OLLAMA_ORIGINS:-}\"  # Use Ollama defaults\n\n# === PERFORMANCE & MEMORY ===\nexport OLLAMA_CONTEXT_LENGTH=\"${OLLAMA_CONTEXT_LENGTH:-}\"  # Default: 4096\nexport OLLAMA_KEEP_ALIVE=\"${OLLAMA_KEEP_ALIVE:-}\"  # Default: 5m\nexport OLLAMA_MAX_LOADED_MODELS=\"${OLLAMA_MAX_LOADED_MODELS:-}\"  # Default: auto (3 * GPU count)\nexport OLLAMA_NUM_PARALLEL=\"${OLLAMA_NUM_PARALLEL:-}\"  # Default: 1\nexport OLLAMA_MAX_QUEUE=\"${OLLAMA_MAX_QUEUE:-}\"  # Default: 512\nexport OLLAMA_LOAD_TIMEOUT=\"${OLLAMA_LOAD_TIMEOUT:-}\"  # Default: 5m\n\n# === GPU CONFIGURATION ===\nexport OLLAMA_FLASH_ATTENTION=\"${OLLAMA_FLASH_ATTENTION:-}\"  # Experimental\nexport OLLAMA_KV_CACHE_TYPE=\"${OLLAMA_KV_CACHE_TYPE:-}\"  # Default: f16\nexport OLLAMA_GPU_OVERHEAD=\"${OLLAMA_GPU_OVERHEAD:-}\"  # Default: 0\n# Only set CUDA_VISIBLE_DEVICES if user explicitly provides it\nif [ -n \"${CUDA_VISIBLE_DEVICES+x}\" ]; then\n  export CUDA_VISIBLE_DEVICES\nfi\n\n# Detect GPU availability\nexport _FLOX_ENV_CUDA_DETECTION=0\nif command -v nvidia-smi >/dev/null 2>&1; then\n  if nvidia-smi -L 2>/dev/null | grep -q \"GPU\"; then\n    export _FLOX_ENV_CUDA_DETECTION=1\n  fi\nfi\n\n# === ADVANCED / EXPERIMENTAL ===\nexport OLLAMA_DEBUG=\"${OLLAMA_DEBUG:-0}\"  # 0 = disabled, 1 = enabled\nexport OLLAMA_SCHED_SPREAD=\"${OLLAMA_SCHED_SPREAD:-}\"  # Schedule across all GPUs\nexport OLLAMA_NOPRUNE=\"${OLLAMA_NOPRUNE:-}\"  # Don't prune model blobs\nexport OLLAMA_LLM_LIBRARY=\"${OLLAMA_LLM_LIBRARY:-}\"  # Bypass autodetection\nexport OLLAMA_AUTH=\"${OLLAMA_AUTH:-}\"  # Experimental authentication\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"Ollama environment ready (headless mode)\"\necho \"\"\necho \"Server:\"\necho \"  Host: ${OLLAMA_HOST}\"\nif [ \"$OLLAMA_MODELS\" = \"$HOME/.ollama/models\" ]; then\n  echo \"  Models: ${OLLAMA_MODELS} (default)\"\nelse\n  echo \"  Models: ${OLLAMA_MODELS} (custom)\"\nfi\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: Available (CUDA detected)\"\nelse\n  echo \"  GPU: Not detected (CPU mode)\"\nfi\necho \"\"\necho \"Commands:\"\necho \"  flox activate -s        Start Ollama service\"\necho \"  ollama pull <model>     Download a model\"\necho \"  ollama list             List local models\"\necho \"  ollama-info             Show configuration\"\necho \"  ollama-health           Test API endpoint\"\necho \"  helpf                   View full README documentation\"\necho \"\"\necho \"Examples:\"\necho \"  ollama pull llama2\"\necho \"  OLLAMA_HOST=0.0.0.0:11434 flox activate -s\"\necho \"  OLLAMA_MODELS=\\$FLOX_ENV_CACHE/models flox activate -s  # Use project-local models\"\necho \"\"\n\n  # Fetch README.md if not present\n  README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n  if [ ! -f \"$README_FILE\" ]; then\n    if curl -fsSL https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/ollama-headless/README.md -o \"$README_FILE\" 2>/dev/null; then\n      echo \"Downloaded README.md (use 'helpf' to view)\"\n    fi\n  fi\n"
+      "on-activate": "# === MODEL STORAGE ===\n# Use Ollama's default location (~/.ollama/models) unless user overrides\n# To use project-local storage: OLLAMA_MODELS=$FLOX_ENV_CACHE/models flox activate\nexport OLLAMA_MODELS=\"${OLLAMA_MODELS:-$HOME/.ollama/models}\"\n\n# Create models directory if using custom location\nif [ \"$OLLAMA_MODELS\" = \"$FLOX_ENV_CACHE/models\" ]; then\n  mkdir -p \"$OLLAMA_MODELS\"\nfi\n\n# === SERVER CONFIGURATION ===\nexport OLLAMA_HOST=\"${OLLAMA_HOST:-127.0.0.1:11434}\"\nexport OLLAMA_ORIGINS=\"${OLLAMA_ORIGINS:-}\"  # Use Ollama defaults\n\n# === PERFORMANCE & MEMORY ===\nexport OLLAMA_CONTEXT_LENGTH=\"${OLLAMA_CONTEXT_LENGTH:-}\"  # Default: 4096\nexport OLLAMA_KEEP_ALIVE=\"${OLLAMA_KEEP_ALIVE:-}\"  # Default: 5m\nexport OLLAMA_MAX_LOADED_MODELS=\"${OLLAMA_MAX_LOADED_MODELS:-}\"  # Default: auto (3 * GPU count)\nexport OLLAMA_NUM_PARALLEL=\"${OLLAMA_NUM_PARALLEL:-}\"  # Default: 1\nexport OLLAMA_MAX_QUEUE=\"${OLLAMA_MAX_QUEUE:-}\"  # Default: 512\nexport OLLAMA_LOAD_TIMEOUT=\"${OLLAMA_LOAD_TIMEOUT:-}\"  # Default: 5m\n\n# === GPU CONFIGURATION ===\nexport OLLAMA_FLASH_ATTENTION=\"${OLLAMA_FLASH_ATTENTION:-}\"  # Experimental\nexport OLLAMA_KV_CACHE_TYPE=\"${OLLAMA_KV_CACHE_TYPE:-}\"  # Default: f16\nexport OLLAMA_GPU_OVERHEAD=\"${OLLAMA_GPU_OVERHEAD:-}\"  # Default: 0\n# Only set CUDA_VISIBLE_DEVICES if user explicitly provides it\nif [ -n \"${CUDA_VISIBLE_DEVICES+x}\" ]; then\n  export CUDA_VISIBLE_DEVICES\nfi\n\n# Detect GPU availability\nexport _FLOX_ENV_CUDA_DETECTION=0\nif command -v nvidia-smi >/dev/null 2>&1; then\n  if nvidia-smi -L 2>/dev/null | grep -q \"GPU\"; then\n    export _FLOX_ENV_CUDA_DETECTION=1\n  fi\nfi\n\n# === ADVANCED / EXPERIMENTAL ===\nexport OLLAMA_DEBUG=\"${OLLAMA_DEBUG:-0}\"  # 0 = disabled, 1 = enabled\nexport OLLAMA_SCHED_SPREAD=\"${OLLAMA_SCHED_SPREAD:-}\"  # Schedule across all GPUs\nexport OLLAMA_NOPRUNE=\"${OLLAMA_NOPRUNE:-}\"  # Don't prune model blobs\nexport OLLAMA_LLM_LIBRARY=\"${OLLAMA_LLM_LIBRARY:-}\"  # Bypass autodetection\nexport OLLAMA_AUTH=\"${OLLAMA_AUTH:-}\"  # Experimental authentication\n\n# === FLOX SKILLS ===\n# Load the Flox skills (flox, floxify, flox-debug) into the agentic CLI tools.\n# Applies to direct launches and to the launcher's tool sessions alike.\nsetup_claude_flox_skills() {\n    local plugin_dir=\"$FLOX_ENV/share/flox/claude/flox\"\n    local real_claude=\"$FLOX_ENV/bin/claude\"\n    local shim_dir=\"$FLOX_ENV_CACHE/bin\"\n    [ -d \"$plugin_dir\" ] && [ -x \"$real_claude\" ] || return 0\n\n    # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally\n    mkdir -p \"$shim_dir\"\n    cat > \"$shim_dir/claude\" << EOF\n#!/usr/bin/env bash\nif grep -qs '\"flox@flox-skills\"' \"\\$HOME/.claude/plugins/installed_plugins.json\" && grep -Eqs '\"flox@flox-skills\"[[:space:]]*:[[:space:]]*true' \"\\$HOME/.claude/settings.json\"; then\n    exec \"$real_claude\" \"\\$@\"\nfi\nexec \"$real_claude\" --plugin-dir \"$plugin_dir\" \"\\$@\"\nEOF\n    chmod +x \"$shim_dir/claude\"\n    case \":$PATH:\" in\n        *\":$shim_dir:\"*) ;;\n        *) export PATH=\"$shim_dir:$PATH\" ;;\n    esac\n}\nsetup_claude_flox_skills\n\n# The Flox build of Codex reads skills from CODEX_FLOX_SKILL_ROOTS\n# (colon-separated; any roots you set yourself are kept)\nsetup_codex_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/flox/codex/flox\"\n    [ -d \"$skills_dir\" ] || return 0\n    case \":${CODEX_FLOX_SKILL_ROOTS:-}:\" in\n        *\":$skills_dir:\"*) ;;\n        *) export CODEX_FLOX_SKILL_ROOTS=\"$skills_dir${CODEX_FLOX_SKILL_ROOTS:+:$CODEX_FLOX_SKILL_ROOTS}\" ;;\n    esac\n}\nsetup_codex_flox_skills\n\n# OpenCode merges the file named by OPENCODE_CONFIG with its other config, and\n# launchers that set OPENCODE_CONFIG_CONTENT (e.g. newer `ollama launch`) don't\n# override it. Falls back to OPENCODE_CONFIG_CONTENT if OPENCODE_CONFIG is taken.\nsetup_opencode_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/flox/opencode/flox/skills\"\n    local config=\"$FLOX_ENV_CACHE/opencode-flox-skills.json\"\n    local content=\"{\\\"skills\\\":{\\\"paths\\\":[\\\"$skills_dir\\\"]}}\"\n    [ -d \"$skills_dir\" ] || return 0\n    if [ -z \"${OPENCODE_CONFIG:-}\" ] || [ \"$OPENCODE_CONFIG\" = \"$config\" ]; then\n        printf '%s\\n' \"$content\" > \"$config\"\n        export OPENCODE_CONFIG=\"$config\"\n    elif [ -z \"${OPENCODE_CONFIG_CONTENT:-}\" ]; then\n        export OPENCODE_CONFIG_CONTENT=\"$content\"\n    else\n        echo \"Note: OPENCODE_CONFIG and OPENCODE_CONFIG_CONTENT are both set; Flox skills not added to OpenCode\" >&2\n    fi\n}\nsetup_opencode_flox_skills\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"Ollama environment ready (headless mode)\"\necho \"\"\necho \"Server:\"\necho \"  Host: ${OLLAMA_HOST}\"\nif [ \"$OLLAMA_MODELS\" = \"$HOME/.ollama/models\" ]; then\n  echo \"  Models: ${OLLAMA_MODELS} (default)\"\nelse\n  echo \"  Models: ${OLLAMA_MODELS} (custom)\"\nfi\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: Available (CUDA detected)\"\nelse\n  echo \"  GPU: Not detected (CPU mode)\"\nfi\necho \"\"\necho \"Commands:\"\necho \"  flox activate -s        Start Ollama service\"\necho \"  ollama pull <model>     Download a model\"\necho \"  ollama list             List local models\"\necho \"  ollama-info             Show configuration\"\necho \"  ollama-health           Test API endpoint\"\necho \"  helpf                   View full README documentation\"\necho \"\"\necho \"Examples:\"\necho \"  ollama pull llama2\"\necho \"  OLLAMA_HOST=0.0.0.0:11434 flox activate -s\"\necho \"  OLLAMA_MODELS=\\$FLOX_ENV_CACHE/models flox activate -s  # Use project-local models\"\necho \"\"\n\n  # Fetch README.md if not present\n  README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n  if [ ! -f \"$README_FILE\" ]; then\n    if curl -fsSL https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/ollama-headless/README.md -o \"$README_FILE\" 2>/dev/null; then\n      echo \"Downloaded README.md (use 'helpf' to view)\"\n    fi\n  fi\n"
     },
     "profile": {
       "bash": "\nollama-info() {\n    echo \"Ollama Headless Environment Configuration\"\n    echo \"\"\n    echo \"Server:\"\n    echo \"  Host: ${OLLAMA_HOST}\"\n    echo \"  Models: ${OLLAMA_MODELS}\"\n    echo \"\"\n    echo \"Performance:\"\n    if [ -n \"$OLLAMA_CONTEXT_LENGTH\" ]; then\n        echo \"  Context Length: ${OLLAMA_CONTEXT_LENGTH}\"\n    else\n        echo \"  Context Length: 4096 (default)\"\n    fi\n    if [ -n \"$OLLAMA_KEEP_ALIVE\" ]; then\n        echo \"  Keep Alive: ${OLLAMA_KEEP_ALIVE}\"\n    else\n        echo \"  Keep Alive: 5m (default)\"\n    fi\n    if [ -n \"$OLLAMA_NUM_PARALLEL\" ]; then\n        echo \"  Num Parallel: ${OLLAMA_NUM_PARALLEL}\"\n    else\n        echo \"  Num Parallel: 1 (default)\"\n    fi\n    if [ -n \"$OLLAMA_MAX_QUEUE\" ]; then\n        echo \"  Max Queue: ${OLLAMA_MAX_QUEUE}\"\n    else\n        echo \"  Max Queue: 512 (default)\"\n    fi\n    if [ -n \"$OLLAMA_MAX_LOADED_MODELS\" ]; then\n        echo \"  Max Loaded Models: ${OLLAMA_MAX_LOADED_MODELS}\"\n    else\n        echo \"  Max Loaded Models: auto (default)\"\n    fi\n    echo \"\"\n    echo \"GPU:\"\n    if [ -n \"$OLLAMA_FLASH_ATTENTION\" ]; then\n        echo \"  Flash Attention: enabled\"\n    else\n        echo \"  Flash Attention: disabled (default)\"\n    fi\n    if [ -n \"$OLLAMA_KV_CACHE_TYPE\" ]; then\n        echo \"  KV Cache Type: ${OLLAMA_KV_CACHE_TYPE}\"\n    else\n        echo \"  KV Cache Type: f16 (default)\"\n    fi\n    if [ -n \"$CUDA_VISIBLE_DEVICES\" ]; then\n        echo \"  CUDA Devices: ${CUDA_VISIBLE_DEVICES}\"\n    else\n        echo \"  CUDA Devices: all (default)\"\n    fi\n    echo \"\"\n    if [ \"$OLLAMA_DEBUG\" = \"1\" ]; then\n        echo \"Debug: enabled\"\n    else\n        echo \"Debug: disabled\"\n    fi\n    echo \"\"\n    echo \"Commands:\"\n    echo \"  ollama pull <model>       Download a model\"\n    echo \"  ollama list               List local models\"\n    echo \"  ollama ps                 List running models\"\n    echo \"  flox services status      Check service status\"\n    echo \"  flox services logs ollama View Ollama logs\"\n    echo \"  ollama-health             Test API endpoint\"\n    echo \"\"\n    echo \"Runtime Override Examples:\"\n    echo \"  OLLAMA_HOST=0.0.0.0:11434 flox activate -s\"\n    echo \"  OLLAMA_NUM_PARALLEL=4 flox activate -s\"\n    echo \"  OLLAMA_DEBUG=1 flox activate -s\"\n}\nexport -f ollama-info\n\nollama-health() {\n    local HOST=\"${OLLAMA_HOST:-127.0.0.1:11434}\"\n    # Remove http:// or https:// prefix if present\n    HOST=\"${HOST#http://}\"\n    HOST=\"${HOST#https://}\"\n\n    if curl -s \"http://${HOST}/\" | grep -q \"Ollama is running\"; then\n        echo \"Ollama API is healthy at http://${HOST}\"\n        return 0\n    else\n        echo \"Ollama API is not responding at http://${HOST}\"\n        echo \"   Try: flox services status\"\n        return 1\n    fi\n}\nexport -f ollama-health\n\n  helpf() {\n    local README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n    local README_URL=\"https://raw.githubusercontent.com/barstoolbluz/floxenvs/main/ollama-headless/README.md\"\n\n    if [ \"$1\" = \"--help\" ]; then\n      echo \"Usage: helpf [OPTIONS]\"\n      echo \"\"\n      echo \"View environment documentation\"\n      echo \"\"\n      echo \"Options:\"\n      echo \"  --force    Force download fresh copy from GitHub\"\n      echo \"  --help     Show this help message\"\n      echo \"\"\n      echo \"The README is cached locally and only downloaded if missing.\"\n      return 0\n    fi\n\n    if [ \"$1\" = \"--force\" ]; then\n      echo \"Fetching latest README.md from GitHub...\"\n      if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n        echo \"Downloaded README.md\"\n      else\n        echo \"Failed to download README.md\"\n        return 1\n      fi\n    elif [ ! -f \"$README_FILE\" ]; then\n      echo \"README.md not found, downloading...\"\n      if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n        echo \"Downloaded README.md\"\n      else\n        echo \"Failed to download README.md\"\n        return 1\n      fi\n    fi\n\n    if [ -f \"$README_FILE\" ]; then\n      bat --style=auto --paging=always \"$README_FILE\"\n    else\n      echo \"README.md not found at $README_FILE\"\n      return 1\n    fi\n  }\n  export -f helpf\n",
@@ -67,7 +59,6 @@
       "systems": [
         "aarch64-darwin",
         "aarch64-linux",
-        "x86_64-darwin",
         "x86_64-linux"
       ]
     },
@@ -81,27 +72,27 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/q0racxlfwyyyx84nh7hiywvh8yc1dv5w-claude-code-2.1.80.drv",
+      "derivation": "/nix/store/5qgjzdrz42s9g7v21lqz8kd3v9hx8jll-claude-code-2.1.295.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "claude-code-2.1.80",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "claude-code-2.1.295",
       "pname": "claude-code",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T15:44:00.313657Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T05:00:24.507229Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": true,
-      "version": "2.1.80",
+      "version": "2.1.295",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/hfxiqgi1jma9xindwpak0zaxq3gybxk8-claude-code-2.1.80"
+        "out": "/nix/store/cf855pvxq3djm1p4mw106zxv4clwm4m2-claude-code-2.1.295"
       },
       "system": "aarch64-darwin",
       "group": "agentic",
@@ -110,27 +101,27 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/n00gw5wbpzvq1kq86pcv4d4hp6vqjvpi-claude-code-2.1.80.drv",
+      "derivation": "/nix/store/j0rk1d7f9m59mr9yl1mv78yfn982z96m-claude-code-2.1.295.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "claude-code-2.1.80",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "claude-code-2.1.295",
       "pname": "claude-code",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T16:24:44.481617Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T05:32:39.552574Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": true,
-      "version": "2.1.80",
+      "version": "2.1.295",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/xn2q4g7sr4xmny99d15p5mwz42zb656v-claude-code-2.1.80"
+        "out": "/nix/store/s1jz9vfr84mwya1mkr70dib6j89zml32-claude-code-2.1.295"
       },
       "system": "aarch64-linux",
       "group": "agentic",
@@ -139,172 +130,27 @@
     {
       "attr_path": "claude-code",
       "broken": false,
-      "derivation": "/nix/store/lsd7zbk9cmj4f875qx65nqpfn1jjjxvc-claude-code-2.1.80.drv",
+      "derivation": "/nix/store/x63621kf531gl4a67r9x49pnaa08fgp0-claude-code-2.1.295.drv",
       "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
       "install_id": "claude-code",
       "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "claude-code-2.1.80",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "claude-code-2.1.295",
       "pname": "claude-code",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:02:41.693037Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T06:09:23.678591Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": true,
-      "version": "2.1.80",
+      "version": "2.1.295",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/lh672n1dyssvdm4rmv855kxj6dv4l5sc-claude-code-2.1.80"
-      },
-      "system": "x86_64-darwin",
-      "group": "agentic",
-      "priority": 5
-    },
-    {
-      "attr_path": "claude-code",
-      "broken": false,
-      "derivation": "/nix/store/d78blrsisgk1fq6rndz6y5zgplknvq44-claude-code-2.1.80.drv",
-      "description": "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster",
-      "install_id": "claude-code",
-      "license": "Unfree",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "claude-code-2.1.80",
-      "pname": "claude-code",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:46:56.405978Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": true,
-      "version": "2.1.80",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/ygv673rcgndrh73nkmbs16bx8sz194ss-claude-code-2.1.80"
-      },
-      "system": "x86_64-linux",
-      "group": "agentic",
-      "priority": 5
-    },
-    {
-      "attr_path": "codex",
-      "broken": false,
-      "derivation": "/nix/store/5fhva37xay88lff2gf8q5913pxhwdwvv-codex-0.115.0.drv",
-      "description": "Lightweight coding agent that runs in your terminal",
-      "install_id": "codex",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "codex-0.115.0",
-      "pname": "codex",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T15:44:00.357966Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.115.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/v1bhiywk497djnxn6gippp73mxb8kdmv-codex-0.115.0"
-      },
-      "system": "aarch64-darwin",
-      "group": "agentic",
-      "priority": 5
-    },
-    {
-      "attr_path": "codex",
-      "broken": false,
-      "derivation": "/nix/store/kspwmdxnqj927xxs241fmfbrmbzdpq3w-codex-0.115.0.drv",
-      "description": "Lightweight coding agent that runs in your terminal",
-      "install_id": "codex",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "codex-0.115.0",
-      "pname": "codex",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T16:24:44.537577Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.115.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/4vl25nzi9fj00303w8bfsvzqbnyp0a8f-codex-0.115.0"
-      },
-      "system": "aarch64-linux",
-      "group": "agentic",
-      "priority": 5
-    },
-    {
-      "attr_path": "codex",
-      "broken": false,
-      "derivation": "/nix/store/3abqp1n3m5cd2yixd3n05ba1g2wfb9yw-codex-0.115.0.drv",
-      "description": "Lightweight coding agent that runs in your terminal",
-      "install_id": "codex",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "codex-0.115.0",
-      "pname": "codex",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:02:41.734809Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.115.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/0rbbzib7msb3g7jb0yyqnx4yic9ra027-codex-0.115.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "agentic",
-      "priority": 5
-    },
-    {
-      "attr_path": "codex",
-      "broken": false,
-      "derivation": "/nix/store/yzpbxfrhxlxj1vwz3z4225y2n5y920b9-codex-0.115.0.drv",
-      "description": "Lightweight coding agent that runs in your terminal",
-      "install_id": "codex",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "codex-0.115.0",
-      "pname": "codex",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:46:56.468682Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.115.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/cmk4vqmx9y6c0sa9xj858zc3064083db-codex-0.115.0"
+        "out": "/nix/store/11ylyzap9r0fpmqncfmxz8kyw4sp1kjk-claude-code-2.1.295"
       },
       "system": "x86_64-linux",
       "group": "agentic",
@@ -313,27 +159,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/cbr72g13150hgm9y6c4h7mx2mlf0d5x4-opencode-1.2.27.drv",
+      "derivation": "/nix/store/7r68qd08gscqsybnzrvsfi2md6qd32p7-opencode-1.18.35.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "opencode-1.2.27",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "opencode-1.18.35",
       "pname": "opencode",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T15:44:31.288021Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T05:00:54.411454Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "1.2.27",
+      "version": "1.18.35",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/py2b28274xmcx4f5a0mw7vii5qd5x09w-opencode-1.2.27"
+        "out": "/nix/store/bsx7spba57kkklh6jr7qpw0fjyyrfh02-opencode-1.18.35"
       },
       "system": "aarch64-darwin",
       "group": "agentic",
@@ -342,27 +188,27 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/q61856x9m1w6xm1466qdszi0fyk9crp9-opencode-1.2.27.drv",
+      "derivation": "/nix/store/dm31z220pwkjik6ibavp67z8k3lxcm1q-opencode-1.18.35.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "opencode-1.2.27",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "opencode-1.18.35",
       "pname": "opencode",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T16:25:30.143123Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T05:33:23.383890Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "1.2.27",
+      "version": "1.18.35",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/8212v9502khlb399pa9ipq91iv859bqz-opencode-1.2.27"
+        "out": "/nix/store/b2szvclid2r1c7b682143k0m1w22i5h8-opencode-1.18.35"
       },
       "system": "aarch64-linux",
       "group": "agentic",
@@ -371,59 +217,123 @@
     {
       "attr_path": "opencode",
       "broken": false,
-      "derivation": "/nix/store/5bmapr1j7z8hhay9lfw1hqi8q86a0rfq-opencode-1.2.27.drv",
+      "derivation": "/nix/store/bc36bvcnj8b7x5dpj696i6ds8ymlbpkz-opencode-1.18.35.drv",
       "description": "AI coding agent built for the terminal",
       "install_id": "opencode",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "opencode-1.2.27",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6510408d147d8c5e6d76043e899e9251756f6a75",
+      "name": "opencode-1.18.35",
       "pname": "opencode",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:03:13.217490Z",
+      "rev": "6510408d147d8c5e6d76043e899e9251756f6a75",
+      "rev_count": 1089111,
+      "rev_date": "2026-10-10T01:01:48Z",
+      "scrape_date": "2026-10-11T06:10:11.646419Z",
       "stabilities": [
         "unstable"
       ],
       "unfree": false,
-      "version": "1.2.27",
+      "version": "1.18.35",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/vfpqsyivxrhzq269nhlzydxs11fzj6d9-opencode-1.2.27"
+        "out": "/nix/store/gs2dij0smmxm5wfy2j8fwihvahb8z48s-opencode-1.18.35"
       },
-      "system": "x86_64-darwin",
+      "system": "x86_64-linux",
       "group": "agentic",
       "priority": 5
     },
     {
-      "attr_path": "opencode",
+      "attr_path": "codex",
       "broken": false,
-      "derivation": "/nix/store/ywp03vchyfdl874pm7g9ayfri8wvda81-opencode-1.2.27.drv",
-      "description": "AI coding agent built for the terminal",
-      "install_id": "opencode",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "opencode-1.2.27",
-      "pname": "opencode",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:47:47.566733Z",
+      "derivation": "/nix/store/cbfax610xsi62s6xp1mxaz8l1xiycgl9-codex-0.162.1.drv",
+      "description": "OpenAI Codex CLI - a coding agent that runs locally",
+      "install_id": "codex",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/floxenvs?rev=b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "name": "codex-0.162.1",
+      "pname": "codex",
+      "rev": "b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "rev_count": 27985,
+      "rev_date": "2026-10-10T05:00:54Z",
+      "scrape_date": "2026-10-11T19:59:38.616454823Z",
       "stabilities": [
-        "unstable"
+        "unstable",
+        "stable",
+        "staging"
       ],
       "unfree": false,
-      "version": "1.2.27",
+      "version": "0.162.1",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/0hr7kzmn5m4j4vgv5vnialjvvv99dl6g-opencode-1.2.27"
+        "out": "/nix/store/xjcr7gnkcvd41bpl08n4im8sj74n2q86-codex-0.162.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "codex",
+      "priority": 5
+    },
+    {
+      "attr_path": "codex",
+      "broken": false,
+      "derivation": "/nix/store/wbahb899qxw3d764f5sr97p9n11l3zj9-codex-0.162.1.drv",
+      "description": "OpenAI Codex CLI - a coding agent that runs locally",
+      "install_id": "codex",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/floxenvs?rev=b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "name": "codex-0.162.1",
+      "pname": "codex",
+      "rev": "b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "rev_count": 27985,
+      "rev_date": "2026-10-10T05:00:54Z",
+      "scrape_date": "2026-10-11T19:59:38.616455913Z",
+      "stabilities": [
+        "unstable",
+        "stable",
+        "staging"
+      ],
+      "unfree": false,
+      "version": "0.162.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/3v9zbgmib32h33rfdidb77psiy19ch46-codex-0.162.1"
+      },
+      "system": "aarch64-linux",
+      "group": "codex",
+      "priority": 5
+    },
+    {
+      "attr_path": "codex",
+      "broken": false,
+      "derivation": "/nix/store/b0hq4scv0jfn979bl0dhbivyngsy0kg7-codex-0.162.1.drv",
+      "description": "OpenAI Codex CLI - a coding agent that runs locally",
+      "install_id": "codex",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/flox/floxenvs?rev=b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "name": "codex-0.162.1",
+      "pname": "codex",
+      "rev": "b40a76e361e99d90057335c3a818fd8ff7c4dc67",
+      "rev_count": 27985,
+      "rev_date": "2026-10-10T05:00:54Z",
+      "scrape_date": "2026-10-11T19:59:38.616456839Z",
+      "stabilities": [
+        "unstable",
+        "stable",
+        "staging"
+      ],
+      "unfree": false,
+      "version": "0.162.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1f930grmk10akc74w6q289jlj45wal3v-codex-0.162.1"
       },
       "system": "x86_64-linux",
-      "group": "agentic",
+      "group": "codex",
       "priority": 5
     },
     {
@@ -485,93 +395,87 @@
       "priority": 1
     },
     {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/inlxks5yk57808y2kc654g2y2wdh73hh-flox-mcp-server-0.2.2.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
-      "name": "flox-mcp-server-0.2.2",
-      "pname": "flox-mcp-server",
-      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
-      "rev_count": 30,
-      "rev_date": "2026-02-03T16:40:14Z",
-      "scrape_date": "2026-04-13T23:36:23.755392027Z",
+      "attr_path": "skills-flox",
+      "derivation": "/nix/store/jhfpq33zrskjyr6kgdi085jm178kyn5g-skills-flox-1.1.0.drv",
+      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
+      "install_id": "skills-flox",
+      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "name": "skills-flox-1.1.0",
+      "pname": "skills-flox",
+      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "rev_count": 195,
+      "rev_date": "2026-08-11T18:19:17Z",
+      "scrape_date": "2026-10-11T19:59:38.616465426Z",
       "stabilities": [
-        "unstable"
+        "staging",
+        "unstable",
+        "stable"
       ],
-      "unfree": false,
-      "version": "0.2.2",
+      "version": "1.1.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dist": "/nix/store/hdfanrwiqj9302qiivnpqanfq1zk8srh-flox-mcp-server-0.2.2-dist",
-        "out": "/nix/store/6ln8l75s9pi54xz1dlksya8rlq8cz230-flox-mcp-server-0.2.2"
+        "out": "/nix/store/xc1kla9dhndllini9df5vclc7f6s78sl-skills-flox-1.1.0"
       },
       "system": "aarch64-darwin",
-      "group": "mcp",
+      "group": "flox-skills",
       "priority": 5
     },
     {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/pdimfq1f3l2kmx2plr6xpas8abby5y2p-flox-mcp-server-0.2.2.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
-      "name": "flox-mcp-server-0.2.2",
-      "pname": "flox-mcp-server",
-      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
-      "rev_count": 30,
-      "rev_date": "2026-02-03T16:40:14Z",
-      "scrape_date": "2026-04-13T23:36:23.755395791Z",
+      "attr_path": "skills-flox",
+      "derivation": "/nix/store/plbgw01r210yxcm5rgxy44w23rl092ic-skills-flox-1.1.0.drv",
+      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
+      "install_id": "skills-flox",
+      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "name": "skills-flox-1.1.0",
+      "pname": "skills-flox",
+      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "rev_count": 195,
+      "rev_date": "2026-08-11T18:19:17Z",
+      "scrape_date": "2026-10-11T19:59:38.616466187Z",
       "stabilities": [
-        "unstable"
+        "staging",
+        "unstable",
+        "stable"
       ],
-      "unfree": false,
-      "version": "0.2.2",
+      "version": "1.1.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dist": "/nix/store/6zjsiagcmx2qflf30kgcnfakipynghlk-flox-mcp-server-0.2.2-dist",
-        "out": "/nix/store/h4y7xqn88gyxd7vymv40y9jnf4l06p5i-flox-mcp-server-0.2.2"
+        "out": "/nix/store/2q9iyvxxwfiq6qa67wsay06agjlzpb95-skills-flox-1.1.0"
       },
       "system": "aarch64-linux",
-      "group": "mcp",
+      "group": "flox-skills",
       "priority": 5
     },
     {
-      "attr_path": "flox-mcp-server",
-      "broken": false,
-      "derivation": "/nix/store/nnqy64nl48nwnz26x2kwagr10ryz54yg-flox-mcp-server-0.2.2.drv",
-      "description": "MCP server for Flox package manager",
-      "install_id": "flox-mcp-server",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/mcp-server?rev=61f940167b7a1d245e314fb84668232ed7195f93",
-      "name": "flox-mcp-server-0.2.2",
-      "pname": "flox-mcp-server",
-      "rev": "61f940167b7a1d245e314fb84668232ed7195f93",
-      "rev_count": 30,
-      "rev_date": "2026-02-03T16:40:14Z",
-      "scrape_date": "2026-04-13T23:36:23.755399093Z",
+      "attr_path": "skills-flox",
+      "derivation": "/nix/store/kz4p280p7gdb30z3qdckbm73gw3xwxj4-skills-flox-1.1.0.drv",
+      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
+      "install_id": "skills-flox",
+      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "name": "skills-flox-1.1.0",
+      "pname": "skills-flox",
+      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
+      "rev_count": 195,
+      "rev_date": "2026-08-11T18:19:17Z",
+      "scrape_date": "2026-10-11T19:59:38.616467505Z",
       "stabilities": [
-        "unstable"
+        "staging",
+        "unstable",
+        "stable"
       ],
-      "unfree": false,
-      "version": "0.2.2",
+      "version": "1.1.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dist": "/nix/store/g2xdbvax1d4yv0czq31pkfnyf5snynh1-flox-mcp-server-0.2.2-dist",
-        "out": "/nix/store/xwcqr4jvj2fqnm6jhxaakigbry38y7vk-flox-mcp-server-0.2.2"
+        "out": "/nix/store/d9d393gxmk06g80ly56pkywvd92h76si-skills-flox-1.1.0"
       },
       "system": "x86_64-linux",
-      "group": "mcp",
+      "group": "flox-skills",
       "priority": 5
     },
     {
@@ -629,35 +533,6 @@
         "out": "/nix/store/g11dl0f63i53kaw2ki0kk8bycy99ax1v-bat-0.26.1"
       },
       "system": "aarch64-linux",
-      "group": "tools",
-      "priority": 5
-    },
-    {
-      "attr_path": "bat",
-      "broken": false,
-      "derivation": "/nix/store/clmnmqx3ibq8n46m6q6p79q71w7idv5f-bat-0.26.1.drv",
-      "description": "Cat(1) clone with syntax highlighting and Git integration",
-      "install_id": "bat",
-      "license": "[ Apache-2.0, MIT ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=4c1018dae018162ec878d42fec712642d214fdfa",
-      "name": "bat-0.26.1",
-      "pname": "bat",
-      "rev": "4c1018dae018162ec878d42fec712642d214fdfa",
-      "rev_count": 977467,
-      "rev_date": "2026-04-09T04:48:10Z",
-      "scrape_date": "2026-04-11T07:05:08.134245Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.26.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/mysappv2jzlb7q13scn0836jwpaf6gc4-bat-0.26.1"
-      },
-      "system": "x86_64-darwin",
       "group": "tools",
       "priority": 5
     },
@@ -772,42 +647,6 @@
     {
       "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/gkm06vy5lkp1n6wlgrr7vvfirf2zgs0g-curl-8.18.0.drv",
-      "description": "Command line tool for transferring files with URL syntax",
-      "install_id": "curl",
-      "license": "curl",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=4c1018dae018162ec878d42fec712642d214fdfa",
-      "name": "curl-8.18.0",
-      "pname": "curl",
-      "rev": "4c1018dae018162ec878d42fec712642d214fdfa",
-      "rev_count": 977467,
-      "rev_date": "2026-04-09T04:48:10Z",
-      "scrape_date": "2026-04-11T07:05:08.582530Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "8.18.0",
-      "outputs_to_install": [
-        "bin",
-        "bin",
-        "man",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/0h4avs7960hxfgmlayshci76pdd7j1zp-curl-8.18.0-bin",
-        "dev": "/nix/store/rpw29w7jmwrp32bp72s805rh0rchp7fh-curl-8.18.0-dev",
-        "devdoc": "/nix/store/4sbv3g3n1nxlq5nfasd194h893k5nkm9-curl-8.18.0-devdoc",
-        "man": "/nix/store/lb59x8lcbiqjph4gfl5a99l8wh1ckvfy-curl-8.18.0-man",
-        "out": "/nix/store/sdf4br1wm1s10y67yz062mc1vmkykm0f-curl-8.18.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "tools",
-      "priority": 5
-    },
-    {
-      "attr_path": "curl",
-      "broken": false,
       "derivation": "/nix/store/1wrll60slxlmvb56g6zk7amw3pwylcng-curl-8.18.0.drv",
       "description": "Command line tool for transferring files with URL syntax",
       "install_id": "curl",
@@ -868,35 +707,6 @@
         "out": "/nix/store/7gjs60vkycrydckyssfggnjabb8grjn2-ollama-0.20.3"
       },
       "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 1
-    },
-    {
-      "attr_path": "ollama",
-      "broken": false,
-      "derivation": "/nix/store/vdirzfwb8695s1n7pjwbh5dz3p7r3a84-ollama-0.20.3.drv",
-      "description": "Get up and running with large language models locally",
-      "install_id": "ollama",
-      "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=4c1018dae018162ec878d42fec712642d214fdfa",
-      "name": "ollama-0.20.3",
-      "pname": "ollama",
-      "rev": "4c1018dae018162ec878d42fec712642d214fdfa",
-      "rev_count": 977467,
-      "rev_date": "2026-04-09T04:48:10Z",
-      "scrape_date": "2026-04-11T07:05:37.024428Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.20.3",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/9kgf8kis8s9m20rhsk7jzaih3h6a110m-ollama-0.20.3"
-      },
-      "system": "x86_64-darwin",
       "group": "toplevel",
       "priority": 1
     }

@@ -15,7 +15,7 @@ LM Studio exposes OpenAI-compatible and Anthropic-compatible API endpoints. This
 - **Context Window Control** - Set context length per model at load time
 - **Model Discovery** - Search and download models from Hugging Face with quantization selection
 - **Tool Calling** - Function calling and structured output (JSON schema) support
-- **MCP Support** - Flox MCP server for environment management from AI agents
+- **Flox Skills** - `flox`, `floxify`, and `flox-debug` agent skills, loaded automatically into Claude Code, Codex, and OpenCode (including sessions started with `lms-launch`)
 - **Headless Service** - Runs as a Flox-managed service via `lms-service`
 - **Cross-Platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 

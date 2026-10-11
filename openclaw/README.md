@@ -118,7 +118,7 @@ Configuration and state are environment-local (stored in `$FLOX_ENV_CACHE`, not 
 
 This environment works on:
 - Linux x86_64 and ARM64
-- macOS ARM64 (Apple Silicon) and x86_64 (Intel)
+- macOS ARM64 (Apple Silicon)
 
 ## Troubleshooting
 

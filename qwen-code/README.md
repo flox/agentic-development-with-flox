@@ -421,7 +421,6 @@ qwen --vlm-switch-mode=once
 This environment works on:
 - Linux x86_64
 - macOS ARM64 (Apple Silicon)
-- macOS x86_64 (Intel)
 
 ## Security Considerations
 

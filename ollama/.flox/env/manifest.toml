@@ -9,7 +9,7 @@ ollama-cuda.pkg-group = "cuda"
 
 # ollama for darwin
 ollama.pkg-path = "ollama"
-ollama.systems = ["x86_64-darwin", "aarch64-darwin"]
+ollama.systems = ["aarch64-darwin"]
 ollama.priority = 1
 
 # general-purpose tools
@@ -523,6 +523,5 @@ end
 systems = [
   "aarch64-darwin",
   "aarch64-linux",
-  "x86_64-darwin",
   "x86_64-linux",
 ]

@@ -5,8 +5,7 @@
 ##   https://flox.dev/docs/reference/command-reference/manifest.toml/
 ##
 ## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
 
 ## Install Packages --------------------------------------------------
@@ -18,9 +17,9 @@ version = 1
 github-copilot-cli.pkg-path = "github-copilot-cli"
 github-copilot-cli.pkg-group = "main"
 
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "aarch64-linux", "x86_64-linux"]
-flox-mcp-server.pkg-group = "mcp"
+# Flox skills (flox, floxify, flox-debug) - teach Copilot CLI to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 
@@ -35,16 +34,17 @@ flox-mcp-server.pkg-group = "mcp"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Check if flox-mcp is available on this system
-check_flox_mcp() {
-    if command -v flox-mcp >/dev/null 2>&1; then
-        echo "  Flox MCP server available (flox-mcp)"
-        echo "  Use /mcp in Copilot to view available MCP servers"
-        return 0
-    else
-        return 1
-    fi
+# Add the Flox skills to Copilot's skill search path (comma-separated)
+setup_copilot_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    [ -d "$skills_dir" ] || return 0
+    case ",${COPILOT_SKILLS_DIRS:-}," in
+        *",$skills_dir,"*) ;;
+        *) export COPILOT_SKILLS_DIRS="$skills_dir${COPILOT_SKILLS_DIRS:+,$COPILOT_SKILLS_DIRS}" ;;
+    esac
 }
+
+setup_copilot_flox_skills
 
 echo ""
 echo "GitHub Copilot CLI - AI Coding Agent in Your Terminal"
@@ -71,7 +71,7 @@ echo "  • Build, debug, and understand code"
 echo "  • GitHub context awareness (repos, issues, PRs)"
 echo "  • Preview-before-execution safety"
 echo "  • MCP extensibility"
-check_flox_mcp
+echo "  • Flox skills (flox, floxify, flox-debug) - see /skills in session"
 echo ""
 echo "Requires: GitHub Copilot subscription (Plus, Pro, Team, or Enterprise)"
 echo ""
@@ -119,11 +119,10 @@ echo ""
 ## Other Environment Options -----------------------------------------
 [options]
 # Systems that environment is compatible with
-# systems = [
-#   "aarch64-darwin",
-#   "aarch64-linux",
-#   "x86_64-darwin",
-#   "x86_64-linux",
-# ]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

@@ -187,7 +187,7 @@ backlog init
 ## System Support
 
 - Linux (x86_64, aarch64)
-- macOS (Intel, Apple Silicon)
+- macOS (Apple Silicon)
 
 ## Power User Tips
 

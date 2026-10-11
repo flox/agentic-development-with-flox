@@ -20,20 +20,18 @@ jq.outputs = "all"
 claude-code.pkg-path = "claude-code"
 claude-code.pkg-group = "agentic"
 claude-code.outputs = "all"
-codex.pkg-path = "codex"
-codex.pkg-group = "agentic"
-codex.outputs = "all"
+# Flox build of Codex (loads Flox skills from CODEX_FLOX_SKILL_ROOTS)
+codex.pkg-path = "flox/codex"
+codex.pkg-group = "codex"
 opencode.pkg-path = "opencode"
 opencode.pkg-group = "agentic"
 opencode.outputs = "all"
 #openclaw.pkg-path = "flox/openclaw"	# uncomment to use openclaw
 #openclaw.pkg-group = "agentic"
 
-# flox mcp server
-flox-mcp-server.pkg-path = "flox/flox-mcp-server"
-flox-mcp-server.systems = ["aarch64-darwin", "x86_64-linux"]
-flox-mcp-server.pkg-group = "mcp"
-flox-mcp-server.outputs = "all"
+# flox skills (flox, floxify, flox-debug) for the agentic cli tools
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
 
 [vars]
 # Server configuration - override at activation time
@@ -66,6 +64,63 @@ if command -v nvidia-smi >/dev/null 2>&1; then
     export _FLOX_ENV_CUDA_DETECTION=1
   fi
 fi
+
+# === FLOX SKILLS ===
+# Load the Flox skills (flox, floxify, flox-debug) into the agentic CLI tools.
+# Applies to direct launches and to the launcher's tool sessions alike.
+setup_claude_flox_skills() {
+    local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
+    local real_claude="$FLOX_ENV/bin/claude"
+    local shim_dir="$FLOX_ENV_CACHE/bin"
+    [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
+
+    # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally
+    mkdir -p "$shim_dir"
+    cat > "$shim_dir/claude" << EOF
+#!/usr/bin/env bash
+if grep -qs '"flox@flox-skills"' "\$HOME/.claude/plugins/installed_plugins.json" && grep -Eqs '"flox@flox-skills"[[:space:]]*:[[:space:]]*true' "\$HOME/.claude/settings.json"; then
+    exec "$real_claude" "\$@"
+fi
+exec "$real_claude" --plugin-dir "$plugin_dir" "\$@"
+EOF
+    chmod +x "$shim_dir/claude"
+    case ":$PATH:" in
+        *":$shim_dir:"*) ;;
+        *) export PATH="$shim_dir:$PATH" ;;
+    esac
+}
+setup_claude_flox_skills
+
+# The Flox build of Codex reads skills from CODEX_FLOX_SKILL_ROOTS
+# (colon-separated; any roots you set yourself are kept)
+setup_codex_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    [ -d "$skills_dir" ] || return 0
+    case ":${CODEX_FLOX_SKILL_ROOTS:-}:" in
+        *":$skills_dir:"*) ;;
+        *) export CODEX_FLOX_SKILL_ROOTS="$skills_dir${CODEX_FLOX_SKILL_ROOTS:+:$CODEX_FLOX_SKILL_ROOTS}" ;;
+    esac
+}
+setup_codex_flox_skills
+
+# OpenCode merges the file named by OPENCODE_CONFIG with its other config, and
+# launchers that set OPENCODE_CONFIG_CONTENT (e.g. newer `ollama launch`) don't
+# override it. Falls back to OPENCODE_CONFIG_CONTENT if OPENCODE_CONFIG is taken.
+setup_opencode_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/opencode/flox/skills"
+    local config="$FLOX_ENV_CACHE/opencode-flox-skills.json"
+    local content="{\"skills\":{\"paths\":[\"$skills_dir\"]}}"
+    [ -d "$skills_dir" ] || return 0
+    if [ -z "${OPENCODE_CONFIG:-}" ] || [ "$OPENCODE_CONFIG" = "$config" ]; then
+        printf '%s\n' "$content" > "$config"
+        export OPENCODE_CONFIG="$config"
+    elif [ -z "${OPENCODE_CONFIG_CONTENT:-}" ]; then
+        export OPENCODE_CONFIG_CONTENT="$content"
+    else
+        echo "Note: OPENCODE_CONFIG and OPENCODE_CONFIG_CONTENT are both set; Flox skills not added to OpenCode" >&2
+    fi
+}
+setup_opencode_flox_skills
 
 # === DISPLAY CONFIGURATION ===
 echo ""

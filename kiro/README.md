@@ -365,7 +365,6 @@ kiro-cli diagnostic
 
 This environment works on:
 - Linux x86_64 (uses `kiro-fhs` for better extension support)
-- macOS x86_64 (Intel)
 - macOS ARM64 (Apple Silicon)
 
 **Note:** ARM64 Linux (`aarch64-linux`) is not currently supported by Kiro packages in nixpkgs.

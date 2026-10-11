@@ -68,13 +68,14 @@
         "priority": 7,
         "systems": [
           "aarch64-linux",
-          "x86_64-darwin",
           "aarch64-darwin"
         ],
         "outputs": "all"
       },
       "torchsde": {
-        "store-path": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879"
+        "pkg-path": "flox/torchsde-python313",
+        "pkg-group": "torchsde",
+        "priority": 10
       },
       "torchvision": {
         "pkg-path": "python313Packages.torchvision",
@@ -82,7 +83,6 @@
         "priority": 6,
         "systems": [
           "aarch64-linux",
-          "x86_64-darwin",
           "aarch64-darwin"
         ],
         "outputs": "all"
@@ -127,8 +127,7 @@
       "systems": [
         "aarch64-darwin",
         "aarch64-linux",
-        "x86_64-linux",
-        "x86_64-darwin"
+        "x86_64-linux"
       ],
       "cuda-detection": true
     },
@@ -139,30 +138,6 @@
     }
   },
   "packages": [
-    {
-      "install_id": "torchsde",
-      "store_path": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879",
-      "system": "aarch64-darwin",
-      "priority": 5
-    },
-    {
-      "install_id": "torchsde",
-      "store_path": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879",
-      "system": "aarch64-linux",
-      "priority": 5
-    },
-    {
-      "install_id": "torchsde",
-      "store_path": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879",
-      "system": "x86_64-linux",
-      "priority": 5
-    },
-    {
-      "install_id": "torchsde",
-      "store_path": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879",
-      "system": "x86_64-darwin",
-      "priority": 5
-    },
     {
       "attr_path": "comfyui-complete",
       "broken": false,
@@ -222,37 +197,6 @@
         "out": "/nix/store/fz99ayjcnw1br9q1zl38c0biz4sx4zha-comfyui-complete-0.18.3+1e05b7a"
       },
       "system": "aarch64-linux",
-      "group": "comfyui",
-      "priority": 0
-    },
-    {
-      "attr_path": "comfyui-complete",
-      "broken": false,
-      "derivation": "/nix/store/qkv69gf86fdfydkn2npiry0zk8np5547-comfyui-complete-0.18.3+1e05b7a.drv",
-      "description": "Complete ComfyUI installation with all dependencies and custom nodes",
-      "install_id": "comfyui",
-      "license": "GPL-3.0-only",
-      "locked_url": "git@github.com:floxrox/build-comfyui.git?rev=ca908a1a3597e8615ed6f3f5fd9c005ff7a5d179",
-      "name": "comfyui-complete-0.18.3+1e05b7a",
-      "pname": "comfyui-complete",
-      "rev": "ca908a1a3597e8615ed6f3f5fd9c005ff7a5d179",
-      "rev_count": 60,
-      "rev_date": "2026-03-30T21:20:32Z",
-      "scrape_date": "2026-04-07T07:17:55.847706781Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "unfree": false,
-      "version": "0.18.3+1e05b7a",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/03lkax0p59l3x2kxacijzcvprjifgs88-comfyui-complete-0.18.3+1e05b7a"
-      },
-      "system": "x86_64-darwin",
       "group": "comfyui",
       "priority": 0
     },
@@ -391,40 +335,6 @@
     {
       "attr_path": "gcc-unwrapped",
       "broken": false,
-      "derivation": "/nix/store/s6xsx2s3bnalcdhfgwinir7xampaww0z-gcc-15.2.0.drv",
-      "description": "GNU Compiler Collection, version 15.2.0",
-      "install_id": "gcc-unwrapped",
-      "license": "GPL-3.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "name": "gcc-15.2.0",
-      "pname": "gcc-unwrapped",
-      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "rev_count": 972949,
-      "rev_date": "2026-04-01T09:47:46Z",
-      "scrape_date": "2026-04-02T19:02:19.214905Z",
-      "stabilities": [
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "15.2.0",
-      "outputs_to_install": [
-        "man",
-        "out"
-      ],
-      "outputs": {
-        "info": "/nix/store/nxhbis8ry1kyzj4kfl1bc2wr3a6qkf9b-gcc-15.2.0-info",
-        "lib": "/nix/store/227zysndh45v3x15z963a157798zcss8-gcc-15.2.0-lib",
-        "man": "/nix/store/q4hpi4f03pawrzwrh99kp9a0h20f4m9q-gcc-15.2.0-man",
-        "out": "/nix/store/jly2347w6nnqbv0zmmk8qj3gabil3sgl-gcc-15.2.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "libraries",
-      "priority": 6
-    },
-    {
-      "attr_path": "gcc-unwrapped",
-      "broken": false,
       "derivation": "/nix/store/vb8rw36wnyvgmnq6mv7vj5iv75a4dfa5-gcc-15.2.0.drv",
       "description": "GNU Compiler Collection, version 15.2.0",
       "install_id": "gcc-unwrapped",
@@ -519,37 +429,6 @@
         "out": "/nix/store/k0xjq43s8vqxpq38wi2qgjv8nwyh26pf-python3-3.13.6"
       },
       "system": "aarch64-linux",
-      "group": "runtime",
-      "priority": 5
-    },
-    {
-      "attr_path": "python313Full",
-      "broken": false,
-      "derivation": "/nix/store/fsfb1wl5v4mv6n7z96w9ffizvg15biz5-python3-3.13.6.drv",
-      "description": "High-level dynamically-typed programming language",
-      "install_id": "python",
-      "license": "Python-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=8a6d5427d99ec71c64f0b93d45778c889005d9c2",
-      "name": "python3-3.13.6",
-      "pname": "python313Full",
-      "rev": "8a6d5427d99ec71c64f0b93d45778c889005d9c2",
-      "rev_count": 852432,
-      "rev_date": "2025-08-27T03:49:43Z",
-      "scrape_date": "2025-08-28T03:44:16.215889Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "unfree": false,
-      "version": "python3-3.13.6",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/xsp2xa0yl974lilapxidnzaxamh2pcjl-python3-3.13.6"
-      },
-      "system": "x86_64-darwin",
       "group": "runtime",
       "priority": 5
     },
@@ -667,43 +546,6 @@
     {
       "attr_path": "curl",
       "broken": false,
-      "derivation": "/nix/store/gkm06vy5lkp1n6wlgrr7vvfirf2zgs0g-curl-8.18.0.drv",
-      "description": "Command line tool for transferring files with URL syntax",
-      "install_id": "curl",
-      "license": "curl",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "name": "curl-8.18.0",
-      "pname": "curl",
-      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "rev_count": 972949,
-      "rev_date": "2026-04-01T09:47:46Z",
-      "scrape_date": "2026-04-02T19:02:18.606529Z",
-      "stabilities": [
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "8.18.0",
-      "outputs_to_install": [
-        "bin",
-        "bin",
-        "man",
-        "man"
-      ],
-      "outputs": {
-        "bin": "/nix/store/0h4avs7960hxfgmlayshci76pdd7j1zp-curl-8.18.0-bin",
-        "dev": "/nix/store/rpw29w7jmwrp32bp72s805rh0rchp7fh-curl-8.18.0-dev",
-        "devdoc": "/nix/store/4sbv3g3n1nxlq5nfasd194h893k5nkm9-curl-8.18.0-devdoc",
-        "man": "/nix/store/lb59x8lcbiqjph4gfl5a99l8wh1ckvfy-curl-8.18.0-man",
-        "out": "/nix/store/sdf4br1wm1s10y67yz062mc1vmkykm0f-curl-8.18.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "tools",
-      "priority": 5
-    },
-    {
-      "attr_path": "curl",
-      "broken": false,
       "derivation": "/nix/store/1wrll60slxlmvb56g6zk7amw3pwylcng-curl-8.18.0.drv",
       "description": "Command line tool for transferring files with URL syntax",
       "install_id": "curl",
@@ -802,36 +644,6 @@
     {
       "attr_path": "uv",
       "broken": false,
-      "derivation": "/nix/store/9gy2q5aykbscq7lw7c02hyag4piqjhjz-uv-0.11.2.drv",
-      "description": "Extremely fast Python package installer and resolver, written in Rust",
-      "install_id": "uv",
-      "license": "[ Apache-2.0, MIT ]",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "name": "uv-0.11.2",
-      "pname": "uv",
-      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "rev_count": 972949,
-      "rev_date": "2026-04-01T09:47:46Z",
-      "scrape_date": "2026-04-02T19:04:42.750549Z",
-      "stabilities": [
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "0.11.2",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/vhixdscpv5zf4wygl66x4mc25kx8givn-uv-0.11.2"
-      },
-      "system": "x86_64-darwin",
-      "group": "tools",
-      "priority": 5
-    },
-    {
-      "attr_path": "uv",
-      "broken": false,
       "derivation": "/nix/store/6j0lmn6na0hqg9zf3jps16n5m6x1jgzq-uv-0.11.2.drv",
       "description": "Extremely fast Python package installer and resolver, written in Rust",
       "install_id": "uv",
@@ -918,37 +730,6 @@
         "out": "/nix/store/krfjxaxazl6102mgyzal0440inmif559-awscli2-2.33.2"
       },
       "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "awscli2",
-      "broken": false,
-      "derivation": "/nix/store/fn7r8ncnkx76q0g97kbbnm2kf8ac7i5h-awscli2-2.33.2.drv",
-      "description": "Unified tool to manage your AWS services",
-      "install_id": "awscli2",
-      "license": "Apache-2.0",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "name": "awscli2-2.33.2",
-      "pname": "awscli2",
-      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
-      "rev_count": 972949,
-      "rev_date": "2026-04-01T09:47:46Z",
-      "scrape_date": "2026-04-02T19:02:18.157964Z",
-      "stabilities": [
-        "staging",
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "2.33.2",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "dist": "/nix/store/3ndhi3ws18g2xk1vkxlxdbra0lrsqbxm-awscli2-2.33.2-dist",
-        "out": "/nix/store/r5slk3dca249mw1nd3gs1hngpqz8jq6p-awscli2-2.33.2"
-      },
-      "system": "x86_64-darwin",
       "group": "toplevel",
       "priority": 5
     },
@@ -1104,36 +885,6 @@
       "priority": 7
     },
     {
-      "attr_path": "python313Packages.torchaudio",
-      "broken": false,
-      "derivation": "/nix/store/0k38238klcknawvkwwy9zzmg8jgpnri1-python3.13-torchaudio-2.10.0.drv",
-      "description": "PyTorch audio library",
-      "install_id": "torchaudio",
-      "license": "BSD-2-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "python3.13-torchaudio-2.10.0",
-      "pname": "torchaudio",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:03:44.101844Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "2.10.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "dist": "/nix/store/vvblxfk893xxrzf7sg3vph3rcqcrlq7b-python3.13-torchaudio-2.10.0-dist",
-        "out": "/nix/store/8g2fnfqvcfkywiby3kk7vpbq4hk04kij-python3.13-torchaudio-2.10.0"
-      },
-      "system": "x86_64-darwin",
-      "group": "torchaudio",
-      "priority": 7
-    },
-    {
       "attr_path": "python3Packages.torchvision",
       "broken": false,
       "derivation": "/nix/store/l45nl21c890cqdfbl93s0g51mxpwnn6h-python3.13-torchvision-0.25.0.drv",
@@ -1254,34 +1005,100 @@
       "priority": 6
     },
     {
-      "attr_path": "python313Packages.torchvision",
+      "attr_path": "torchsde-python313",
       "broken": false,
-      "derivation": "/nix/store/lw39nb0b7mknf1ssimk61kw5bbsxnlw2-python3.13-torchvision-0.25.0.drv",
-      "description": "PyTorch vision library",
-      "install_id": "torchvision",
-      "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "name": "python3.13-torchvision-0.25.0",
-      "pname": "torchvision",
-      "rev": "6c9a78c09ff4d6c21d0319114873508a6ec01655",
-      "rev_count": 967235,
-      "rev_date": "2026-03-21T15:16:39Z",
-      "scrape_date": "2026-03-25T17:03:44.135676Z",
+      "derivation": "/nix/store/kf1pk8qvmk3ahnrswnxgmlp5r2swypwn-python3.13-torchsde-python313-0.2.6+7f11879.drv",
+      "description": "TorchSDE without bundled torch — avoids ABI conflicts when torch is provided by the environment",
+      "install_id": "torchsde",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/build-torchsde.git?rev=89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "name": "python3.13-torchsde-python313-0.2.6+7f11879",
+      "pname": "torchsde-python313",
+      "rev": "89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "rev_count": 8,
+      "rev_date": "2026-03-18T23:40:25Z",
+      "scrape_date": "2026-10-11T20:30:04.976146901Z",
       "stabilities": [
+        "stable",
+        "staging",
         "unstable"
       ],
       "unfree": false,
-      "version": "0.25.0",
+      "version": "0.2.6+7f11879",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dist": "/nix/store/lr4wbhx14d4dj8pfkhab56zrdn4gb2ir-python3.13-torchvision-0.25.0-dist",
-        "out": "/nix/store/hxq1yjlizb992s8ywmjvn7aq90zf8cpc-python3.13-torchvision-0.25.0"
+        "dist": "/nix/store/2ywrzb3h3b4sd3l03abws0c9asm8127s-python3.13-torchsde-python313-0.2.6+7f11879-dist",
+        "out": "/nix/store/2g6v8mlsscdjdnpixmshnprc2aag3vih-python3.13-torchsde-python313-0.2.6+7f11879"
       },
-      "system": "x86_64-darwin",
-      "group": "torchvision",
-      "priority": 6
+      "system": "aarch64-darwin",
+      "group": "torchsde",
+      "priority": 10
+    },
+    {
+      "attr_path": "torchsde-python313",
+      "broken": false,
+      "derivation": "/nix/store/gidx4xf24hm64fn62minaydjzmq1v0xf-python3.13-torchsde-python313-0.2.6+7f11879.drv",
+      "description": "TorchSDE without bundled torch — avoids ABI conflicts when torch is provided by the environment",
+      "install_id": "torchsde",
+      "license": "Apache-2.0",
+      "locked_url": "https://github.com/barstoolbluz/build-torchsde?rev=89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "name": "python3.13-torchsde-python313-0.2.6+7f11879",
+      "pname": "torchsde-python313",
+      "rev": "89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "rev_count": 8,
+      "rev_date": "2026-03-18T23:40:25Z",
+      "scrape_date": "2026-10-11T20:30:04.976159201Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.6+7f11879",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/3px2bfmhswxa8w1pxpc95m83jn3r9l60-python3.13-torchsde-python313-0.2.6+7f11879-dist",
+        "out": "/nix/store/qzpjyl99iascsj2akwa2a3f1w5r98l1k-python3.13-torchsde-python313-0.2.6+7f11879"
+      },
+      "system": "aarch64-linux",
+      "group": "torchsde",
+      "priority": 10
+    },
+    {
+      "attr_path": "torchsde-python313",
+      "broken": false,
+      "derivation": "/nix/store/s8rvpbg5v3f5kk11fr5sfs6sw69wiybs-python3.13-torchsde-python313-0.2.6+7f11879.drv",
+      "description": "TorchSDE without bundled torch — avoids ABI conflicts when torch is provided by the environment",
+      "install_id": "torchsde",
+      "license": "Apache-2.0",
+      "locked_url": "git@github.com:barstoolbluz/build-torchsde.git?rev=89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "name": "python3.13-torchsde-python313-0.2.6+7f11879",
+      "pname": "torchsde-python313",
+      "rev": "89a5580dfde0ca7079fe63a50c64ed6dcd5ea97e",
+      "rev_count": 8,
+      "rev_date": "2026-03-18T23:40:25Z",
+      "scrape_date": "2026-10-11T20:30:04.976162186Z",
+      "stabilities": [
+        "stable",
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.2.6+7f11879",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/fp0bg96psnimm7h3kaq3w83xrcvx1fyd-python3.13-torchsde-python313-0.2.6+7f11879-dist",
+        "out": "/nix/store/bivhq796mvpi3pgpbp7n43k6j87pig7l-python3.13-torchsde-python313-0.2.6+7f11879"
+      },
+      "system": "x86_64-linux",
+      "group": "torchsde",
+      "priority": 10
     }
   ]
 }

@@ -5,7 +5,7 @@ Rust-based CLI for Claude AI with tool execution and session persistence. A term
 - **Rust binary** - Fast startup, single binary, no runtime dependencies
 - **Tool execution** - Shell commands, file operations, code editing
 - **Session persistence** - Resume conversations across sessions
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

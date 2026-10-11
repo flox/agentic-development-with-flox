@@ -7,7 +7,7 @@ Ultra-minimal autonomous AI assistant infrastructure written in Zig. Ships as a 
 - **10 memory engines** - SQLite (default, hybrid FTS5 + vector), PostgreSQL, Redis, ClickHouse, LanceDB, Markdown, and more
 - **35+ built-in tools** - Shell, file I/O, browser, web search, MCP, subagents, voice
 - **Zero dependencies** - Single static binary, no runtime/VM overhead
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon), RISC-V
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon), RISC-V
 
 ## Quick Start
 

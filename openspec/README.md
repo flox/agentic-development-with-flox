@@ -6,7 +6,7 @@ Lightweight spec framework that adds a specification layer between humans and AI
 - **Works with 20+ AI assistants** - Slash commands integrate with Claude Code, Codex, and more
 - **Lightweight** - Fluid, not rigid; iterative, not waterfall
 - **Brownfield-friendly** - Designed for existing projects
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Intel, Apple Silicon)
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
 ## Quick Start
 

@@ -907,7 +907,6 @@ EOF
 This environment works on:
 - Linux x86_64
 - Linux aarch64 (ARM64)
-- macOS x86_64 (Intel)
 - macOS ARM64 (Apple Silicon)
 
 **Provider compatibility:**

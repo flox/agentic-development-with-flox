@@ -130,7 +130,6 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
 - [**claude-code-router**](./claude-code-router) - Middleware proxy routing Claude Code requests to multiple AI providers
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
-- [**flox-mcp-server**](./flox-mcp-server) - MCP server enabling AI assistants to manage Flox environments
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
 
 ## How It Works
@@ -180,11 +179,13 @@ Additional composable environments are available from the [floxrox catalog](http
 - **API keys** stay in `$HOME` (e.g., `~/.config/`, env vars). Never stored in project directories.
 - **Services** use non-standard ports to avoid conflicts (e.g., PostgreSQL on 15432).
 - **Helper functions** follow the pattern `tool-info` (show config) and `tool-update` (update the tool).
-- **All environments** run on macOS (Intel/ARM) and Linux (x86/ARM) unless noted.
+- **All environments** run on macOS (Apple Silicon) and Linux (x86/ARM) unless noted. Intel Macs (`x86_64-darwin`) are not supported: nixpkgs no longer builds most packages for that platform.
 
 ## For AI Agents
 
 This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
+
+Several environments (claude-code, codex, copilot-cli, crush, gemini-cli, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
 
 ## Prerequisites
 
