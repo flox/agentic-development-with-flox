@@ -6,6 +6,13 @@ ollama-cuda.pkg-path = "flox/ollama-cuda"
 ollama-cuda.pkg-group = "cuda"
 ollama-cuda.systems = ["x86_64-linux", "aarch64-linux"]
 
+# Override the macOS ollama package from the included flox/ollama environment,
+# which still lists x86_64-darwin (no longer supported here). Linux gets
+# ollama-cuda from that environment.
+ollama.pkg-path = "flox/ollama"
+ollama.pkg-group = "ollama"
+ollama.systems = ["aarch64-darwin"]
+
 [vars]
 FORGE_HISTORY_FILE = "$FLOX_ENV_CACHE/forge_history"
 FORGE_HTTP_CONNECT_TIMEOUT = "30"

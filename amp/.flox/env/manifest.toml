@@ -3,8 +3,11 @@ schema-version = "1.11.0"
 
 ## Install Packages --------------------------------------------------
 [install]
-amp-cli.pkg-path = "amp-cli"
-amp-cli.pkg-group = "amp"
+amp.pkg-path = "flox/amp"
+amp.pkg-group = "amp"
+# Pinned: the newest flox/amp build (0.0.1791734437-g42649e) has no uploaded
+# binaries in the catalog store yet. Remove this pin once newer builds download.
+amp.version = "0.0.1791720050-g0a7ff0"
 gum.pkg-path = "gum"
 curl.pkg-path = "curl"
 curl.outputs = "all"

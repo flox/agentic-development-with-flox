@@ -24,7 +24,8 @@ schema-version = "1.11.0"
 
 ## Install Packages --------------------------------------------------
 [install]
-claude-code-router.pkg-path = "claude-code-router"
+claude-code-router.pkg-path = "flox/claude-code-router"
+claude-code-router.pkg-group = "claude-code-router"
 claude-code.pkg-path = "claude-code"
 gum.pkg-path = "gum"
 curl.pkg-path = "curl"
@@ -32,6 +33,13 @@ curl.outputs = "all"
 jq.pkg-path = "jq"
 jq.outputs = "all"
 bat.pkg-path = "bat"
+
+# Override the macOS ollama package from the included flox/ollama environment,
+# which still lists x86_64-darwin (no longer supported here). Linux gets
+# ollama-cuda from that environment.
+ollama.pkg-path = "flox/ollama"
+ollama.pkg-group = "ollama"
+ollama.systems = ["aarch64-darwin"]
 
 
 ## Environment Variables ---------------------------------------------

@@ -7,7 +7,7 @@ schema-version = "1.11.0"
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-spec-kit.pkg-path = "spec-kit"
+spec-kit.pkg-path = "flox/spec-kit"
 spec-kit.pkg-group = "spec-kit"
 spec-kit.outputs = "all"
 # gum.pkg-path = "gum"

@@ -7,7 +7,8 @@ schema-version = "1.11.0"
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-gemini-cli.pkg-path = "gemini-cli"
+gemini-cli.pkg-path = "flox/gemini-cli"
+gemini-cli.pkg-group = "gemini-cli"
 gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-vscode-ide-companion"
 jq.pkg-path = "jq"
 jq.outputs = "all"

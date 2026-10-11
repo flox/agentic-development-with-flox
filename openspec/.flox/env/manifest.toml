@@ -3,7 +3,8 @@ schema-version = "1.11.0"
 [install]
 # OpenSpec from nixpkgs (maintained by numtide)
 # NOT flox/openspec — that entry is stale at 0.16.0
-openspec.pkg-path = "openspec"
+openspec.pkg-path = "flox/openspec"
+openspec.pkg-group = "openspec"
 git.pkg-path = "gitFull"
 git.outputs = "all"
 curl.pkg-path = "curl"

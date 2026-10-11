@@ -8,7 +8,7 @@ ollama-cuda.priority = 1
 ollama-cuda.pkg-group = "cuda"
 
 # ollama for darwin
-ollama.pkg-path = "ollama"
+ollama.pkg-path = "flox/ollama"
 ollama.systems = ["aarch64-darwin"]
 ollama.priority = 1
 
