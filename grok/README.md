@@ -3,7 +3,7 @@
 xAI's agentic coding tool for the terminal. Grok Build reads your project, edits files, runs commands, and works through tasks in an interactive TUI or headless with `grok agent`.
 
 - **xAI models** - Grok models via your xAI account or an API key
-- **Interactive or headless** - Full TUI, or `grok agent` for scripting and CI
+- **Interactive or single-turn** - Full TUI, or `grok -p "<prompt>"` for scripts and CI
 - **Git worktrees** - `grok --worktree=<name>` runs a task on its own branch
 - **Skills, rules, and plugins** - Reads `~/.grok/skills`, rules files, and plugin marketplaces
 - **Flox skills built in** - flox, floxify, and flox-debug are linked in on activation
@@ -40,8 +40,8 @@ grok
 # Start with a prompt
 grok "fix the failing test"
 
-# Run without the interactive UI
-grok agent
+# Single-turn prompt: print the response and exit
+grok -p "explain this codebase"
 ```
 
 ## Commands
@@ -49,7 +49,8 @@ grok agent
 | Command | Description |
 |---------|-------------|
 | `grok` | Interactive TUI |
-| `grok agent` | Run without the interactive UI |
+| `grok -p "<prompt>"` | Single-turn prompt; prints the response and exits |
+| `grok agent` | Run the agent as a server for editors and SDKs (stdio, WebSocket) |
 | `grok inspect` | Show the config, skills, rules, and agents Grok discovers here |
 | `grok sessions` | List, search, or restore sessions |
 | `grok mcp` | Manage MCP servers |

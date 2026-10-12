@@ -61,7 +61,22 @@ flox activate
 codewhale --provider ollama --model <model>
 ```
 
-Codewhale uses `http://localhost:11434/v1` by default; set `OLLAMA_BASE_URL` to use another host.
+Codewhale uses `http://localhost:11434/v1` by default. It may underestimate the model's context window and stop with "does not fit ... window" on the second turn; set the window your Ollama server actually uses (`ollama ps` shows it) in `~/.codewhale/config.toml`:
+
+```toml
+[providers.ollama]
+context_window = 32768
+```
+
+For an Ollama server on another machine, add its URL, a placeholder key (Ollama ignores it, but Codewhale requires one for non-local endpoints), and permission to use plain HTTP:
+
+```toml
+[providers.ollama]
+base_url = "http://192.168.1.50:11434/v1"
+api_key = "ollama"
+allow_insecure_http = true
+context_window = 32768
+```
 
 ## Commands
 
