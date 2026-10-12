@@ -1,0 +1,142 @@
+schema-version = "1.11.0"
+
+[install]
+mistral-vibe.pkg-path = "flox/mistral-vibe"
+mistral-vibe.pkg-group = "mistral-vibe"
+
+# Flox skills (flox, floxify, flox-debug) - teach Vibe to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+jq.pkg-path = "jq"
+
+[vars]
+# API key - set in your shell profile or pass at activation time
+# MISTRAL_API_KEY = ""
+
+# Or run 'vibe --setup' to configure a provider interactively
+
+[hook]
+on-activate = '''
+# Point Vibe at the Flox skills. VIBE_SKILL_PATHS is a JSON list that Vibe
+# merges with skill_paths from ~/.vibe/config.toml; any paths you set in
+# VIBE_SKILL_PATHS yourself are kept.
+setup_vibe_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local merged
+    [ -d "$skills_dir" ] || return 0
+    if [ -z "${VIBE_SKILL_PATHS:-}" ]; then
+        export VIBE_SKILL_PATHS="[\"$skills_dir\"]"
+    elif merged=$(printf '%s' "$VIBE_SKILL_PATHS" | jq -c --arg d "$skills_dir" 'if index($d) then . else . + [$d] end' 2>/dev/null); then
+        export VIBE_SKILL_PATHS="$merged"
+    else
+        echo "Note: VIBE_SKILL_PATHS is not a JSON list; Flox skills not added to Vibe" >&2
+    fi
+}
+
+setup_vibe_flox_skills
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Mistral Vibe environment ready"
+echo ""
+
+if [ -n "$MISTRAL_API_KEY" ]; then
+  echo "  Mistral API key: set"
+else
+  echo "  Mistral API key: not set"
+  echo ""
+  echo "  Set an API key or configure interactively:"
+  echo "    export MISTRAL_API_KEY=..."
+  echo "    vibe --setup"
+fi
+echo ""
+
+echo "Commands:"
+echo "  vibe                         Start interactive session"
+echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
+echo "  vibe -c                      Continue the most recent session"
+echo "  vibe-acp                     Agent Client Protocol server (for editors)"
+echo "  vibe-info                    Show configuration"
+echo ""
+echo "Flox skills: flox, floxify, and flox-debug are loaded automatically"
+echo ""
+'''
+
+[profile]
+bash = '''
+vibe-info() {
+    echo "Mistral Vibe Environment Configuration"
+    echo ""
+    echo "API Key:"
+    [ -n "$MISTRAL_API_KEY" ] && echo "  Mistral: set" || echo "  Mistral: not set (or use 'vibe --setup')"
+    echo ""
+    echo "Skill paths: $VIBE_SKILL_PATHS"
+    echo ""
+    echo "Commands:"
+    echo "  vibe                         Start interactive session"
+    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
+    echo "  vibe -c                      Continue the most recent session"
+    echo "  vibe --setup                 Configure a provider"
+    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
+    echo ""
+    echo "Config: ${VIBE_HOME:-$HOME/.vibe}/config.toml"
+    echo "Source: https://github.com/mistralai/mistral-vibe"
+}
+export -f vibe-info
+'''
+
+zsh = '''
+vibe-info() {
+    echo "Mistral Vibe Environment Configuration"
+    echo ""
+    echo "API Key:"
+    [ -n "$MISTRAL_API_KEY" ] && echo "  Mistral: set" || echo "  Mistral: not set (or use 'vibe --setup')"
+    echo ""
+    echo "Skill paths: $VIBE_SKILL_PATHS"
+    echo ""
+    echo "Commands:"
+    echo "  vibe                         Start interactive session"
+    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
+    echo "  vibe -c                      Continue the most recent session"
+    echo "  vibe --setup                 Configure a provider"
+    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
+    echo ""
+    echo "Config: ${VIBE_HOME:-$HOME/.vibe}/config.toml"
+    echo "Source: https://github.com/mistralai/mistral-vibe"
+}
+'''
+
+fish = '''
+function vibe-info
+    set -l vibe_home $HOME/.vibe
+    if set -q VIBE_HOME; set vibe_home $VIBE_HOME; end
+    echo "Mistral Vibe Environment Configuration"
+    echo ""
+    echo "API Key:"
+    if test -n "$MISTRAL_API_KEY"; echo "  Mistral: set"; else; echo "  Mistral: not set (or use 'vibe --setup')"; end
+    echo ""
+    echo "Skill paths: $VIBE_SKILL_PATHS"
+    echo ""
+    echo "Commands:"
+    echo "  vibe                         Start interactive session"
+    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
+    echo "  vibe -c                      Continue the most recent session"
+    echo "  vibe --setup                 Configure a provider"
+    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
+    echo ""
+    echo "Config: $vibe_home/config.toml"
+    echo "Source: https://github.com/mistralai/mistral-vibe"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

@@ -1,0 +1,179 @@
+schema-version = "1.11.0"
+
+[install]
+codewhale.pkg-path = "flox/codewhale"
+codewhale.pkg-group = "codewhale"
+
+# Flox skills (flox, floxify, flox-debug) - teach Codewhale to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# API keys - set in your shell profile or pass at activation time
+# DEEPSEEK_API_KEY = ""
+# OPENAI_API_KEY = ""
+# ANTHROPIC_API_KEY = ""
+# OPENROUTER_API_KEY = ""
+
+# Or store a key with 'codewhale auth set --provider <name>', or use /provider
+# inside codewhale. Local models need no key: codewhale --provider ollama
+
+[hook]
+on-activate = '''
+# Link the Flox skills into Codewhale's global skills directory
+# (~/.codewhale/skills by default). CODEWHALE_SKILLS_DIR replaces that
+# directory rather than adding to it, so linking is the environment-scoped
+# option. Links that point at a Flox skills package are refreshed on each
+# activation; skills you added yourself (directories, or symlinks pointing
+# anywhere else) are never replaced.
+link_codewhale_flox_skills() {
+    local skills_src="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dst="${CODEWHALE_SKILLS_DIR:-${CODEWHALE_HOME:-$HOME/.codewhale}/skills}"
+    local skill name target
+    [ -d "$skills_src" ] || return 0
+    mkdir -p "$skills_dst"
+    for skill in "$skills_src"/*/; do
+        name=$(basename "$skill")
+        target="$skills_dst/$name"
+        if [ -L "$target" ]; then
+            case "$(readlink "$target")" in
+                */share/flox/codex/flox/"$name") ;;
+                *) continue ;;
+            esac
+        elif [ -e "$target" ]; then
+            continue
+        fi
+        ln -sfn "$skills_src/$name" "$target"
+    done
+}
+
+link_codewhale_flox_skills
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Codewhale environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+for _var in DEEPSEEK_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY OPENROUTER_API_KEY; do
+  if [ -n "${!_var}" ]; then
+    echo "  $_var: set"
+    _has_key=1
+  fi
+done
+if [ "$_has_key" = "0" ]; then
+  echo "  No provider API key set"
+  echo ""
+  echo "  Set an API key, store one, or use a local model:"
+  echo "    export DEEPSEEK_API_KEY=sk-..."
+  echo "    codewhale auth set --provider deepseek"
+  echo "    codewhale --provider ollama --model <model>"
+fi
+echo ""
+
+echo "Commands:"
+echo "  codewhale                    Start interactive TUI"
+echo "  codewhale exec \"<prompt>\"    Run a non-interactive prompt"
+echo "  codewhale review             Review the current git diff"
+echo "  codewhale doctor             Run diagnostics (providers, skills, MCP)"
+echo "  codewhale-info               Show configuration"
+echo ""
+echo "Flox skills: flox, floxify, and flox-debug linked into ~/.codewhale/skills"
+echo ""
+
+unset _has_key _var
+'''
+
+[profile]
+bash = '''
+codewhale-info() {
+    echo "Codewhale Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$DEEPSEEK_API_KEY" ] && echo "  DeepSeek: set" || echo "  DeepSeek: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo "  (keys saved with 'codewhale auth set' are not shown; see 'codewhale auth status')"
+    echo ""
+    echo "Flox skills: ${CODEWHALE_SKILLS_DIR:-${CODEWHALE_HOME:-$HOME/.codewhale}/skills}"
+    echo ""
+    echo "Commands:"
+    echo "  codewhale                    Start interactive TUI"
+    echo "  codewhale exec \"<prompt>\"    Run a non-interactive prompt"
+    echo "  codewhale review             Review the current git diff"
+    echo "  codewhale doctor             Run diagnostics (providers, skills, MCP)"
+    echo "  codewhale --provider ollama  Use a local Ollama model"
+    echo ""
+    echo "Config: ${CODEWHALE_HOME:-$HOME/.codewhale}/config.toml"
+    echo "Source: https://github.com/codewhale-hq/CodeWhale"
+}
+export -f codewhale-info
+'''
+
+zsh = '''
+codewhale-info() {
+    echo "Codewhale Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$DEEPSEEK_API_KEY" ] && echo "  DeepSeek: set" || echo "  DeepSeek: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo "  (keys saved with 'codewhale auth set' are not shown; see 'codewhale auth status')"
+    echo ""
+    echo "Flox skills: ${CODEWHALE_SKILLS_DIR:-${CODEWHALE_HOME:-$HOME/.codewhale}/skills}"
+    echo ""
+    echo "Commands:"
+    echo "  codewhale                    Start interactive TUI"
+    echo "  codewhale exec \"<prompt>\"    Run a non-interactive prompt"
+    echo "  codewhale review             Review the current git diff"
+    echo "  codewhale doctor             Run diagnostics (providers, skills, MCP)"
+    echo "  codewhale --provider ollama  Use a local Ollama model"
+    echo ""
+    echo "Config: ${CODEWHALE_HOME:-$HOME/.codewhale}/config.toml"
+    echo "Source: https://github.com/codewhale-hq/CodeWhale"
+}
+'''
+
+fish = '''
+function codewhale-info
+    set -l cw_home $HOME/.codewhale
+    if set -q CODEWHALE_HOME; set cw_home $CODEWHALE_HOME; end
+    set -l cw_skills $cw_home/skills
+    if set -q CODEWHALE_SKILLS_DIR; set cw_skills $CODEWHALE_SKILLS_DIR; end
+    echo "Codewhale Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$DEEPSEEK_API_KEY"; echo "  DeepSeek: set"; else; echo "  DeepSeek: not set"; end
+    if test -n "$OPENAI_API_KEY"; echo "  OpenAI: set"; else; echo "  OpenAI: not set"; end
+    if test -n "$ANTHROPIC_API_KEY"; echo "  Anthropic: set"; else; echo "  Anthropic: not set"; end
+    if test -n "$OPENROUTER_API_KEY"; echo "  OpenRouter: set"; else; echo "  OpenRouter: not set"; end
+    echo "  (keys saved with 'codewhale auth set' are not shown; see 'codewhale auth status')"
+    echo ""
+    echo "Flox skills: $cw_skills"
+    echo ""
+    echo "Commands:"
+    echo "  codewhale                    Start interactive TUI"
+    echo "  codewhale exec \"<prompt>\"    Run a non-interactive prompt"
+    echo "  codewhale review             Review the current git diff"
+    echo "  codewhale doctor             Run diagnostics (providers, skills, MCP)"
+    echo "  codewhale --provider ollama  Use a local Ollama model"
+    echo ""
+    echo "Config: $cw_home/config.toml"
+    echo "Source: https://github.com/codewhale-hq/CodeWhale"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

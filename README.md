@@ -67,6 +67,7 @@ aider --model ollama_chat/gemma4
 - [**claw-code**](./claw-code) - Claw Code Rust-based CLI for Claude AI with tool execution and session persistence
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
 - [**code**](./code) - Every Code fast local coding agent with multi-agent orchestration
+- [**codewhale**](./codewhale) - Codewhale open-source coding agent for any model, built for open-weight and local models (Ollama, vLLM, SGLang)
 - [**codex**](./codex) - OpenAI Codex CLI coding agent
 - [**copilot-cli**](./copilot-cli) - GitHub Copilot CLI
 - [**crush**](./crush) - Crush AI coding agent for the terminal by Charm
@@ -76,10 +77,12 @@ aider --model ollama_chat/gemma4
 - [**forge**](./forge) - Forge AI coding agent by Antinomy
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
+- [**grok**](./grok) - Grok Build, xAI's agentic coding tool for the terminal
 - [**hermes-agent**](./hermes-agent) - Hermes self-improving AI agent with persistent learning, 200+ models, and messaging gateway support
 - [**ironclaw**](./ironclaw) - IronClaw secure personal AI assistant in Rust with WASM sandboxing and pgvector memory
 - [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
 - [**kiro**](./kiro) - Agentic AI development platform (IDE + CLI) with spec-driven development
+- [**mistral-vibe**](./mistral-vibe) - Mistral Vibe CLI coding agent powered by Devstral
 - [**mux**](./mux) - Mux parallel agentic development with multi-provider support and isolated workspaces
 - [**nanobot**](./nanobot) - Nanobot ultra-lightweight personal AI agent with multi-channel chat and persistent memory
 - [**nanocoder**](./nanocoder) - Nanocoder local-first CLI coding agent with multi-provider support
@@ -88,6 +91,7 @@ aider --model ollama_chat/gemma4
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
 - [**openhands**](./openhands) - OpenHands AI-driven software development agent with sandboxed Docker execution
 - [**open-interpreter**](./open-interpreter) - Open Interpreter natural language interface for local code execution
+- [**pi**](./pi) - pi minimal, extensible terminal coding agent with multi-model support
 - [**qwen-code**](./qwen-code) - Qwen code model CLI
 - [**ruflo**](./ruflo) - Ruflo multi-agent AI orchestration platform for Claude Code with self-learning swarms
 - [**zeroclaw**](./zeroclaw) - Zeroclaw personal AI assistant infrastructure in Rust with multi-channel messaging and 70+ tools
@@ -184,7 +188,7 @@ Additional composable environments are available from the [floxrox catalog](http
 
 This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
 
-Several environments (claude-code, codex, copilot-cli, crush, gemini-cli, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
+Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, grok, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
 
 ## Prerequisites
 

@@ -1,0 +1,171 @@
+schema-version = "1.11.0"
+
+[install]
+pi.pkg-path = "flox/pi"
+pi.pkg-group = "pi"
+
+# Flox skills (flox, floxify, flox-debug) - teach pi to manage Flox environments
+skills-flox.pkg-path = "flox/skills-flox"
+skills-flox.pkg-group = "flox-skills"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# API keys - set in your shell profile or pass at activation time
+# ANTHROPIC_API_KEY = ""
+# OPENAI_API_KEY = ""
+# GEMINI_API_KEY = ""
+# OPENROUTER_API_KEY = ""
+
+# Or use /login inside pi to sign in with a subscription or save an API key
+
+[hook]
+on-activate = '''
+# Wrap pi so it loads the Flox skills. pi has no environment variable for
+# skill locations, so the shim passes --skill; pi's subcommands (install,
+# list, auth, ...) are passed through untouched, since a leading --skill
+# makes pi treat the subcommand name as a prompt, and so is --no-skills.
+setup_pi_flox_skills() {
+    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local real_pi="$FLOX_ENV/bin/pi"
+    local shim_dir="$FLOX_ENV_CACHE/bin"
+    [ -d "$skills_dir" ] && [ -x "$real_pi" ] || return 0
+    mkdir -p "$shim_dir"
+    cat > "$shim_dir/pi" << EOF
+#!/usr/bin/env bash
+case "\${1:-}" in
+    install|remove|uninstall|update|list|config|auth|mcp)
+        exec "$real_pi" "\$@" ;;
+esac
+for arg in "\$@"; do
+    case "\$arg" in
+        --no-skills|-ns) exec "$real_pi" "\$@" ;;
+    esac
+done
+exec "$real_pi" --skill "$skills_dir" "\$@"
+EOF
+    chmod +x "$shim_dir/pi"
+    case ":$PATH:" in *":$shim_dir:"*) ;; *) export PATH="$shim_dir:$PATH" ;; esac
+}
+
+setup_pi_flox_skills
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "pi environment ready"
+echo ""
+
+# Show API key status
+_has_key=0
+for _var in ANTHROPIC_API_KEY OPENAI_API_KEY GEMINI_API_KEY OPENROUTER_API_KEY; do
+  if [ -n "${!_var}" ]; then
+    echo "  $_var: set"
+    _has_key=1
+  fi
+done
+if [ "$_has_key" = "0" ]; then
+  echo "  No provider API key set"
+  echo ""
+  echo "  Set an API key or sign in interactively:"
+  echo "    export ANTHROPIC_API_KEY=sk-ant-..."
+  echo "    pi  then  /login"
+fi
+echo ""
+
+echo "Commands:"
+echo "  pi                           Start interactive session"
+echo "  pi -p \"<prompt>\"             Non-interactive single prompt"
+echo "  pi -c                        Continue previous session"
+echo "  pi-info                      Show configuration"
+echo ""
+echo "In-app commands:"
+echo "  /login                       Sign in to a provider"
+echo "  /model                       Switch model"
+echo "  /skill:flox                  Load the Flox skill explicitly"
+echo ""
+echo "Flox skills: flox, floxify, and flox-debug are loaded automatically"
+echo ""
+
+unset _has_key _var
+'''
+
+[profile]
+bash = '''
+pi-info() {
+    echo "pi Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$GEMINI_API_KEY" ] && echo "  Gemini: set" || echo "  Gemini: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo ""
+    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo ""
+    echo "Commands:"
+    echo "  pi                           Start interactive session"
+    echo "  pi -p \"<prompt>\"             Non-interactive single prompt"
+    echo "  pi -c                        Continue previous session"
+    echo "  pi install <source>          Install an extension or Pi package"
+    echo ""
+    echo "Config: ~/.pi/agent (override with PI_CODING_AGENT_DIR)"
+    echo "Source: https://github.com/earendil-works/pi"
+}
+export -f pi-info
+'''
+
+zsh = '''
+pi-info() {
+    echo "pi Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$GEMINI_API_KEY" ] && echo "  Gemini: set" || echo "  Gemini: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo ""
+    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo ""
+    echo "Commands:"
+    echo "  pi                           Start interactive session"
+    echo "  pi -p \"<prompt>\"             Non-interactive single prompt"
+    echo "  pi -c                        Continue previous session"
+    echo "  pi install <source>          Install an extension or Pi package"
+    echo ""
+    echo "Config: ~/.pi/agent (override with PI_CODING_AGENT_DIR)"
+    echo "Source: https://github.com/earendil-works/pi"
+}
+'''
+
+fish = '''
+function pi-info
+    echo "pi Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    if test -n "$ANTHROPIC_API_KEY"; echo "  Anthropic: set"; else; echo "  Anthropic: not set"; end
+    if test -n "$OPENAI_API_KEY"; echo "  OpenAI: set"; else; echo "  OpenAI: not set"; end
+    if test -n "$GEMINI_API_KEY"; echo "  Gemini: set"; else; echo "  Gemini: not set"; end
+    if test -n "$OPENROUTER_API_KEY"; echo "  OpenRouter: set"; else; echo "  OpenRouter: not set"; end
+    echo ""
+    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo ""
+    echo "Commands:"
+    echo "  pi                           Start interactive session"
+    echo "  pi -p \"<prompt>\"             Non-interactive single prompt"
+    echo "  pi -c                        Continue previous session"
+    echo "  pi install <source>          Install an extension or Pi package"
+    echo ""
+    echo "Config: ~/.pi/agent (override with PI_CODING_AGENT_DIR)"
+    echo "Source: https://github.com/earendil-works/pi"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
