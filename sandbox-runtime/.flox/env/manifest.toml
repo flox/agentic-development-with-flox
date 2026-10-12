@@ -1,0 +1,162 @@
+schema-version = "1.11.0"
+
+[install]
+sandbox-runtime.pkg-path = "flox/sandbox-runtime"
+sandbox-runtime.pkg-group = "sandbox-runtime"
+# On Linux the package brings its own bubblewrap, socat, and ripgrep;
+# on macOS srt uses sandbox-exec but still needs ripgrep on PATH
+ripgrep.pkg-path = "ripgrep"
+ripgrep.systems = ["aarch64-darwin"]
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# srt-init writes a starter ~/.srt-settings.json; it never overwrites one.
+setup_srt_init() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/srt-init" << 'EOF'
+#!/usr/bin/env bash
+settings="$HOME/.srt-settings.json"
+if [ -e "$settings" ]; then
+    echo "$settings already exists; not changing it."
+    exit 0
+fi
+cat > "$settings" << 'JSON'
+{
+  "network": {
+    "allowedDomains": [
+      "github.com",
+      "*.github.com",
+      "registry.npmjs.org",
+      "pypi.org",
+      "files.pythonhosted.org"
+    ],
+    "deniedDomains": []
+  },
+  "filesystem": {
+    "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.config/gh"],
+    "allowWrite": [".", "/tmp"],
+    "denyWrite": [".env"]
+  }
+}
+JSON
+echo "Wrote $settings"
+echo "  Network: GitHub, npm, and PyPI only"
+echo "  Writes:  current directory and /tmp (not .env)"
+echo "  Reads:   everything except ~/.ssh, ~/.aws, ~/.gnupg, ~/.config/gh"
+EOF
+    chmod +x "$bin_dir/srt-init"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+# Ubuntu 24.04+ strips capabilities from unprivileged user namespaces,
+# which bubblewrap needs.
+check_srt_userns() {
+    local f=/proc/sys/kernel/apparmor_restrict_unprivileged_userns
+    [ -r "$f" ] && [ "$(cat "$f")" = "1" ] || return 0
+    echo "  Warning: AppArmor restricts unprivileged user namespaces, so srt"
+    echo "  cannot sandbox commands. Allow them with:"
+    echo "    sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0"
+    echo ""
+}
+
+setup_srt_init
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Sandbox Runtime (srt) environment ready"
+echo ""
+if [ -f "$HOME/.srt-settings.json" ]; then
+  echo "  Settings: ~/.srt-settings.json"
+else
+  echo "  Settings: none (no network and no writes inside the sandbox)"
+  echo "  Run srt-init for a starter ~/.srt-settings.json"
+fi
+echo ""
+check_srt_userns
+
+echo "Commands:"
+echo "  srt -- <command> [args]      Run a command in the sandbox"
+echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
+echo "  srt -s <file> -- <command>   Use another settings file"
+echo "  srt-init                     Write a starter ~/.srt-settings.json"
+echo "  srt-info                     Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+srt-info() {
+    echo "Sandbox Runtime (srt) Environment Configuration"
+    echo ""
+    if [ -f "$HOME/.srt-settings.json" ]; then
+        echo "Settings: $HOME/.srt-settings.json"
+    else
+        echo "Settings: none (run srt-init for a starter file)"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  srt -- <command> [args]      Run a command in the sandbox"
+    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
+    echo "  srt -s <file> -- <command>   Use another settings file"
+    echo "  srt -d -- <command>          Debug logging"
+    echo "  srt-init                     Write a starter ~/.srt-settings.json"
+    echo ""
+    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+}
+export -f srt-info
+'''
+
+zsh = '''
+srt-info() {
+    echo "Sandbox Runtime (srt) Environment Configuration"
+    echo ""
+    if [ -f "$HOME/.srt-settings.json" ]; then
+        echo "Settings: $HOME/.srt-settings.json"
+    else
+        echo "Settings: none (run srt-init for a starter file)"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  srt -- <command> [args]      Run a command in the sandbox"
+    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
+    echo "  srt -s <file> -- <command>   Use another settings file"
+    echo "  srt -d -- <command>          Debug logging"
+    echo "  srt-init                     Write a starter ~/.srt-settings.json"
+    echo ""
+    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+}
+'''
+
+fish = '''
+function srt-info
+    echo "Sandbox Runtime (srt) Environment Configuration"
+    echo ""
+    if test -f "$HOME/.srt-settings.json"
+        echo "Settings: $HOME/.srt-settings.json"
+    else
+        echo "Settings: none (run srt-init for a starter file)"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  srt -- <command> [args]      Run a command in the sandbox"
+    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
+    echo "  srt -s <file> -- <command>   Use another settings file"
+    echo "  srt -d -- <command>          Debug logging"
+    echo "  srt-init                     Write a starter ~/.srt-settings.json"
+    echo ""
+    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

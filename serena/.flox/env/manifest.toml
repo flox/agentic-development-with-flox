@@ -1,0 +1,152 @@
+schema-version = "1.11.0"
+
+[install]
+serena.pkg-path = "flox/serena"
+serena.pkg-group = "serena"
+
+# Serena downloads most language servers itself (into ~/.serena):
+# uv for Python, node/npm for TypeScript, JavaScript, Bash, JSON, YAML, ...
+# Other languages use the toolchain on PATH (gopls, rust-analyzer, java, ...).
+uv.pkg-path = "uv"
+uv.pkg-group = "language-server-tools"
+nodejs.pkg-path = "nodejs"
+nodejs.pkg-group = "language-server-tools"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Opt out of Serena's anonymous usage reporting
+# SERENA_USAGE_REPORTING = "false"
+
+[hook]
+on-activate = '''
+# Write two launchers into $FLOX_ENV_CACHE/bin:
+#   serena-mcp       runs `serena start-mcp-server` inside this environment
+#                    (via flox activate), so agents get Serena plus uv and
+#                    node no matter which shell or environment launched them
+#   serena-register  registers serena-mcp with an agent's MCP config
+# Hook output goes to stderr under `flox activate --`, so stdout stays
+# clean for the MCP stdio protocol.
+setup_serena_launchers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    local flox_bin
+    flox_bin="$(command -v flox)" || return 0
+    mkdir -p "$bin_dir"
+
+    cat > "$bin_dir/serena-mcp" << EOF
+#!/usr/bin/env bash
+exec "$flox_bin" activate -d "$FLOX_ENV_PROJECT" -- serena start-mcp-server "\$@"
+EOF
+
+    cat > "$bin_dir/serena-register" << EOF
+#!/usr/bin/env bash
+mcp="$bin_dir/serena-mcp"
+case "\${1:-}" in
+    claude-code) exec claude mcp add --scope user serena -- "\$mcp" --context=claude-code --project-from-cwd ;;
+    codex)       exec codex mcp add serena -- "\$mcp" --context=codex --project-from-cwd ;;
+    grok)        exec grok mcp add --scope user serena -- "\$mcp" --context=grok --project-from-cwd ;;
+    print)
+        echo "Command for any MCP client (stdio):"
+        echo "  \$mcp --context=agent --project-from-cwd"
+        echo ""
+        echo "JSON (mcpServers):"
+        echo "  \"serena\": { \"command\": \"\$mcp\", \"args\": [\"--context=agent\", \"--project-from-cwd\"] }"
+        ;;
+    *)
+        echo "Usage: serena-register claude-code|codex|grok|print" >&2
+        exit 1
+        ;;
+esac
+EOF
+
+    chmod +x "$bin_dir/serena-mcp" "$bin_dir/serena-register"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_serena_launchers
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Serena environment ready"
+echo ""
+echo "  Serena is an MCP server: register it with your coding agent once,"
+echo "  and the agent starts it when needed."
+echo ""
+
+echo "Commands:"
+echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+echo "  serena-register print        Show the command for any other MCP client"
+echo "  serena project create        Configure the current project"
+echo "  serena project index         Pre-index the current project"
+echo "  serena-info                  Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+serena-info() {
+    echo "Serena Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
+    echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
+    echo ""
+    echo "Commands:"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register print        Show the command for any other MCP client"
+    echo "  serena project create        Configure the current project"
+    echo "  serena project index         Pre-index the current project"
+    echo "  serena project health-check  Check language servers for the current project"
+    echo ""
+    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
+    echo "Source: https://github.com/oraios/serena"
+}
+export -f serena-info
+'''
+
+zsh = '''
+serena-info() {
+    echo "Serena Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
+    echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
+    echo ""
+    echo "Commands:"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register print        Show the command for any other MCP client"
+    echo "  serena project create        Configure the current project"
+    echo "  serena project index         Pre-index the current project"
+    echo "  serena project health-check  Check language servers for the current project"
+    echo ""
+    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
+    echo "Source: https://github.com/oraios/serena"
+}
+'''
+
+fish = '''
+function serena-info
+    echo "Serena Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
+    if test -n "$SERENA_USAGE_REPORTING"; echo "Usage reporting: $SERENA_USAGE_REPORTING"; else; echo "Usage reporting: on (set SERENA_USAGE_REPORTING=false to disable)"; end
+    echo ""
+    echo "Commands:"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register print        Show the command for any other MCP client"
+    echo "  serena project create        Configure the current project"
+    echo "  serena project index         Pre-index the current project"
+    echo "  serena project health-check  Check language servers for the current project"
+    echo ""
+    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
+    echo "Source: https://github.com/oraios/serena"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

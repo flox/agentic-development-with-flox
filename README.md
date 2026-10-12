@@ -74,7 +74,7 @@ aider --model ollama_chat/gemma4
 - [**cursor-agent**](./cursor-agent) - Cursor Agent CLI
 - [**droid**](./droid) - Factory Droid AI software development agent
 - [**eca**](./eca) - Emerge Cognitive Architecture AI pair programming assistant
-- [**forge**](./forge) - Forge AI coding agent by Antinomy
+- [**forge**](./forge) - ForgeCode AI pair programmer (formerly Forge by Antinomy), 300+ models
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
 - [**grok**](./grok) - Grok Build, xAI's agentic coding tool for the terminal
@@ -126,14 +126,17 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
+- [**sandbox-runtime**](./sandbox-runtime) - Anthropic's lightweight filesystem and network sandbox (srt) for agents, MCP servers, and commands
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
+- [**vibe-kanban**](./vibe-kanban) - Kanban board that runs coding agents in isolated git worktrees, as a background service
 
 ### MCP and Integration
 
 - [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
+- [**serena**](./serena) - MCP server giving coding agents IDE-grade semantic code tools via language servers
 
 ## How It Works
 

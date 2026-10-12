@@ -1,0 +1,110 @@
+schema-version = "1.11.0"
+
+[install]
+# Vibe Kanban bundles Node.js and git; by default it runs coding agents
+# with `npx -y <agent>@<version>` (override per agent in profiles.json)
+vibe-kanban.pkg-path = "flox/vibe-kanban"
+vibe-kanban.pkg-group = "vibe-kanban"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# Listen address for the service; override at activation, e.g.
+#   VIBE_KANBAN_PORT=4000 flox activate -s
+export VIBE_KANBAN_HOST="${VIBE_KANBAN_HOST:-127.0.0.1}"
+export VIBE_KANBAN_PORT="${VIBE_KANBAN_PORT:-3210}"
+mkdir -p "$FLOX_ENV_CACHE/logs"
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Vibe Kanban environment ready"
+echo ""
+if [ "$FLOX_ACTIVATE_START_SERVICES" = "true" ]; then
+  echo "  Service: starting at http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
+else
+  echo "  Service: not started (use flox activate -s, or flox services start)"
+fi
+echo ""
+echo "  Agents run with their permission prompts turned off by default;"
+echo "  change this in the agent settings of the web UI."
+echo ""
+
+echo "Commands:"
+echo "  flox activate -s             Start the Vibe Kanban service"
+echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
+echo "  flox services logs vibe-kanban  Show service logs"
+echo "  vibe-kanban-info             Show configuration"
+echo ""
+'''
+
+[services]
+vibe-kanban.command = '''
+HOST="$VIBE_KANBAN_HOST" PORT="$VIBE_KANBAN_PORT" exec vibe-kanban >> "$FLOX_ENV_CACHE/logs/vibe-kanban.log" 2>&1
+'''
+
+[profile]
+bash = '''
+vibe-kanban-info() {
+    echo "Vibe Kanban Environment Configuration"
+    echo ""
+    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
+    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo ""
+    echo "Commands:"
+    echo "  flox activate -s             Start the Vibe Kanban service"
+    echo "  flox services status         Check the service"
+    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
+    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
+    echo ""
+    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
+    echo "Source: https://github.com/BloopAI/vibe-kanban"
+}
+export -f vibe-kanban-info
+'''
+
+zsh = '''
+vibe-kanban-info() {
+    echo "Vibe Kanban Environment Configuration"
+    echo ""
+    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
+    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo ""
+    echo "Commands:"
+    echo "  flox activate -s             Start the Vibe Kanban service"
+    echo "  flox services status         Check the service"
+    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
+    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
+    echo ""
+    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
+    echo "Source: https://github.com/BloopAI/vibe-kanban"
+}
+'''
+
+fish = '''
+function vibe-kanban-info
+    echo "Vibe Kanban Environment Configuration"
+    echo ""
+    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
+    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo ""
+    echo "Commands:"
+    echo "  flox activate -s             Start the Vibe Kanban service"
+    echo "  flox services status         Check the service"
+    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
+    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
+    echo ""
+    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
+    echo "Source: https://github.com/BloopAI/vibe-kanban"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

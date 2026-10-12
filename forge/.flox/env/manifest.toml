@@ -1,7 +1,8 @@
 version = 1
 
 [install]
-forge.pkg-path = "flox/forge"
+# ForgeCode (formerly antinomyhq/forge); the binary is still `forge`
+forge.pkg-path = "flox/forgecode"
 ollama-cuda.pkg-path = "flox/ollama-cuda"
 ollama-cuda.pkg-group = "cuda"
 ollama-cuda.systems = ["x86_64-linux", "aarch64-linux"]
@@ -14,10 +15,11 @@ ollama.pkg-group = "ollama"
 ollama.systems = ["aarch64-darwin"]
 
 [vars]
-FORGE_HISTORY_FILE = "$FLOX_ENV_CACHE/forge_history"
-FORGE_HTTP_CONNECT_TIMEOUT = "30"
-FORGE_HTTP_READ_TIMEOUT = "900"
-FORGE_TOOL_TIMEOUT = "300"
+# ForgeCode reads FORGE_<key> (nested keys: FORGE_<section>__<key>); see `forge config list`
+FORGE_CUSTOM_HISTORY_PATH = "$FLOX_ENV_CACHE/forge_history"
+FORGE_HTTP__CONNECT_TIMEOUT_SECS = "30"
+FORGE_HTTP__READ_TIMEOUT_SECS = "900"
+FORGE_TOOL_TIMEOUT_SECS = "300"
 
 [hook]
 on-activate = '''
