@@ -29,6 +29,12 @@ VIBE_KANBAN_HOST=0.0.0.0 flox activate -s      # reachable from other machines
 
 Vibe Kanban has no login of its own; only listen on a non-local address on a network you trust.
 
+The service doesn't open a browser tab when it starts. To have it do so, as `vibe-kanban` does in the foreground:
+
+```bash
+VIBE_KANBAN_OPEN_BROWSER=true flox activate -s
+```
+
 Or run it in the foreground on a random port. It opens your browser:
 
 ```bash

@@ -25,6 +25,8 @@ serena-register claude-code    # or: codex, grok
 
 This registers Serena once, in the agent's user-level MCP config. The agent then starts Serena itself whenever it runs; you don't need to keep this environment active.
 
+The registration points at this environment's directory. If you move or re-clone the repository, run `serena-register` again from the new location; it replaces the existing `serena` entry.
+
 For any other MCP client, print the command and JSON snippet to paste into its config:
 
 ```bash
@@ -56,6 +58,16 @@ Serena downloads most language servers on first use into `~/.serena`. This envir
 
 Other languages use the toolchain on your `PATH` (`gopls`, `rust-analyzer`, `java`, `clangd`, ...). Activate your project's own environment before starting the agent, and Serena picks those up.
 
+### Python Projects
+
+For Python, Serena's language server (pyright) does not use the Python on your `PATH` or find a project `.venv` by itself, so imports of your project's dependencies show up as unresolved. Point pyright at the virtual environment with a `pyrightconfig.json` in the project root:
+
+```json
+{ "venvPath": ".", "venv": ".venv" }
+```
+
+Use the directory that contains your virtual environment as `venvPath`, and the environment's directory name as `venv`.
+
 ```bash
 serena project create          # Configure the current project (--language to choose)
 serena project index           # Pre-index for faster first queries on large projects
@@ -63,6 +75,8 @@ serena project health-check    # Check that the language servers start
 ```
 
 ## Configuration
+
+While this environment is active, Serena's own Python and its command-line tools (`python`, `python3`, `flask`, `uvicorn`, `httpx`, `dotenv`) come first on `PATH`, ahead of your own. You only need the environment active to run `serena-register` or the `serena` commands; agents start Serena through `serena-mcp` on their own.
 
 Serena's global config is `~/.serena/serena_config.yml` (set `SERENA_HOME` to use another directory). Per-project settings are in `.serena/project.yml`.
 

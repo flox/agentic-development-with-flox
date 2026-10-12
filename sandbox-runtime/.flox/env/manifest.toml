@@ -16,10 +16,11 @@ bat.pkg-path = "bat"
 [hook]
 on-activate = '''
 # srt-init writes a starter ~/.srt-settings.json; it never overwrites one.
+# The script is written to a temporary file and renamed into place.
 setup_srt_init() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/srt-init" << 'EOF'
+    cat > "$bin_dir/.srt-init.$$" << 'EOF'
 #!/usr/bin/env bash
 settings="$HOME/.srt-settings.json"
 if [ -e "$settings" ]; then
@@ -50,7 +51,8 @@ echo "  Network: GitHub, npm, and PyPI only"
 echo "  Writes:  current directory and /tmp (not .env)"
 echo "  Reads:   everything except ~/.ssh, ~/.aws, ~/.gnupg, ~/.config/gh"
 EOF
-    chmod +x "$bin_dir/srt-init"
+    chmod +x "$bin_dir/.srt-init.$$"
+    mv -f "$bin_dir/.srt-init.$$" "$bin_dir/srt-init"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }
 

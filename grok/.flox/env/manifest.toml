@@ -37,8 +37,11 @@ setup_grok_launchers() {
     mkdir -p "$shim_dir"
     for name in grok agent; do
         [ -x "$pkg_dir/libexec/grok/$name-launcher" ] || continue
-        printf '#!/usr/bin/env bash\nexec "%s" "$@"\n' "$pkg_dir/libexec/grok/$name-launcher" > "$shim_dir/$name"
-        chmod +x "$shim_dir/$name"
+        # Write to a temporary file and rename, so a grok starting in another
+        # shell at the same moment never runs a half-written shim
+        printf '#!/usr/bin/env bash\nexec "%s" "$@"\n' "$pkg_dir/libexec/grok/$name-launcher" > "$shim_dir/.$name.$$"
+        chmod +x "$shim_dir/.$name.$$"
+        mv -f "$shim_dir/.$name.$$" "$shim_dir/$name"
     done
     case ":$PATH:" in *":$shim_dir:"*) ;; *) export PATH="$shim_dir:$PATH" ;; esac
 }

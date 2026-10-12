@@ -27,27 +27,43 @@ on-activate = '''
 #   serena-mcp       runs `serena start-mcp-server` inside this environment
 #                    (via flox activate), so agents get Serena plus uv and
 #                    node no matter which shell or environment launched them
-#   serena-register  registers serena-mcp with an agent's MCP config
+#   serena-register  registers serena-mcp with an agent's MCP config,
+#                    replacing an existing "serena" entry (e.g. after the
+#                    repository moved)
 # Hook output goes to stderr under `flox activate --`, so stdout stays
-# clean for the MCP stdio protocol.
+# clean for the MCP stdio protocol. The hook also runs when an agent starts
+# Serena and no other activation is live, so each launcher is written to a
+# temporary file and renamed into place; an agent starting at the same
+# moment never runs a half-written script.
 setup_serena_launchers() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     local flox_bin
     flox_bin="$(command -v flox)" || return 0
     mkdir -p "$bin_dir"
 
-    cat > "$bin_dir/serena-mcp" << EOF
+    cat > "$bin_dir/.serena-mcp.$$" << EOF
 #!/usr/bin/env bash
 exec "$flox_bin" activate -d "$FLOX_ENV_PROJECT" -- serena start-mcp-server "\$@"
 EOF
 
-    cat > "$bin_dir/serena-register" << EOF
+    cat > "$bin_dir/.serena-register.$$" << EOF
 #!/usr/bin/env bash
 mcp="$bin_dir/serena-mcp"
+replace() {
+    if "\$@" >/dev/null 2>&1; then
+        echo "Replacing the existing 'serena' MCP entry"
+    fi
+}
 case "\${1:-}" in
-    claude-code) exec claude mcp add --scope user serena -- "\$mcp" --context=claude-code --project-from-cwd ;;
-    codex)       exec codex mcp add serena -- "\$mcp" --context=codex --project-from-cwd ;;
-    grok)        exec grok mcp add --scope user serena -- "\$mcp" --context=grok --project-from-cwd ;;
+    claude-code)
+        replace claude mcp remove --scope user serena
+        exec claude mcp add --scope user serena -- "\$mcp" --context=claude-code --project-from-cwd ;;
+    codex)
+        replace codex mcp remove serena
+        exec codex mcp add serena -- "\$mcp" --context=codex --project-from-cwd ;;
+    grok)
+        replace grok mcp remove --scope user serena
+        exec grok mcp add --scope user serena -- "\$mcp" --context=grok --project-from-cwd ;;
     print)
         echo "Command for any MCP client (stdio):"
         echo "  \$mcp --context=agent --project-from-cwd"
@@ -62,7 +78,9 @@ case "\${1:-}" in
 esac
 EOF
 
-    chmod +x "$bin_dir/serena-mcp" "$bin_dir/serena-register"
+    chmod +x "$bin_dir/.serena-mcp.$$" "$bin_dir/.serena-register.$$"
+    mv -f "$bin_dir/.serena-mcp.$$" "$bin_dir/serena-mcp"
+    mv -f "$bin_dir/.serena-register.$$" "$bin_dir/serena-register"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }
 

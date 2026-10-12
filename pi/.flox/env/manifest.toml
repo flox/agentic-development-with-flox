@@ -34,7 +34,9 @@ setup_pi_flox_skills() {
     local shim_dir="$FLOX_ENV_CACHE/bin"
     [ -d "$skills_dir" ] && [ -x "$real_pi" ] || return 0
     mkdir -p "$shim_dir"
-    cat > "$shim_dir/pi" << EOF
+    # Write to a temporary file and rename, so a pi starting in another
+    # shell at the same moment never runs a half-written shim
+    cat > "$shim_dir/.pi.$$" << EOF
 #!/usr/bin/env bash
 case "\${1:-}" in
     install|remove|uninstall|update|list|config|auth|mcp)
@@ -47,7 +49,8 @@ for arg in "\$@"; do
 done
 exec "$real_pi" --skill "$skills_dir" "\$@"
 EOF
-    chmod +x "$shim_dir/pi"
+    chmod +x "$shim_dir/.pi.$$"
+    mv -f "$shim_dir/.pi.$$" "$shim_dir/pi"
     case ":$PATH:" in *":$shim_dir:"*) ;; *) export PATH="$shim_dir:$PATH" ;; esac
 }
 

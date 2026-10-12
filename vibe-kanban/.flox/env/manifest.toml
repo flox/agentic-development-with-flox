@@ -17,6 +17,9 @@ on-activate = '''
 #   VIBE_KANBAN_PORT=4000 flox activate -s
 export VIBE_KANBAN_HOST="${VIBE_KANBAN_HOST:-127.0.0.1}"
 export VIBE_KANBAN_PORT="${VIBE_KANBAN_PORT:-3210}"
+# Vibe Kanban opens a browser tab whenever it starts; the service does not,
+# unless VIBE_KANBAN_OPEN_BROWSER=true
+export VIBE_KANBAN_OPEN_BROWSER="${VIBE_KANBAN_OPEN_BROWSER:-false}"
 mkdir -p "$FLOX_ENV_CACHE/logs"
 
 # === DISPLAY CONFIGURATION ===
@@ -43,6 +46,10 @@ echo ""
 
 [services]
 vibe-kanban.command = '''
+# Vibe Kanban opens $BROWSER when set; `true` makes that a no-op
+if [ "$VIBE_KANBAN_OPEN_BROWSER" != "true" ]; then
+  export BROWSER=true
+fi
 HOST="$VIBE_KANBAN_HOST" PORT="$VIBE_KANBAN_PORT" exec vibe-kanban >> "$FLOX_ENV_CACHE/logs/vibe-kanban.log" 2>&1
 '''
 
@@ -53,6 +60,7 @@ vibe-kanban-info() {
     echo ""
     echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
     echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
     echo ""
     echo "Commands:"
     echo "  flox activate -s             Start the Vibe Kanban service"
@@ -72,6 +80,7 @@ vibe-kanban-info() {
     echo ""
     echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
     echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
     echo ""
     echo "Commands:"
     echo "  flox activate -s             Start the Vibe Kanban service"
@@ -90,6 +99,7 @@ function vibe-kanban-info
     echo ""
     echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
     echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
     echo ""
     echo "Commands:"
     echo "  flox activate -s             Start the Vibe Kanban service"
