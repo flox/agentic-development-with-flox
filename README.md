@@ -77,7 +77,6 @@ aider --model ollama_chat/gemma4
 - [**forge**](./forge) - ForgeCode AI pair programmer (formerly Forge by Antinomy), 300+ models
 - [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
-- [**grok**](./grok) - Grok Build, xAI's agentic coding tool for the terminal
 - [**hermes-agent**](./hermes-agent) - Hermes self-improving AI agent with persistent learning, 200+ models, and messaging gateway support
 - [**ironclaw**](./ironclaw) - IronClaw secure personal AI assistant in Rust with WASM sandboxing and pgvector memory
 - [**kilocode-cli**](./kilocode-cli) - Kilocode open-source AI coding agent with multi-modal workflows
@@ -191,7 +190,7 @@ Additional composable environments are available from the [floxrox catalog](http
 
 This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
 
-Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, grok, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
+Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
 
 ## Prerequisites
 

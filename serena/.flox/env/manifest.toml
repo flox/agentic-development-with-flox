@@ -71,9 +71,6 @@ case "\${1:-}" in
     codex)
         replace codex mcp remove serena
         exec codex mcp add serena -- "\$mcp" --context=codex --project-from-cwd ;;
-    grok)
-        replace grok mcp remove --scope user serena
-        exec grok mcp add --scope user serena -- "\$mcp" --context=grok --project-from-cwd ;;
     print)
         echo "Command for any MCP client (stdio):"
         echo "  \$mcp --context=agent --project-from-cwd"
@@ -82,7 +79,7 @@ case "\${1:-}" in
         echo "  \"serena\": { \"command\": \"\$mcp\", \"args\": [\"--context=agent\", \"--project-from-cwd\"] }"
         ;;
     *)
-        echo "Usage: serena-register claude-code|codex|grok|print" >&2
+        echo "Usage: serena-register claude-code|codex|print" >&2
         exit 1
         ;;
 esac
@@ -104,7 +101,7 @@ echo "  and the agent starts it when needed."
 echo ""
 
 echo "Commands:"
-echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+echo "  serena-register claude-code  Register with Claude Code (also: codex)"
 echo "  serena-register print        Show the command for any other MCP client"
 echo "  serena project create        Configure the current project"
 echo "  serena project index         Pre-index the current project"
@@ -121,7 +118,7 @@ serena-info() {
     echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
     echo ""
     echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
     echo "  serena-register print        Show the command for any other MCP client"
     echo "  serena project create        Configure the current project"
     echo "  serena project index         Pre-index the current project"
@@ -141,7 +138,7 @@ serena-info() {
     echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
     echo ""
     echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
     echo "  serena-register print        Show the command for any other MCP client"
     echo "  serena project create        Configure the current project"
     echo "  serena project index         Pre-index the current project"
@@ -160,7 +157,7 @@ function serena-info
     if test -n "$SERENA_USAGE_REPORTING"; echo "Usage reporting: $SERENA_USAGE_REPORTING"; else; echo "Usage reporting: on (set SERENA_USAGE_REPORTING=false to disable)"; end
     echo ""
     echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex, grok)"
+    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
     echo "  serena-register print        Show the command for any other MCP client"
     echo "  serena project create        Configure the current project"
     echo "  serena project index         Pre-index the current project"

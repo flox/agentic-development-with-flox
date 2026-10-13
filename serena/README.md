@@ -4,7 +4,7 @@ MCP server that gives coding agents IDE-grade semantic code tools. Instead of re
 
 - **Semantic tools** - Find symbol, find references and implementations, rename, replace symbol body, diagnostics
 - **Many languages** - Python, TypeScript/JavaScript, Go, Rust, Java, C/C++, C#, Ruby, PHP, and 40+ more via LSP
-- **Works with your agent** - Claude Code, Codex, Grok, and any other MCP client
+- **Works with your agent** - Claude Code, Codex, and any other MCP client
 - **Project memories** - Serena keeps per-project notes the agent can read and update
 - **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
@@ -20,7 +20,7 @@ flox activate
 ### 2. Register Serena with Your Agent
 
 ```bash
-serena-register claude-code    # or: codex, grok
+serena-register claude-code    # or: codex
 ```
 
 This registers Serena once, in the agent's user-level MCP config. The agent then starts Serena itself whenever it runs; you don't need to keep this environment active.
