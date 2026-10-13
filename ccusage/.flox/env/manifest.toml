@@ -1,0 +1,149 @@
+schema-version = "1.11.0"
+
+[install]
+ccusage.pkg-path = "flox/ccusage"
+ccusage.pkg-group = "ccusage"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# Write ccusage-statusline into $FLOX_ENV_CACHE/bin. Claude Code runs its
+# status line command in its own environment, where ccusage may not be on
+# PATH; the launcher calls this environment's ccusage by absolute path, so
+# it works from any shell, without the cost of a flox activation on every
+# status line refresh.
+install_ccusage_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_ccusage_statusline() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    [ -n "$FLOX_ENV_CACHE" ] && [ -x "$FLOX_ENV/bin/ccusage" ] || return 0
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.ccusage-statusline.$$" << EOF
+#!/usr/bin/env bash
+exec "$FLOX_ENV/bin/ccusage" statusline "\$@"
+EOF
+    install_ccusage_script "$bin_dir/.ccusage-statusline.$$" "$bin_dir/ccusage-statusline"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_ccusage_statusline
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "ccusage environment ready"
+echo ""
+echo "  Token usage and cost reports from local coding agent logs."
+echo "  Nothing to sign up for; ccusage reads files already on disk."
+echo ""
+
+echo "Commands:"
+echo "  ccusage                      Daily report across all detected agents"
+echo "  ccusage monthly | weekly     Group by month or week"
+echo "  ccusage session              Group by session"
+echo "  ccusage blocks --active      Current 5-hour Claude billing block"
+echo "  ccusage claude daily         One agent only (also: codex, pi, gemini, ...)"
+echo "  ccusage-info                 Status line setup and configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+ccusage-info() {
+    echo "ccusage Environment Configuration"
+    echo ""
+    echo "Status line launcher: $FLOX_ENV_CACHE/bin/ccusage-statusline"
+    echo ""
+    echo "Claude Code status line (~/.claude/settings.json):"
+    echo "  \"statusLine\": {"
+    echo "    \"type\": \"command\","
+    echo "    \"command\": \"$FLOX_ENV_CACHE/bin/ccusage-statusline\","
+    echo "    \"padding\": 0"
+    echo "  }"
+    echo ""
+    echo "Commands:"
+    echo "  ccusage                      Daily report across all detected agents"
+    echo "  ccusage monthly | weekly     Group by month or week"
+    echo "  ccusage session              Group by session"
+    echo "  ccusage blocks --active      Current 5-hour Claude billing block"
+    echo "  ccusage claude daily         One agent only (also: codex, pi, gemini, ...)"
+    echo "  ccusage --offline            Use the bundled pricing data, no network"
+    echo "  ccusage --json               JSON output"
+    echo ""
+    echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
+    echo "Source: https://github.com/ryoppippi/ccusage"
+}
+export -f ccusage-info
+'''
+
+zsh = '''
+ccusage-info() {
+    echo "ccusage Environment Configuration"
+    echo ""
+    echo "Status line launcher: $FLOX_ENV_CACHE/bin/ccusage-statusline"
+    echo ""
+    echo "Claude Code status line (~/.claude/settings.json):"
+    echo "  \"statusLine\": {"
+    echo "    \"type\": \"command\","
+    echo "    \"command\": \"$FLOX_ENV_CACHE/bin/ccusage-statusline\","
+    echo "    \"padding\": 0"
+    echo "  }"
+    echo ""
+    echo "Commands:"
+    echo "  ccusage                      Daily report across all detected agents"
+    echo "  ccusage monthly | weekly     Group by month or week"
+    echo "  ccusage session              Group by session"
+    echo "  ccusage blocks --active      Current 5-hour Claude billing block"
+    echo "  ccusage claude daily         One agent only (also: codex, pi, gemini, ...)"
+    echo "  ccusage --offline            Use the bundled pricing data, no network"
+    echo "  ccusage --json               JSON output"
+    echo ""
+    echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
+    echo "Source: https://github.com/ryoppippi/ccusage"
+}
+'''
+
+fish = '''
+function ccusage-info
+    echo "ccusage Environment Configuration"
+    echo ""
+    echo "Status line launcher: $FLOX_ENV_CACHE/bin/ccusage-statusline"
+    echo ""
+    echo "Claude Code status line (~/.claude/settings.json):"
+    echo "  \"statusLine\": {"
+    echo "    \"type\": \"command\","
+    echo "    \"command\": \"$FLOX_ENV_CACHE/bin/ccusage-statusline\","
+    echo "    \"padding\": 0"
+    echo "  }"
+    echo ""
+    echo "Commands:"
+    echo "  ccusage                      Daily report across all detected agents"
+    echo "  ccusage monthly | weekly     Group by month or week"
+    echo "  ccusage session              Group by session"
+    echo "  ccusage blocks --active      Current 5-hour Claude billing block"
+    echo "  ccusage claude daily         One agent only (also: codex, pi, gemini, ...)"
+    echo "  ccusage --offline            Use the bundled pricing data, no network"
+    echo "  ccusage --json               JSON output"
+    echo ""
+    echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
+    echo "Source: https://github.com/ryoppippi/ccusage"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

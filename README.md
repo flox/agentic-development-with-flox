@@ -62,7 +62,7 @@ aider --model ollama_chat/gemma4
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**amp**](./amp) - Amp frontier coding agent for the terminal
 - [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
-- [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent
+- [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent, with [ccusage](./ccusage) for usage and cost reports and a status line
 - [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
 - [**claw-code**](./claw-code) - Claw Code Rust-based CLI for Claude AI with tool execution and session persistence
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
@@ -118,20 +118,28 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 
 ### Developer Tools
 
+- [**agent-browser**](./agent-browser) - Vercel's headless browser automation CLI and MCP server for AI agents, with Nix Chromium on Linux
+- [**agent-deck**](./agent-deck) - Terminal command center for running many coding agent sessions in tmux, with an optional web UI
+- [**agnix**](./agnix) - Linter and auto-fixer for agent configs (skills, CLAUDE.md/AGENTS.md, hooks, MCP, subagents) across Claude Code, Codex, Cursor, and more
 - [**backlog-md**](./backlog-md) - Markdown-native task manager and Kanban board with MCP integration
 - [**catnip**](./catnip) - Multi-agent orchestration for running multiple Claude Code sessions in parallel
+- [**ccusage**](./ccusage) - Token usage and cost reports from local coding agent logs (Claude Code, Codex, pi, and more), plus a Claude Code status line
 - [**claudebox**](./claudebox) - Lightweight sandbox wrapper for Claude Code with command transparency
 - [**claude-squad**](./claude-squad) - TUI for managing multiple AI coding agents in parallel with tmux isolation
+- [**codeburn**](./codeburn) - Dashboard for AI coding token usage and costs across 40+ agents, from local session logs
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
 - [**sandbox-runtime**](./sandbox-runtime) - Anthropic's lightweight filesystem and network sandbox (srt) for agents, MCP servers, and commands
+- [**sfw**](./sfw) - Socket Firewall Free: blocks known-malicious npm, PyPI, and crates packages, with optional transparent wrapping for agents
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 - [**vibe-kanban**](./vibe-kanban) - Kanban board that runs coding agents in isolated git worktrees, as a background service
+- [**worktrunk**](./worktrunk) - Git worktree manager for running coding agents in parallel, with shell integration loaded on activation
 
 ### MCP and Integration
 
+- [**basic-memory**](./basic-memory) - Local-first agent memory: Markdown notes, knowledge graph, and semantic search over MCP
 - [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
@@ -156,7 +164,7 @@ When you run `flox activate`:
 3. **Profile functions** are loaded (helper commands like `tool-info`, `tool-update`)
 4. **Services** start if you used `flox activate -s` (inference servers, databases, gateways)
 
-When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system.
+When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system. Two exceptions are deliberate: [agent-deck](./agent-deck) keeps agent sessions running in tmux after you leave, and [agent-browser](./agent-browser)'s browser daemon exits after an hour idle (or on `agent-browser close`).
 
 ## Composing Environments
 

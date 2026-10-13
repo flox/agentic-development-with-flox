@@ -1,0 +1,227 @@
+schema-version = "1.11.0"
+
+[install]
+basic-memory.pkg-path = "flox/basic-memory"
+basic-memory.pkg-group = "basic-memory"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Where notes live (default: ~/basic-memory) and where config and the
+# search index live (default: ~/.basic-memory, or $XDG_CONFIG_HOME/basic-memory
+# when XDG_CONFIG_HOME is set)
+# BASIC_MEMORY_HOME = ""
+# BASIC_MEMORY_CONFIG_DIR = ""
+
+# Skip the daily PyPI update check (a Nix install never updates itself)
+# BASIC_MEMORY_AUTO_UPDATE = "false"
+
+[hook]
+on-activate = '''
+# Basic Memory shows Basic Memory Cloud promos in the interactive CLI and
+# sends an anonymous analytics event when it does. Both are off here by
+# default; set BASIC_MEMORY_NO_PROMOS=0 to allow them (1, true, and yes
+# all mean off).
+export BASIC_MEMORY_NO_PROMOS="${BASIC_MEMORY_NO_PROMOS:-1}"
+
+# Write two launchers into $FLOX_ENV_CACHE/bin:
+#   basic-memory-mcp       runs `basic-memory mcp` inside this environment
+#                          (via flox activate), so agents get Basic Memory
+#                          no matter which shell or environment launched them
+#   basic-memory-register  registers basic-memory-mcp with an agent's MCP
+#                          config, replacing an existing "basic-memory" entry
+#                          (e.g. after the repository moved)
+# Hook output goes to stderr under `flox activate --`, so stdout stays
+# clean for the MCP stdio protocol. The hook also runs when an agent starts
+# Basic Memory and no other activation is live, so each launcher is written
+# to a temporary file and renamed into place (only when it changed); an
+# agent starting at the same moment never runs an empty or partly written
+# script.
+install_basic_memory_launcher() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_basic_memory_launchers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    local flox_bin
+    flox_bin="$(command -v flox)" || return 0
+    mkdir -p "$bin_dir"
+
+    cat > "$bin_dir/.basic-memory-mcp.$$" << EOF
+#!/usr/bin/env bash
+exec "$flox_bin" activate -d "$FLOX_ENV_PROJECT" -- basic-memory mcp "\$@"
+EOF
+
+    cat > "$bin_dir/.basic-memory-register.$$" << EOF
+#!/usr/bin/env bash
+mcp="$bin_dir/basic-memory-mcp"
+replace() {
+    if "\$@" >/dev/null 2>&1; then
+        echo "Replacing the existing 'basic-memory' MCP entry"
+    fi
+}
+case "\${1:-}" in
+    claude-code)
+        replace claude mcp remove --scope user basic-memory
+        exec claude mcp add --scope user basic-memory -- "\$mcp" ;;
+    codex)
+        replace codex mcp remove basic-memory
+        exec codex mcp add basic-memory -- "\$mcp" ;;
+    print)
+        echo "Command for any MCP client (stdio):"
+        echo "  \$mcp"
+        echo ""
+        echo "JSON (mcpServers):"
+        echo "  \"basic-memory\": { \"command\": \"\$mcp\", \"args\": [] }"
+        ;;
+    *)
+        echo "Usage: basic-memory-register claude-code|codex|print" >&2
+        exit 1
+        ;;
+esac
+EOF
+
+    install_basic_memory_launcher "$bin_dir/.basic-memory-mcp.$$" "$bin_dir/basic-memory-mcp"
+    install_basic_memory_launcher "$bin_dir/.basic-memory-register.$$" "$bin_dir/basic-memory-register"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_basic_memory_launchers
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Basic Memory environment ready"
+echo ""
+echo "  Basic Memory is an MCP server: register it with your coding agent"
+echo "  once, and the agent starts it when needed."
+echo ""
+echo "  Notes: ${BASIC_MEMORY_HOME:-~/basic-memory} (first project; see bm project list)"
+echo ""
+
+echo "Commands:"
+echo "  basic-memory-register claude-code  Register with Claude Code (also: codex)"
+echo "  basic-memory-register print        Show the command for any other MCP client"
+echo "  bm project list                    List projects"
+echo "  bm project add <name> <path>       Add a project"
+echo "  bm tool search-notes <query>       Search notes from the shell"
+echo "  basic-memory-info                  Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+basic-memory-info() {
+    local config="${BASIC_MEMORY_CONFIG_DIR:-}"
+    if [ -z "$config" ]; then
+        if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+            config="$XDG_CONFIG_HOME/basic-memory"
+        else
+            config="$HOME/.basic-memory"
+        fi
+    fi
+    echo "Basic Memory Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/basic-memory-mcp"
+    echo "Notes (first project): ${BASIC_MEMORY_HOME:-$HOME/basic-memory}"
+    echo "Config and index: $config"
+    # Basic Memory treats 1, true, and yes (any case) as off
+    case "$(printf '%s' "$BASIC_MEMORY_NO_PROMOS" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')" in
+        1|true|yes) echo "Cloud promos and analytics: off" ;;
+        *) echo "Cloud promos and analytics: on" ;;
+    esac
+    echo ""
+    echo "Commands:"
+    echo "  basic-memory-register claude-code  Register with Claude Code (also: codex)"
+    echo "  basic-memory-register print        Show the command for any other MCP client"
+    echo "  bm project list                    List projects"
+    echo "  bm project add <name> <path>       Add a project"
+    echo "  bm project default <name>          Set the default project"
+    echo "  bm tool search-notes <query>       Search notes from the shell"
+    echo "  bm doctor                          Check files against the index"
+    echo ""
+    echo "Source: https://github.com/basicmachines-co/basic-memory"
+}
+export -f basic-memory-info
+'''
+
+zsh = '''
+basic-memory-info() {
+    local config="${BASIC_MEMORY_CONFIG_DIR:-}"
+    if [ -z "$config" ]; then
+        if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+            config="$XDG_CONFIG_HOME/basic-memory"
+        else
+            config="$HOME/.basic-memory"
+        fi
+    fi
+    echo "Basic Memory Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/basic-memory-mcp"
+    echo "Notes (first project): ${BASIC_MEMORY_HOME:-$HOME/basic-memory}"
+    echo "Config and index: $config"
+    # Basic Memory treats 1, true, and yes (any case) as off
+    case "$(printf '%s' "$BASIC_MEMORY_NO_PROMOS" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')" in
+        1|true|yes) echo "Cloud promos and analytics: off" ;;
+        *) echo "Cloud promos and analytics: on" ;;
+    esac
+    echo ""
+    echo "Commands:"
+    echo "  basic-memory-register claude-code  Register with Claude Code (also: codex)"
+    echo "  basic-memory-register print        Show the command for any other MCP client"
+    echo "  bm project list                    List projects"
+    echo "  bm project add <name> <path>       Add a project"
+    echo "  bm project default <name>          Set the default project"
+    echo "  bm tool search-notes <query>       Search notes from the shell"
+    echo "  bm doctor                          Check files against the index"
+    echo ""
+    echo "Source: https://github.com/basicmachines-co/basic-memory"
+}
+'''
+
+fish = '''
+function basic-memory-info
+    set -l notes $HOME/basic-memory
+    if set -q BASIC_MEMORY_HOME; and test -n "$BASIC_MEMORY_HOME"; set notes $BASIC_MEMORY_HOME; end
+    set -l config $HOME/.basic-memory
+    if set -q XDG_CONFIG_HOME; and test -n "$XDG_CONFIG_HOME"; set config $XDG_CONFIG_HOME/basic-memory; end
+    if set -q BASIC_MEMORY_CONFIG_DIR; and test -n "$BASIC_MEMORY_CONFIG_DIR"; set config $BASIC_MEMORY_CONFIG_DIR; end
+    echo "Basic Memory Environment Configuration"
+    echo ""
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/basic-memory-mcp"
+    echo "Notes (first project): $notes"
+    echo "Config and index: $config"
+    # Basic Memory treats 1, true, and yes (any case) as off
+    if contains -- (string lower -- (string trim -- "$BASIC_MEMORY_NO_PROMOS")) 1 true yes
+        echo "Cloud promos and analytics: off"
+    else
+        echo "Cloud promos and analytics: on"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  basic-memory-register claude-code  Register with Claude Code (also: codex)"
+    echo "  basic-memory-register print        Show the command for any other MCP client"
+    echo "  bm project list                    List projects"
+    echo "  bm project add <name> <path>       Add a project"
+    echo "  bm project default <name>          Set the default project"
+    echo "  bm tool search-notes <query>       Search notes from the shell"
+    echo "  bm doctor                          Check files against the index"
+    echo ""
+    echo "Source: https://github.com/basicmachines-co/basic-memory"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

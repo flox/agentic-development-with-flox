@@ -1,0 +1,125 @@
+schema-version = "1.11.0"
+
+[install]
+agnix.pkg-path = "flox/agnix"
+agnix.pkg-group = "agnix"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# agnix lints agent configuration (skills, CLAUDE.md/AGENTS.md, hooks, MCP,
+# subagents, Cursor/Copilot/Codex/Kiro/Gemini rules) offline; it needs no
+# account. Telemetry is opt-in and off unless you run `agnix telemetry enable`.
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "agnix environment ready"
+echo ""
+if [ -f .agnix.toml ]; then
+  echo "  Config: ./.agnix.toml"
+else
+  echo "  Config: none (agnix init writes a starter .agnix.toml)"
+fi
+echo ""
+
+echo "Commands:"
+echo "  agnix .                      Lint agent configs in the current directory"
+echo "  agnix --dry-run --show-fixes .  Preview fixes"
+echo "  agnix --fix-unsafe .         Apply all fixes (review with git diff)"
+echo "  agnix --strict .             Treat warnings as errors"
+echo "  agnix --format sarif .       SARIF output (also: json, github)"
+echo "  agnix explain <RULE>         Explain a rule, e.g. CC-AG-003"
+echo "  agnix-info                   Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+agnix-info() {
+    echo "agnix Environment Configuration"
+    echo ""
+    if [ -f .agnix.toml ]; then
+        echo "Config: $PWD/.agnix.toml"
+    else
+        echo "Config: none in $PWD (agnix init writes a starter .agnix.toml)"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  agnix [paths...]             Lint agent configs (default: .)"
+    echo "  agnix --dry-run --show-fixes .  Preview fixes"
+    echo "  agnix --fix .                Apply high-confidence fixes only"
+    echo "  agnix --fix-unsafe .         Apply all fixes (review with git diff)"
+    echo "  agnix --strict .             Treat warnings as errors (exit 1)"
+    echo "  agnix --format sarif .       SARIF output (also: json, github)"
+    echo "  agnix --watch .              Re-lint on file changes"
+    echo "  agnix explain <RULE>         Explain a rule, e.g. CC-AG-003"
+    echo "  agnix init                   Write a starter .agnix.toml"
+    echo "  agnix telemetry status       Telemetry (opt-in, off by default)"
+    echo ""
+    echo "Source: https://github.com/agent-sh/agnix"
+}
+export -f agnix-info
+'''
+
+zsh = '''
+agnix-info() {
+    echo "agnix Environment Configuration"
+    echo ""
+    if [ -f .agnix.toml ]; then
+        echo "Config: $PWD/.agnix.toml"
+    else
+        echo "Config: none in $PWD (agnix init writes a starter .agnix.toml)"
+    fi
+    echo ""
+    echo "Commands:"
+    echo "  agnix [paths...]             Lint agent configs (default: .)"
+    echo "  agnix --dry-run --show-fixes .  Preview fixes"
+    echo "  agnix --fix .                Apply high-confidence fixes only"
+    echo "  agnix --fix-unsafe .         Apply all fixes (review with git diff)"
+    echo "  agnix --strict .             Treat warnings as errors (exit 1)"
+    echo "  agnix --format sarif .       SARIF output (also: json, github)"
+    echo "  agnix --watch .              Re-lint on file changes"
+    echo "  agnix explain <RULE>         Explain a rule, e.g. CC-AG-003"
+    echo "  agnix init                   Write a starter .agnix.toml"
+    echo "  agnix telemetry status       Telemetry (opt-in, off by default)"
+    echo ""
+    echo "Source: https://github.com/agent-sh/agnix"
+}
+'''
+
+fish = '''
+function agnix-info
+    echo "agnix Environment Configuration"
+    echo ""
+    if test -f .agnix.toml
+        echo "Config: $PWD/.agnix.toml"
+    else
+        echo "Config: none in $PWD (agnix init writes a starter .agnix.toml)"
+    end
+    echo ""
+    echo "Commands:"
+    echo "  agnix [paths...]             Lint agent configs (default: .)"
+    echo "  agnix --dry-run --show-fixes .  Preview fixes"
+    echo "  agnix --fix .                Apply high-confidence fixes only"
+    echo "  agnix --fix-unsafe .         Apply all fixes (review with git diff)"
+    echo "  agnix --strict .             Treat warnings as errors (exit 1)"
+    echo "  agnix --format sarif .       SARIF output (also: json, github)"
+    echo "  agnix --watch .              Re-lint on file changes"
+    echo "  agnix explain <RULE>         Explain a rule, e.g. CC-AG-003"
+    echo "  agnix init                   Write a starter .agnix.toml"
+    echo "  agnix telemetry status       Telemetry (opt-in, off by default)"
+    echo ""
+    echo "Source: https://github.com/agent-sh/agnix"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

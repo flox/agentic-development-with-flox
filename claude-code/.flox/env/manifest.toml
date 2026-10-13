@@ -24,6 +24,11 @@ jq.pkg-path = "jq"
 skills-flox.pkg-path = "flox/skills-flox"
 skills-flox.pkg-group = "flox-skills"
 
+# ccusage - token usage and cost reports from Claude Code's local logs,
+# plus a status line (see setup_claude_ccusage_statusline below)
+ccusage.pkg-path = "flox/ccusage"
+ccusage.pkg-group = "ccusage"
+
 ## Environment Variables ---------------------------------------------
 ##  ... available for use in the activated environment
 ##      as well as [hook], [profile] scripts and [services] below.
@@ -61,6 +66,35 @@ EOF
     esac
 }
 
+# Write ccusage-statusline into $FLOX_ENV_CACHE/bin. Claude Code runs its
+# status line command from ~/.claude/settings.json in any shell, where
+# ccusage may not be on PATH, so the launcher calls this environment's
+# ccusage by absolute path. To use it, add to ~/.claude/settings.json:
+#   "statusLine": { "type": "command",
+#     "command": "<this directory>/.flox/cache/bin/ccusage-statusline" }
+# The script is written to a temporary file and renamed into place (only
+# when it changed), so a status line refresh never runs a partial file.
+install_claude_ccusage_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_claude_ccusage_statusline() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    [ -n "$FLOX_ENV_CACHE" ] && [ -x "$FLOX_ENV/bin/ccusage" ] || return 0
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.ccusage-statusline.$$" << EOF
+#!/usr/bin/env bash
+exec "$FLOX_ENV/bin/ccusage" statusline "\$@"
+EOF
+    install_claude_ccusage_script "$bin_dir/.ccusage-statusline.$$" "$bin_dir/ccusage-statusline"
+}
+
 # Remove the deprecated user-scope "flox" MCP server (command flox-mcp) that
 # earlier versions of this environment registered. Servers named "flox" that
 # run anything else, and project-scoped servers, are left alone.
@@ -74,6 +108,7 @@ remove_claude_flox_mcp() {
 }
 
 setup_claude_flox_skills
+setup_claude_ccusage_statusline
 remove_claude_flox_mcp
 '''
 

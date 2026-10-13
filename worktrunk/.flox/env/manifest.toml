@@ -1,0 +1,137 @@
+schema-version = "1.11.0"
+
+[install]
+worktrunk.pkg-path = "flox/worktrunk"
+worktrunk.pkg-group = "worktrunk"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Worktrunk reads any user config key from WORKTRUNK_* variables, e.g.
+# WORKTRUNK_WORKTREE_PATH = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
+
+[hook]
+on-activate = '''
+# Shell integration (the wt function that lets `wt switch` change the
+# shell's directory) is loaded by the [profile] sections below, so nothing
+# is written to your ~/.bashrc, ~/.zshrc, or fish config.
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Worktrunk environment ready"
+echo ""
+echo "  Shell integration: loaded in interactive shells, so wt switch changes directory"
+echo ""
+
+echo "Commands:"
+echo "  wt switch -c <branch>        Create a branch and worktree, and cd into it"
+echo "  wt switch -c -x claude <b>   Same, then start an agent there (any program)"
+echo "  wt switch <branch>           Switch to a worktree (no branch: picker)"
+echo "  wt list                      List worktrees and their status"
+echo "  wt merge                     Merge the current branch, remove its worktree"
+echo "  wt remove                    Remove a worktree; delete the branch if merged"
+echo "  wt-info                      Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+eval "$(command wt config shell init bash)"
+
+wt-info() {
+    echo "Worktrunk Environment Configuration"
+    echo ""
+    if [ "$(type -t wt)" = "function" ]; then
+        echo "Shell integration: loaded"
+    else
+        echo "Shell integration: not loaded"
+    fi
+    echo "User config: ${WORKTRUNK_CONFIG_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}/worktrunk/config.toml}"
+    echo "Project config: .config/wt.toml (in the repository)"
+    echo ""
+    echo "Commands:"
+    echo "  wt switch -c <branch>        Create a branch and worktree, and cd into it"
+    echo "  wt switch -c -x claude <b>   Same, then start an agent there (any program)"
+    echo "  wt switch <branch>           Switch to a worktree (no branch: picker)"
+    echo "  wt list                      List worktrees and their status"
+    echo "  wt merge                     Merge the current branch, remove its worktree"
+    echo "  wt remove                    Remove a worktree; delete the branch if merged"
+    echo "  wt config create             Write a commented user config"
+    echo "  wt config show               Show config files and locations"
+    echo ""
+    echo "Docs: https://worktrunk.dev"
+}
+export -f wt-info
+'''
+
+zsh = '''
+eval "$(command wt config shell init zsh)"
+
+wt-info() {
+    echo "Worktrunk Environment Configuration"
+    echo ""
+    if (( $+functions[wt] )); then
+        echo "Shell integration: loaded"
+    else
+        echo "Shell integration: not loaded"
+    fi
+    echo "User config: ${WORKTRUNK_CONFIG_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}/worktrunk/config.toml}"
+    echo "Project config: .config/wt.toml (in the repository)"
+    echo ""
+    echo "Commands:"
+    echo "  wt switch -c <branch>        Create a branch and worktree, and cd into it"
+    echo "  wt switch -c -x claude <b>   Same, then start an agent there (any program)"
+    echo "  wt switch <branch>           Switch to a worktree (no branch: picker)"
+    echo "  wt list                      List worktrees and their status"
+    echo "  wt merge                     Merge the current branch, remove its worktree"
+    echo "  wt remove                    Remove a worktree; delete the branch if merged"
+    echo "  wt config create             Write a commented user config"
+    echo "  wt config show               Show config files and locations"
+    echo ""
+    echo "Docs: https://worktrunk.dev"
+}
+'''
+
+fish = '''
+command wt config shell init fish | source
+
+function wt-info
+    echo "Worktrunk Environment Configuration"
+    echo ""
+    if functions -q wt
+        echo "Shell integration: loaded"
+    else
+        echo "Shell integration: not loaded"
+    end
+    set -l config_dir $HOME/.config
+    if set -q XDG_CONFIG_HOME; set config_dir $XDG_CONFIG_HOME; end
+    if set -q WORKTRUNK_CONFIG_PATH
+        echo "User config: $WORKTRUNK_CONFIG_PATH"
+    else
+        echo "User config: $config_dir/worktrunk/config.toml"
+    end
+    echo "Project config: .config/wt.toml (in the repository)"
+    echo ""
+    echo "Commands:"
+    echo "  wt switch -c <branch>        Create a branch and worktree, and cd into it"
+    echo "  wt switch -c -x claude <b>   Same, then start an agent there (any program)"
+    echo "  wt switch <branch>           Switch to a worktree (no branch: picker)"
+    echo "  wt list                      List worktrees and their status"
+    echo "  wt merge                     Merge the current branch, remove its worktree"
+    echo "  wt remove                    Remove a worktree; delete the branch if merged"
+    echo "  wt config create             Write a commented user config"
+    echo "  wt config show               Show config files and locations"
+    echo ""
+    echo "Docs: https://worktrunk.dev"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

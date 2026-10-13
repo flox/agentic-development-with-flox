@@ -1,0 +1,140 @@
+schema-version = "1.11.0"
+
+[install]
+codeburn.pkg-path = "flox/codeburn"
+codeburn.pkg-group = "codeburn"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# CodeBurn reads the session logs that coding agents already write to disk
+# (Claude Code, Codex, Gemini CLI, OpenCode, pi, and 40-odd more); there is
+# nothing to configure and no account. It keeps a parse cache and LiteLLM's
+# model price list (refreshed daily, with a built-in fallback when offline)
+# in ~/.cache/codeburn, or $CODEBURN_CACHE_DIR.
+#
+# To merge several Claude Code profiles, pass CLAUDE_CONFIG_DIRS at
+# activation so your shell expands the paths (not every part of CodeBurn
+# expands ~):
+#   CLAUDE_CONFIG_DIRS="$HOME/.claude-work:$HOME/.claude-personal" flox activate
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "CodeBurn environment ready"
+echo ""
+echo "  Reads local session logs from your coding agents; no account or API key."
+if [ -n "$CLAUDE_CONFIG_DIRS" ]; then
+  echo "  Claude Code profiles: $CLAUDE_CONFIG_DIRS"
+fi
+echo ""
+
+echo "Commands:"
+echo "  codeburn                     Interactive dashboard"
+echo "  codeburn status              One-line summary: today and this month"
+echo "  codeburn today | month       Dashboard for today or this month"
+echo "  codeburn models              Per-model token and cost table"
+echo "  codeburn optimize            Find token waste, with suggested fixes"
+echo "  codeburn web                 Local web dashboard (127.0.0.1:4747)"
+echo "  codeburn doctor              Which agents were found, and where"
+echo "  codeburn-info                Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+codeburn-info() {
+    echo "CodeBurn Environment Configuration"
+    echo ""
+    echo "Cache:  ${CODEBURN_CACHE_DIR:-$HOME/.cache/codeburn}"
+    echo "Config: $HOME/.config/codeburn/config.json (currency, plans, price overrides)"
+    echo "Claude Code profiles: ${CLAUDE_CONFIG_DIRS:-${CLAUDE_CONFIG_DIR:-$HOME/.claude (default)}}"
+    echo ""
+    echo "Commands:"
+    echo "  codeburn                     Interactive dashboard"
+    echo "  codeburn status              One-line summary: today and this month"
+    echo "  codeburn today | month       Dashboard for today or this month"
+    echo "  codeburn report -p 30days    Dashboard for another period (--format json)"
+    echo "  codeburn models              Per-model token and cost table"
+    echo "  codeburn sessions            Per-session usage report"
+    echo "  codeburn optimize            Find token waste, with suggested fixes"
+    echo "  codeburn compare             Compare two models side by side"
+    echo "  codeburn export -f json      Export usage to CSV or JSON"
+    echo "  codeburn web                 Local web dashboard (127.0.0.1:4747)"
+    echo "  codeburn doctor              Which agents were found, and where"
+    echo "  codeburn mcp                 MCP server (stdio) with usage tools"
+    echo ""
+    echo "Filter any report with --provider <name>, e.g. --provider claude"
+    echo "Source: https://github.com/getagentseal/codeburn"
+}
+export -f codeburn-info
+'''
+
+zsh = '''
+codeburn-info() {
+    echo "CodeBurn Environment Configuration"
+    echo ""
+    echo "Cache:  ${CODEBURN_CACHE_DIR:-$HOME/.cache/codeburn}"
+    echo "Config: $HOME/.config/codeburn/config.json (currency, plans, price overrides)"
+    echo "Claude Code profiles: ${CLAUDE_CONFIG_DIRS:-${CLAUDE_CONFIG_DIR:-$HOME/.claude (default)}}"
+    echo ""
+    echo "Commands:"
+    echo "  codeburn                     Interactive dashboard"
+    echo "  codeburn status              One-line summary: today and this month"
+    echo "  codeburn today | month       Dashboard for today or this month"
+    echo "  codeburn report -p 30days    Dashboard for another period (--format json)"
+    echo "  codeburn models              Per-model token and cost table"
+    echo "  codeburn sessions            Per-session usage report"
+    echo "  codeburn optimize            Find token waste, with suggested fixes"
+    echo "  codeburn compare             Compare two models side by side"
+    echo "  codeburn export -f json      Export usage to CSV or JSON"
+    echo "  codeburn web                 Local web dashboard (127.0.0.1:4747)"
+    echo "  codeburn doctor              Which agents were found, and where"
+    echo "  codeburn mcp                 MCP server (stdio) with usage tools"
+    echo ""
+    echo "Filter any report with --provider <name>, e.g. --provider claude"
+    echo "Source: https://github.com/getagentseal/codeburn"
+}
+'''
+
+fish = '''
+function codeburn-info
+    set -l cache_dir $HOME/.cache/codeburn
+    if test -n "$CODEBURN_CACHE_DIR"; set cache_dir $CODEBURN_CACHE_DIR; end
+    set -l claude_dirs "$HOME/.claude (default)"
+    if test -n "$CLAUDE_CONFIG_DIR"; set claude_dirs $CLAUDE_CONFIG_DIR; end
+    if test -n "$CLAUDE_CONFIG_DIRS"; set claude_dirs $CLAUDE_CONFIG_DIRS; end
+    echo "CodeBurn Environment Configuration"
+    echo ""
+    echo "Cache:  $cache_dir"
+    echo "Config: $HOME/.config/codeburn/config.json (currency, plans, price overrides)"
+    echo "Claude Code profiles: $claude_dirs"
+    echo ""
+    echo "Commands:"
+    echo "  codeburn                     Interactive dashboard"
+    echo "  codeburn status              One-line summary: today and this month"
+    echo "  codeburn today | month       Dashboard for today or this month"
+    echo "  codeburn report -p 30days    Dashboard for another period (--format json)"
+    echo "  codeburn models              Per-model token and cost table"
+    echo "  codeburn sessions            Per-session usage report"
+    echo "  codeburn optimize            Find token waste, with suggested fixes"
+    echo "  codeburn compare             Compare two models side by side"
+    echo "  codeburn export -f json      Export usage to CSV or JSON"
+    echo "  codeburn web                 Local web dashboard (127.0.0.1:4747)"
+    echo "  codeburn doctor              Which agents were found, and where"
+    echo "  codeburn mcp                 MCP server (stdio) with usage tools"
+    echo ""
+    echo "Filter any report with --provider <name>, e.g. --provider claude"
+    echo "Source: https://github.com/getagentseal/codeburn"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

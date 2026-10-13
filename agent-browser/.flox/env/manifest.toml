@@ -1,0 +1,197 @@
+schema-version = "1.11.0"
+
+[install]
+# On Linux the package wraps agent-browser with a Nix Chromium
+# (AGENT_BROWSER_EXECUTABLE_PATH), so no browser download is needed.
+# On macOS it uses Chrome; see the README.
+agent-browser.pkg-path = "flox/agent-browser"
+agent-browser.pkg-group = "agent-browser"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# Move a freshly written script into place, unless it matches the one there.
+# The rename is atomic, so an agent starting at the same moment never runs
+# an empty or partly written script.
+install_agent_browser_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+# Write two launchers into $FLOX_ENV_CACHE/bin:
+#   agent-browser-mcp       runs `agent-browser mcp` (an MCP stdio server)
+#                           inside this environment, via flox activate
+#   agent-browser-register  registers agent-browser-mcp with an agent's MCP
+#                           config, replacing an existing "agent-browser"
+#                           entry (e.g. after the repository moved)
+# Hook output goes to stderr under `flox activate --`, so stdout stays
+# clean for the MCP stdio protocol.
+setup_agent_browser_launchers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    local flox_bin
+    flox_bin="$(command -v flox)" || return 0
+    mkdir -p "$bin_dir"
+
+    cat > "$bin_dir/.agent-browser-mcp.$$" << EOF
+#!/usr/bin/env bash
+exec "$flox_bin" activate -d "$FLOX_ENV_PROJECT" -- agent-browser mcp "\$@"
+EOF
+
+    cat > "$bin_dir/.agent-browser-register.$$" << EOF
+#!/usr/bin/env bash
+mcp="$bin_dir/agent-browser-mcp"
+replace() {
+    if "\$@" >/dev/null 2>&1; then
+        echo "Replacing the existing 'agent-browser' MCP entry"
+    fi
+}
+case "\${1:-}" in
+    claude-code)
+        replace claude mcp remove --scope user agent-browser
+        exec claude mcp add --scope user agent-browser -- "\$mcp" ;;
+    codex)
+        replace codex mcp remove agent-browser
+        exec codex mcp add agent-browser -- "\$mcp" ;;
+    print)
+        echo "Command for any MCP client (stdio):"
+        echo "  \$mcp"
+        echo ""
+        echo "JSON (mcpServers):"
+        echo "  \"agent-browser\": { \"command\": \"\$mcp\" }"
+        ;;
+    *)
+        echo "Usage: agent-browser-register claude-code|codex|print" >&2
+        exit 1
+        ;;
+esac
+EOF
+
+    install_agent_browser_script "$bin_dir/.agent-browser-mcp.$$" "$bin_dir/agent-browser-mcp"
+    install_agent_browser_script "$bin_dir/.agent-browser-register.$$" "$bin_dir/agent-browser-register"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_agent_browser_launchers
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "agent-browser environment ready"
+echo ""
+if [ "$(uname -s)" = "Darwin" ]; then
+  echo "  Browser: Chrome. If agent-browser can't find one, run:"
+  echo "    agent-browser install"
+else
+  echo "  Browser: Chromium from Nix (headless, no download needed)"
+fi
+echo ""
+
+echo "Commands:"
+echo "  agent-browser open <url>          Open a page"
+echo "  agent-browser snapshot -i         Interactive elements with @refs"
+echo "  agent-browser click @e1           Act on an element by ref"
+echo "  agent-browser screenshot [path]   Save a screenshot"
+echo "  agent-browser close               Close the browser"
+echo "  agent-browser skills get core     Usage guide written for agents"
+echo "  agent-browser-register claude-code  Register the MCP server (also: codex, print)"
+echo "  agent-browser-info                Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+agent-browser-info() {
+    echo "agent-browser Environment Configuration"
+    echo ""
+    if [ "$(uname -s)" = "Darwin" ]; then
+        echo "Browser: Chrome (run 'agent-browser install' if none is found)"
+    else
+        echo "Browser: Chromium from Nix"
+    fi
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/agent-browser-mcp"
+    echo "Skill: $FLOX_ENV/share/agent-browser/skills/agent-browser"
+    echo ""
+    echo "Commands:"
+    echo "  agent-browser open <url>          Open a page"
+    echo "  agent-browser snapshot -i         Interactive elements with @refs"
+    echo "  agent-browser click @e1           Act on an element by ref"
+    echo "  agent-browser fill @e2 <text>     Fill an input"
+    echo "  agent-browser screenshot [path]   Save a screenshot"
+    echo "  agent-browser close               Close the browser"
+    echo "  agent-browser skills get core     Usage guide written for agents"
+    echo "  agent-browser-register claude-code  Register the MCP server (also: codex, print)"
+    echo ""
+    echo "Config: ~/.agent-browser/config.json, ./agent-browser.json"
+    echo "Source: https://github.com/vercel-labs/agent-browser"
+}
+export -f agent-browser-info
+'''
+
+zsh = '''
+agent-browser-info() {
+    echo "agent-browser Environment Configuration"
+    echo ""
+    if [ "$(uname -s)" = "Darwin" ]; then
+        echo "Browser: Chrome (run 'agent-browser install' if none is found)"
+    else
+        echo "Browser: Chromium from Nix"
+    fi
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/agent-browser-mcp"
+    echo "Skill: $FLOX_ENV/share/agent-browser/skills/agent-browser"
+    echo ""
+    echo "Commands:"
+    echo "  agent-browser open <url>          Open a page"
+    echo "  agent-browser snapshot -i         Interactive elements with @refs"
+    echo "  agent-browser click @e1           Act on an element by ref"
+    echo "  agent-browser fill @e2 <text>     Fill an input"
+    echo "  agent-browser screenshot [path]   Save a screenshot"
+    echo "  agent-browser close               Close the browser"
+    echo "  agent-browser skills get core     Usage guide written for agents"
+    echo "  agent-browser-register claude-code  Register the MCP server (also: codex, print)"
+    echo ""
+    echo "Config: ~/.agent-browser/config.json, ./agent-browser.json"
+    echo "Source: https://github.com/vercel-labs/agent-browser"
+}
+'''
+
+fish = '''
+function agent-browser-info
+    echo "agent-browser Environment Configuration"
+    echo ""
+    if test (uname -s) = "Darwin"
+        echo "Browser: Chrome (run 'agent-browser install' if none is found)"
+    else
+        echo "Browser: Chromium from Nix"
+    end
+    echo "MCP launcher: $FLOX_ENV_CACHE/bin/agent-browser-mcp"
+    echo "Skill: $FLOX_ENV/share/agent-browser/skills/agent-browser"
+    echo ""
+    echo "Commands:"
+    echo "  agent-browser open <url>          Open a page"
+    echo "  agent-browser snapshot -i         Interactive elements with @refs"
+    echo "  agent-browser click @e1           Act on an element by ref"
+    echo "  agent-browser fill @e2 <text>     Fill an input"
+    echo "  agent-browser screenshot [path]   Save a screenshot"
+    echo "  agent-browser close               Close the browser"
+    echo "  agent-browser skills get core     Usage guide written for agents"
+    echo "  agent-browser-register claude-code  Register the MCP server (also: codex, print)"
+    echo ""
+    echo "Config: ~/.agent-browser/config.json, ./agent-browser.json"
+    echo "Source: https://github.com/vercel-labs/agent-browser"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

@@ -1,0 +1,161 @@
+schema-version = "1.11.0"
+
+[install]
+agent-deck.pkg-path = "flox/agent-deck"
+agent-deck.pkg-group = "agent-deck"
+# Agent Deck runs every session in tmux, which the package doesn't bundle
+tmux.pkg-path = "tmux"
+tmux.pkg-group = "agent-deck-tools"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# The binary lives in the read-only Nix store, so Agent Deck's self-update
+# can never install; this stops its background checks against GitHub.
+# Upgrade with `flox upgrade` instead. Set to 0 to see update notices again.
+export AGENTDECK_SKIP_UPDATE_CHECK="${AGENTDECK_SKIP_UPDATE_CHECK:-1}"
+# Usage reports are opt-in, and the Flox build has no upload key, so nothing
+# is ever sent; "off" also skips the consent question on first start.
+# Set AGENTDECK_TELEMETRY=1 to be asked.
+export AGENTDECK_TELEMETRY="${AGENTDECK_TELEMETRY:-off}"
+# Listen address for the web UI service; override at activation, e.g.
+#   AGENT_DECK_WEB_PORT=9000 flox activate -s
+# A non-loopback address also needs AGENT_DECK_WEB_TOKEN_FILE (a 0600 file
+# holding a bearer token); Agent Deck refuses to start without one.
+export AGENT_DECK_WEB_HOST="${AGENT_DECK_WEB_HOST:-127.0.0.1}"
+export AGENT_DECK_WEB_PORT="${AGENT_DECK_WEB_PORT:-8420}"
+export AGENT_DECK_WEB_TOKEN_FILE="${AGENT_DECK_WEB_TOKEN_FILE:-}"
+mkdir -p "$FLOX_ENV_CACHE/logs"
+
+# List the coding agents Agent Deck can start from this shell
+show_agent_deck_agents() {
+    local agent found=""
+    for agent in claude codex gemini opencode pi hermes; do
+        command -v "$agent" >/dev/null 2>&1 && found="$found $agent"
+    done
+    if [ -n "$found" ]; then
+        echo "  Agents on PATH:$found"
+    else
+        echo "  Agents on PATH: none found"
+        echo "  Activate an agent environment first (e.g. ../claude-code),"
+        echo "  then this one, or install an agent another way."
+    fi
+}
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Agent Deck environment ready"
+echo ""
+show_agent_deck_agents
+if [ "$FLOX_ACTIVATE_START_SERVICES" = "true" ]; then
+  echo "  Web UI: starting at http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT"
+else
+  echo "  Web UI: not started (use flox activate -s, or flox services start)"
+fi
+echo ""
+echo "  Claude Code sessions skip permission prompts by default;"
+echo "  set dangerous_mode = false under [claude] in config.toml to keep them."
+echo ""
+
+echo "Commands:"
+echo "  agent-deck                   Start the TUI"
+echo "  agent-deck add . -c claude   Add a session for this directory"
+echo "  agent-deck list              List sessions"
+echo "  agent-deck harness list      Show which agents are installed"
+echo "  agent-deck-info              Show configuration"
+echo ""
+'''
+
+[services]
+agent-deck-web.command = '''
+set -- web --no-tui --listen "$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT"
+if [ -n "$AGENT_DECK_WEB_TOKEN_FILE" ]; then
+  set -- "$@" --token-file "$AGENT_DECK_WEB_TOKEN_FILE"
+fi
+exec agent-deck "$@" >> "$FLOX_ENV_CACHE/logs/agent-deck-web.log" 2>&1
+'''
+
+[profile]
+bash = '''
+agent-deck-info() {
+    echo "Agent Deck Environment Configuration"
+    echo ""
+    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
+    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
+    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
+    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
+    echo ""
+    echo "Commands:"
+    echo "  agent-deck                   Start the TUI"
+    echo "  agent-deck add . -c claude   Add a session for this directory"
+    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
+    echo "  agent-deck list | status     List sessions, or summarize their state"
+    echo "  agent-deck session attach <id>  Attach to a session"
+    echo "  agent-deck harness list      Show which agents are installed"
+    echo "  agent-deck doctor            Check accounts and runtime health"
+    echo ""
+    echo "Config: ~/.config/agent-deck/config.toml"
+    echo "Data: ~/.local/share/agent-deck"
+    echo "Source: https://github.com/asheshgoplani/agent-deck"
+}
+export -f agent-deck-info
+'''
+
+zsh = '''
+agent-deck-info() {
+    echo "Agent Deck Environment Configuration"
+    echo ""
+    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
+    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
+    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
+    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
+    echo ""
+    echo "Commands:"
+    echo "  agent-deck                   Start the TUI"
+    echo "  agent-deck add . -c claude   Add a session for this directory"
+    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
+    echo "  agent-deck list | status     List sessions, or summarize their state"
+    echo "  agent-deck session attach <id>  Attach to a session"
+    echo "  agent-deck harness list      Show which agents are installed"
+    echo "  agent-deck doctor            Check accounts and runtime health"
+    echo ""
+    echo "Config: ~/.config/agent-deck/config.toml"
+    echo "Data: ~/.local/share/agent-deck"
+    echo "Source: https://github.com/asheshgoplani/agent-deck"
+}
+'''
+
+fish = '''
+function agent-deck-info
+    echo "Agent Deck Environment Configuration"
+    echo ""
+    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
+    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
+    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
+    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
+    echo ""
+    echo "Commands:"
+    echo "  agent-deck                   Start the TUI"
+    echo "  agent-deck add . -c claude   Add a session for this directory"
+    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
+    echo "  agent-deck list | status     List sessions, or summarize their state"
+    echo "  agent-deck session attach <id>  Attach to a session"
+    echo "  agent-deck harness list      Show which agents are installed"
+    echo "  agent-deck doctor            Check accounts and runtime health"
+    echo ""
+    echo "Config: ~/.config/agent-deck/config.toml"
+    echo "Data: ~/.local/share/agent-deck"
+    echo "Source: https://github.com/asheshgoplani/agent-deck"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

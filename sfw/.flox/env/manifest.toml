@@ -1,0 +1,226 @@
+schema-version = "1.11.0"
+
+[install]
+# Socket Firewall Free, plus its PATH shims for npm, yarn, pnpm, pip, uv,
+# and cargo (in $FLOX_ENV/libexec/sfw-shims); the hook adds npx, pip3, and
+# uvx. Bring your own package managers: from the system, a layered
+# environment, or an [include].
+sfw.pkg-path = "flox/sfw"
+sfw.pkg-group = "sfw"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[vars]
+# Print "Protected by Socket Firewall" and scan details on every install
+# SFW_VERBOSE = "true"
+
+[hook]
+on-activate = '''
+# Route plain npm/npx/yarn/pnpm/pip/pip3/uv/uvx/cargo calls through sfw;
+# off by default. Turn it on at activation:
+#   SFW_WRAP=true flox activate
+export SFW_WRAP="${SFW_WRAP:-false}"
+export SFW_SHIM_DIR="$FLOX_ENV_CACHE/sfw-shims"
+
+# Build the shim directory: links to the package's shims and prompt helpers,
+# plus npx, pip3, and uvx, which the package doesn't ship. The package's
+# sfw-shim script works for any name: it runs the command it was called as.
+# Each link is replaced by a rename, and only when its target changed.
+link_sfw_shim() {
+    local dest="$SFW_SHIM_DIR/$1"
+    [ "$(readlink "$dest" 2>/dev/null)" = "$2" ] && return 0
+    ln -sfn "$2" "$dest.$$" && mv -f "$dest.$$" "$dest"
+}
+
+setup_sfw_shims() {
+    local pkg_dir="$FLOX_ENV/libexec/sfw-shims" name
+    [ -n "$FLOX_ENV_CACHE" ] && [ -x "$pkg_dir/sfw-shim" ] || return 0
+    mkdir -p "$SFW_SHIM_DIR"
+    for name in npm yarn pnpm pip uv cargo activate.bash activate.zsh; do
+        if [ -e "$pkg_dir/$name" ]; then
+            link_sfw_shim "$name" "$pkg_dir/$name"
+        else
+            # Remove a link the package no longer backs
+            rm -f "$SFW_SHIM_DIR/$name"
+        fi
+    done
+    for name in npx pip3 uvx; do
+        link_sfw_shim "$name" "$pkg_dir/sfw-shim"
+    done
+}
+
+# Each shim finds the real command on PATH (skipping the shim directory)
+# and runs `sfw <real command>`; sfw sets _SFW_WRAPPING, so a package
+# manager that calls itself again is not wrapped twice. Putting the shim
+# directory on PATH here covers `flox activate -- <cmd>`, scripts, and
+# agents; [profile] keeps it in front for interactive shells.
+setup_sfw_wrapping() {
+    [ "$SFW_WRAP" = "true" ] || return 0
+    [ -e "$SFW_SHIM_DIR/npm" ] || return 0
+    case ":$PATH:" in *":$SFW_SHIM_DIR:"*) ;; *) export PATH="$SFW_SHIM_DIR:$PATH" ;; esac
+}
+
+setup_sfw_shims
+setup_sfw_wrapping
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Socket Firewall (sfw) environment ready"
+echo ""
+if [ "$SFW_WRAP" = "true" ]; then
+  echo "  Wrapping: on (npm, npx, yarn, pnpm, pip, pip3, uv, uvx, and cargo"
+  echo "            run through sfw)"
+else
+  echo "  Wrapping: off (prefix commands with sfw, or activate with"
+  echo "            SFW_WRAP=true to route plain npm, pip, ... through sfw)"
+fi
+echo "  Each install is checked against Socket's service; telemetry is"
+echo "  always on in the free version (see README)."
+echo ""
+
+echo "Commands:"
+echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm,"
+echo "                               pip, uv, cargo)"
+echo "  sfw --verbose <command>      Show the sfw banner and scan details"
+echo "  sfw-info                     Show configuration and wrapped commands"
+echo ""
+'''
+
+[profile]
+bash = '''
+# The shipped helper re-prepends the shim directory before each prompt, so
+# sourcing a venv's bin/activate later does not bypass sfw
+if [ "$SFW_WRAP" = "true" ] && [ -f "$SFW_SHIM_DIR/activate.bash" ]; then
+    source "$SFW_SHIM_DIR/activate.bash"
+fi
+
+sfw-info() {
+    local m p s real
+    echo "Socket Firewall (sfw) Environment Configuration"
+    echo ""
+    echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
+    if [ "$SFW_WRAP" = "true" ]; then
+        echo "Wrapping: on"
+    else
+        echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
+    fi
+    echo "Verbose: ${SFW_VERBOSE:-false}"
+    echo ""
+    echo "Package managers:"
+    for m in npm npx yarn pnpm pip pip3 uv uvx cargo; do
+        # First match outside the shim directory is the real command
+        real=""
+        for p in $(type -ap "$m" 2>/dev/null); do
+            case "$p" in "$SFW_SHIM_DIR/"*) ;; *) real="$p"; break ;; esac
+        done
+        p=$(command -v "$m" 2>/dev/null)
+        if [ -z "$real" ]; then
+            s="not installed"
+        elif [ "${p#"$SFW_SHIM_DIR/"}" != "$p" ]; then
+            s="through sfw ($real)"
+        else
+            s="direct ($real)"
+        fi
+        printf '  %-6s %s\n' "$m" "$s"
+    done
+    echo ""
+    echo "Commands:"
+    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
+    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
+    echo ""
+    echo "Source: https://github.com/SocketDev/sfw-free"
+}
+export -f sfw-info
+'''
+
+zsh = '''
+# The shipped helper re-prepends the shim directory before each prompt, so
+# sourcing a venv's bin/activate later does not bypass sfw
+if [ "$SFW_WRAP" = "true" ] && [ -f "$SFW_SHIM_DIR/activate.zsh" ]; then
+    source "$SFW_SHIM_DIR/activate.zsh"
+fi
+
+sfw-info() {
+    local m p s real
+    echo "Socket Firewall (sfw) Environment Configuration"
+    echo ""
+    echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
+    if [ "$SFW_WRAP" = "true" ]; then
+        echo "Wrapping: on"
+    else
+        echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
+    fi
+    echo "Verbose: ${SFW_VERBOSE:-false}"
+    echo ""
+    echo "Package managers:"
+    for m in npm npx yarn pnpm pip pip3 uv uvx cargo; do
+        # First match outside the shim directory is the real command
+        real=""
+        for p in $(whence -ap "$m" 2>/dev/null); do
+            case "$p" in "$SFW_SHIM_DIR/"*) ;; *) real="$p"; break ;; esac
+        done
+        p=$(command -v "$m" 2>/dev/null)
+        if [ -z "$real" ]; then
+            s="not installed"
+        elif [ "${p#"$SFW_SHIM_DIR/"}" != "$p" ]; then
+            s="through sfw ($real)"
+        else
+            s="direct ($real)"
+        fi
+        printf '  %-6s %s\n' "$m" "$s"
+    done
+    echo ""
+    echo "Commands:"
+    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
+    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
+    echo ""
+    echo "Source: https://github.com/SocketDev/sfw-free"
+}
+'''
+
+fish = '''
+# Keep the shim directory first on PATH (sfw ships no fish helper)
+if test "$SFW_WRAP" = "true"; and test -e "$SFW_SHIM_DIR/npm"
+    set -gx PATH $SFW_SHIM_DIR (string match -v -- $SFW_SHIM_DIR $PATH)
+end
+
+function sfw-info
+    echo "Socket Firewall (sfw) Environment Configuration"
+    echo ""
+    echo "Version: "(sfw --version 2>/dev/null | sed 's/.*version //')
+    if test "$SFW_WRAP" = "true"; echo "Wrapping: on"; else; echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"; end
+    if set -q SFW_VERBOSE; echo "Verbose: $SFW_VERBOSE"; else; echo "Verbose: false"; end
+    echo ""
+    echo "Package managers:"
+    for m in npm npx yarn pnpm pip pip3 uv uvx cargo
+        # First match outside the shim directory is the real command
+        set -l real (string match -v -- "$SFW_SHIM_DIR/*" (command -a -s $m 2>/dev/null))[1]
+        set -l p (command -v $m 2>/dev/null)
+        set -l s
+        if test -z "$real"
+            set s "not installed"
+        else if string match -q -- "$SFW_SHIM_DIR/*" $p
+            set s "through sfw ($real)"
+        else
+            set s "direct ($real)"
+        end
+        printf '  %-6s %s\n' $m $s
+    end
+    echo ""
+    echo "Commands:"
+    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
+    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
+    echo ""
+    echo "Source: https://github.com/SocketDev/sfw-free"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
