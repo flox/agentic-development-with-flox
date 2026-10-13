@@ -73,8 +73,9 @@ EOF
 }
 
 # Each shim finds the real command on PATH (skipping the shim directory)
-# and runs `sfw <real command>`; sfw sets _SFW_WRAPPING, so a package
-# manager that calls itself again is not wrapped twice. Putting the shim
+# and runs `sfw <real command>`. The shims (and the sfw wrapper above) set
+# _SFW_WRAPPING first, so a package manager that calls itself again is not
+# wrapped twice. Putting the shim
 # directory on PATH here covers `flox activate -- <cmd>`, scripts, and
 # agents; [profile] keeps it in front for interactive shells.
 setup_sfw_wrapping() {

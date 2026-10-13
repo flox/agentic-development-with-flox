@@ -19,19 +19,23 @@ flox activate
 
 The environment provides `sfw`, not the package managers. Use the ones on your system, or layer an environment that has them (see [Wrapping for Agents](#wrapping-for-agents)).
 
-### 2. Install Through sfw
+### 2. Install as Usual
+
+Wrapping is on by default, so plain package-manager commands are checked:
 
 ```bash
-sfw npm install lodash            # checked, then installed
-sfw pip install requests          # pip, inside a virtual environment
-sfw uv pip install flask
-sfw cargo fetch
+npm install lodash                # checked, then installed
+pip install requests              # pip, inside a virtual environment
+uv pip install flask
+cargo fetch
 ```
+
+With wrapping off (`SFW_WRAP=false`), put `sfw` in front instead: `sfw npm install lodash`.
 
 A flagged package is blocked and the command fails:
 
 ```bash
-sfw npm install lodahs            # a typosquat of lodash
+npm install lodahs                # a typosquat of lodash
 ```
 
 ```text
@@ -74,6 +78,8 @@ Wrapping only catches commands found through `PATH` under one of those names. Th
 - a command run by its full path, such as `.venv/bin/pip install ...`
 - `python -m pip install ...`, since the command is `python` (use `pip` or `sfw python -m pip ...`)
 - versioned names such as `pip3.12`
+
+Wrapping applies to every command run through those names, not just installs. `npm run dev`, `npm test`, `uv run app.py`, and `cargo run` also run under sfw, so the programs they start get sfw's proxy and certificate settings (`HTTPS_PROXY`, `SSL_CERT_FILE`, `NODE_EXTRA_CA_CERTS`, ...). In testing, programs could still reach other HTTPS sites through the proxy, and connections to `localhost` bypassed it. If a program misbehaves behind the proxy, run it directly (e.g. `node server.js` instead of `npm run dev`) or turn wrapping off.
 
 In interactive bash and zsh the environment moves the shims back to the front before each prompt, so `source .venv/bin/activate` doesn't bypass them; a script that activates a virtual environment and then runs `pip` does bypass them.
 
