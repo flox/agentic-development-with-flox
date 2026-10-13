@@ -131,7 +131,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
 - [**sandbox-runtime**](./sandbox-runtime) - Anthropic's lightweight filesystem and network sandbox (srt) for agents, MCP servers, and commands
-- [**sfw**](./sfw) - Socket Firewall Free: blocks known-malicious npm, PyPI, and crates packages, with optional transparent wrapping for agents
+- [**sfw**](./sfw) - Socket Firewall Free: blocks known-malicious npm, PyPI, and crates packages, transparently wrapping package managers for agents
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 - [**vibe-kanban**](./vibe-kanban) - Kanban board that runs coding agents in isolated git worktrees, as a background service

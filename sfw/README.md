@@ -4,7 +4,7 @@ Socket Firewall Free blocks known-malicious packages before they are downloaded.
 
 - **Blocks confirmed malware** - Typosquats and other packages Socket has confirmed as malicious, before any of their code reaches your machine
 - **npm, yarn, pnpm, pip, uv, cargo** - The package managers Socket Firewall Free supports
-- **Optional transparent wrapping** - `SFW_WRAP=true` routes plain `npm install`, `npx -y`, `pip install`, `uvx`, ... through sfw, including commands run by agents and scripts
+- **Transparent wrapping, on by default** - Routes plain `npm install`, `npx -y`, `pip install`, `uvx`, ... through sfw, including commands run by agents and scripts
 - **No account** - No sign-up or API key (but see [Privacy](#privacy))
 - **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
@@ -44,19 +44,19 @@ sfw npm install lodahs            # a typosquat of lodash
 
 ## Wrapping for Agents
 
-Prefixing `sfw` works for commands you type, but an agent runs `npm install` on its own. Turn on wrapping and plain package-manager commands go through sfw automatically:
+Prefixing `sfw` works for commands you type, but an agent runs `npm install` on its own. So by default the environment wraps package managers: plain package-manager commands go through sfw automatically. To use sfw only when you type it, turn wrapping off:
 
 ```bash
-SFW_WRAP=true flox activate
+SFW_WRAP=false flox activate
 ```
 
-The `flox/sfw` package ships a small shim for `npm`, `yarn`, `pnpm`, `pip`, `uv`, and `cargo`; the environment adds the same shim for `npx`, `pip3`, and `uvx`, which agents often use to start MCP servers (`npx -y <server>`, `uvx <server>`). It keeps all of them in `$FLOX_ENV_CACHE/sfw-shims`, and with wrapping on it puts that directory first on `PATH`. Each shim finds the real command further down `PATH` and runs it under `sfw`, and a package manager that calls itself again (an install script running `npm`, for example) is not wrapped twice. Because it works through `PATH`, it covers interactive shells, `flox activate -- <command>`, scripts, and the package-manager commands an agent started from that shell runs (with the exceptions below).
+The `flox/sfw` package ships a small shim for `npm`, `yarn`, `pnpm`, `pip`, `uv`, and `cargo`; the environment adds the same shim for `npx`, `pip3`, and `uvx`, which agents often use to start MCP servers (`npx -y <server>`, `uvx <server>`). It keeps all of them in `$FLOX_ENV_CACHE/sfw-shims`, and with wrapping on it puts that directory first on `PATH`. Each shim finds the real command further down `PATH` and runs it under `sfw`, and a package manager that calls itself again (an install script running `npm`, for example) is not wrapped twice. Typing `sfw npm ...` yourself still works and isn't wrapped twice either. Because it works through `PATH`, it covers interactive shells, `flox activate -- <command>`, scripts, and the package-manager commands an agent started from that shell runs (with the exceptions below).
 
 Activate this environment *after* the one that provides your package managers, so the shims come first:
 
 ```bash
 cd ~/my-project && flox activate                  # an environment with node, uv, ...
-SFW_WRAP=true flox activate -d /path/to/sfw       # then sfw on top
+flox activate -d /path/to/sfw                     # then sfw on top
 claude                                            # the agent's npm/npx/pip/uv/uvx/cargo calls are now checked
 ```
 
@@ -100,7 +100,7 @@ The Flox catalog lists sfw as unfree: it is a prebuilt binary under Socket's own
 
 | Variable | Default | Effect |
 |----------|---------|--------|
-| `SFW_WRAP` | `false` | `true` routes plain `npm`, `npx`, `yarn`, `pnpm`, `pip`, `pip3`, `uv`, `uvx`, and `cargo` through sfw |
+| `SFW_WRAP` | `true` | `true` routes plain `npm`, `npx`, `yarn`, `pnpm`, `pip`, `pip3`, `uv`, `uvx`, and `cargo` through sfw; `false` leaves them alone |
 | `SFW_VERBOSE` | unset | `true` prints the sfw banner and scan details on every run |
 
 ## Helper Commands

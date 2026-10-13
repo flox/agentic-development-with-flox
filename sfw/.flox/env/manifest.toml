@@ -20,9 +20,9 @@ bat.pkg-path = "bat"
 [hook]
 on-activate = '''
 # Route plain npm/npx/yarn/pnpm/pip/pip3/uv/uvx/cargo calls through sfw;
-# off by default. Turn it on at activation:
-#   SFW_WRAP=true flox activate
-export SFW_WRAP="${SFW_WRAP:-false}"
+# on by default. Turn it off at activation:
+#   SFW_WRAP=false flox activate
+export SFW_WRAP="${SFW_WRAP:-true}"
 export SFW_SHIM_DIR="$FLOX_ENV_CACHE/sfw-shims"
 
 # Build the shim directory: links to the package's shims and prompt helpers,
@@ -33,6 +33,17 @@ link_sfw_shim() {
     local dest="$SFW_SHIM_DIR/$1"
     [ "$(readlink "$dest" 2>/dev/null)" = "$2" ] && return 0
     ln -sfn "$2" "$dest.$$" && mv -f "$dest.$$" "$dest"
+}
+
+# Move a freshly written script into place, unless it matches the one there
+install_sfw_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
 }
 
 setup_sfw_shims() {
@@ -50,6 +61,15 @@ setup_sfw_shims() {
     for name in npx pip3 uvx; do
         link_sfw_shim "$name" "$pkg_dir/sfw-shim"
     done
+    # With wrapping on, a typed `sfw npm ...` would find the npm shim and be
+    # wrapped twice. This sfw sets the shims' recursion guard first, so the
+    # package manager under it runs directly.
+    cat > "$SFW_SHIM_DIR/.sfw.$$" << EOF
+#!/usr/bin/env bash
+export _SFW_WRAPPING=1
+exec "$FLOX_ENV/bin/sfw" "\$@"
+EOF
+    install_sfw_script "$SFW_SHIM_DIR/.sfw.$$" "$SFW_SHIM_DIR/sfw"
 }
 
 # Each shim finds the real command on PATH (skipping the shim directory)
@@ -72,7 +92,7 @@ echo "Socket Firewall (sfw) environment ready"
 echo ""
 if [ "$SFW_WRAP" = "true" ]; then
   echo "  Wrapping: on (npm, npx, yarn, pnpm, pip, pip3, uv, uvx, and cargo"
-  echo "            run through sfw)"
+  echo "            run through sfw; SFW_WRAP=false flox activate to turn off)"
 else
   echo "  Wrapping: off (prefix commands with sfw, or activate with"
   echo "            SFW_WRAP=true to route plain npm, pip, ... through sfw)"
@@ -103,7 +123,7 @@ sfw-info() {
     echo ""
     echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
     if [ "$SFW_WRAP" = "true" ]; then
-        echo "Wrapping: on"
+        echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"
     else
         echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
     fi
@@ -149,7 +169,7 @@ sfw-info() {
     echo ""
     echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
     if [ "$SFW_WRAP" = "true" ]; then
-        echo "Wrapping: on"
+        echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"
     else
         echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
     fi
@@ -191,7 +211,7 @@ function sfw-info
     echo "Socket Firewall (sfw) Environment Configuration"
     echo ""
     echo "Version: "(sfw --version 2>/dev/null | sed 's/.*version //')
-    if test "$SFW_WRAP" = "true"; echo "Wrapping: on"; else; echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"; end
+    if test "$SFW_WRAP" = "true"; echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"; else; echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"; end
     if set -q SFW_VERBOSE; echo "Verbose: $SFW_VERBOSE"; else; echo "Verbose: false"; end
     echo ""
     echo "Package managers:"
