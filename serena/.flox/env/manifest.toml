@@ -33,8 +33,18 @@ on-activate = '''
 # Hook output goes to stderr under `flox activate --`, so stdout stays
 # clean for the MCP stdio protocol. The hook also runs when an agent starts
 # Serena and no other activation is live, so each launcher is written to a
-# temporary file and renamed into place; an agent starting at the same
-# moment never runs a half-written script.
+# temporary file and renamed into place (only when it changed); an agent
+# starting at the same moment never runs an empty or partly written script.
+install_serena_launcher() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
 setup_serena_launchers() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     local flox_bin
@@ -78,9 +88,8 @@ case "\${1:-}" in
 esac
 EOF
 
-    chmod +x "$bin_dir/.serena-mcp.$$" "$bin_dir/.serena-register.$$"
-    mv -f "$bin_dir/.serena-mcp.$$" "$bin_dir/serena-mcp"
-    mv -f "$bin_dir/.serena-register.$$" "$bin_dir/serena-register"
+    install_serena_launcher "$bin_dir/.serena-mcp.$$" "$bin_dir/serena-mcp"
+    install_serena_launcher "$bin_dir/.serena-register.$$" "$bin_dir/serena-register"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }
 

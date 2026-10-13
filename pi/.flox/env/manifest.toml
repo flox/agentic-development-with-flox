@@ -28,14 +28,31 @@ on-activate = '''
 # skill locations, so the shim passes --skill; pi's subcommands (install,
 # list, auth, ...) are passed through untouched, since a leading --skill
 # makes pi treat the subcommand name as a prompt, and so is --no-skills.
+
+# Move a freshly written shim into place, unless it matches the one there.
+# The rename is atomic, so a pi starting in another shell at the same
+# moment never runs an empty or partly written shim.
+install_pi_shim() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
 setup_pi_flox_skills() {
     local skills_dir="$FLOX_ENV/share/flox/codex/flox"
     local real_pi="$FLOX_ENV/bin/pi"
     local shim_dir="$FLOX_ENV_CACHE/bin"
-    [ -d "$skills_dir" ] && [ -x "$real_pi" ] || return 0
+    [ -n "$FLOX_ENV_CACHE" ] || return 0
+    if [ ! -d "$skills_dir" ] || [ ! -x "$real_pi" ]; then
+        # Remove a shim from an earlier activation that no longer applies
+        rm -f "$shim_dir/pi"
+        return 0
+    fi
     mkdir -p "$shim_dir"
-    # Write to a temporary file and rename, so a pi starting in another
-    # shell at the same moment never runs a half-written shim
     cat > "$shim_dir/.pi.$$" << EOF
 #!/usr/bin/env bash
 case "\${1:-}" in
@@ -49,8 +66,7 @@ for arg in "\$@"; do
 done
 exec "$real_pi" --skill "$skills_dir" "\$@"
 EOF
-    chmod +x "$shim_dir/.pi.$$"
-    mv -f "$shim_dir/.pi.$$" "$shim_dir/pi"
+    install_pi_shim "$shim_dir/.pi.$$" "$shim_dir/pi"
     case ":$PATH:" in *":$shim_dir:"*) ;; *) export PATH="$shim_dir:$PATH" ;; esac
 }
 
