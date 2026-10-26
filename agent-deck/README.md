@@ -86,11 +86,11 @@ AGENT_DECK_WEB_HOST=0.0.0.0 AGENT_DECK_WEB_TOKEN_FILE=~/.config/agent-deck/web-t
 Without the token file, the service exits with an explanation in its log.
 
 ```bash
-flox services status                  # Check the service
-flox services logs agent-deck-web     # Show logs
+flox services status                                 # Check the service
+tail -f "$FLOX_ENV_CACHE/logs/agent-deck-web.log"    # Follow its log
 ```
 
-The log is also written to `$FLOX_ENV_CACHE/logs/agent-deck-web.log`. The service stops when the last activation that started it exits; the sessions keep running.
+The service writes its output to that log file, so `flox services logs` shows nothing for it. The service stops when the last activation that started it exits; the sessions keep running.
 
 ## Updates and Telemetry
 

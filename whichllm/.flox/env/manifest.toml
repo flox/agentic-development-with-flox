@@ -1,0 +1,149 @@
+schema-version = "1.11.0"
+
+[install]
+# The package is a Python virtual environment, so its bin/ also puts python,
+# python3, and a few library CLIs (httpx, typer, ...) on PATH; see the README.
+whichllm.pkg-path = "flox/whichllm"
+whichllm.pkg-group = "whichllm"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "whichllm environment ready"
+echo ""
+echo "  Ranks open models from Hugging Face by what fits and runs fast on"
+echo "  this machine's GPU, CPU, and RAM. No account or API key needed."
+echo ""
+
+echo "Commands:"
+echo "  whichllm                     Top 10 models for this machine"
+echo "  whichllm --profile coding    Rank for coding (also: vision, math)"
+echo "  whichllm --gpu \"RTX 4090\"    Rank for a GPU you don't have"
+echo "  whichllm plan <model>        What hardware a model needs"
+echo "  whichllm hardware            Show the detected hardware"
+echo "  whichllm-info                Show configuration and more commands"
+echo ""
+'''
+
+[profile]
+bash = '''
+whichllm-info() {
+    echo "whichllm Environment Configuration"
+    echo ""
+    echo "Version: $(whichllm --version 2>/dev/null)"
+    # whichllm ignores a relative XDG_CACHE_HOME and refuses an empty HF_ENDPOINT
+    local cache_base="${XDG_CACHE_HOME:-}" hf_endpoint="https://huggingface.co" hf
+    case "$cache_base" in /*) ;; *) cache_base="$HOME/.cache" ;; esac
+    if [ -n "${HF_ENDPOINT+x}" ]; then
+        hf=$(printf '%s' "$HF_ENDPOINT" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        case "$hf" in
+            "") hf_endpoint="empty, so whichllm stops with an error; unset it" ;;
+            http://*|https://*) hf_endpoint="$hf" ;;
+            *) hf_endpoint="$hf, which whichllm rejects: it must start with http:// or https://" ;;
+        esac
+    fi
+    echo "Cache: $cache_base/whichllm (models 6 h, benchmarks 24 h)"
+    echo "Hugging Face endpoint: $hf_endpoint (HF_ENDPOINT)"
+    echo ""
+    echo "Commands:"
+    echo "  whichllm                     Top 10 models for this machine"
+    echo "  whichllm -n 20 -c 32k        More results, sized for a 32k context"
+    echo "  whichllm --profile coding    Rank for coding (also: vision, math)"
+    echo "  whichllm --cpu-only          Ignore the GPU"
+    echo "  whichllm --gpu \"RTX 4090\"    Rank for a GPU you don't have"
+    echo "  whichllm plan <model>        What hardware a model needs"
+    echo "  whichllm upgrade \"RTX 5090\"  Compare this machine with other GPUs"
+    echo "  whichllm hardware            Show the detected hardware"
+    echo "  whichllm --json | --markdown Machine-readable or Markdown output"
+    echo "  whichllm --refresh           Ignore the cache and re-fetch"
+    echo ""
+    echo "Source: https://github.com/Andyyyy64/whichllm"
+}
+export -f whichllm-info
+'''
+
+zsh = '''
+whichllm-info() {
+    echo "whichllm Environment Configuration"
+    echo ""
+    echo "Version: $(whichllm --version 2>/dev/null)"
+    # whichllm ignores a relative XDG_CACHE_HOME and refuses an empty HF_ENDPOINT
+    local cache_base="${XDG_CACHE_HOME:-}" hf_endpoint="https://huggingface.co" hf
+    case "$cache_base" in /*) ;; *) cache_base="$HOME/.cache" ;; esac
+    if [ -n "${HF_ENDPOINT+x}" ]; then
+        hf=$(printf '%s' "$HF_ENDPOINT" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        case "$hf" in
+            "") hf_endpoint="empty, so whichllm stops with an error; unset it" ;;
+            http://*|https://*) hf_endpoint="$hf" ;;
+            *) hf_endpoint="$hf, which whichllm rejects: it must start with http:// or https://" ;;
+        esac
+    fi
+    echo "Cache: $cache_base/whichllm (models 6 h, benchmarks 24 h)"
+    echo "Hugging Face endpoint: $hf_endpoint (HF_ENDPOINT)"
+    echo ""
+    echo "Commands:"
+    echo "  whichllm                     Top 10 models for this machine"
+    echo "  whichllm -n 20 -c 32k        More results, sized for a 32k context"
+    echo "  whichllm --profile coding    Rank for coding (also: vision, math)"
+    echo "  whichllm --cpu-only          Ignore the GPU"
+    echo "  whichllm --gpu \"RTX 4090\"    Rank for a GPU you don't have"
+    echo "  whichllm plan <model>        What hardware a model needs"
+    echo "  whichllm upgrade \"RTX 5090\"  Compare this machine with other GPUs"
+    echo "  whichllm hardware            Show the detected hardware"
+    echo "  whichllm --json | --markdown Machine-readable or Markdown output"
+    echo "  whichllm --refresh           Ignore the cache and re-fetch"
+    echo ""
+    echo "Source: https://github.com/Andyyyy64/whichllm"
+}
+'''
+
+fish = '''
+function whichllm-info
+    echo "whichllm Environment Configuration"
+    echo ""
+    echo "Version: "(whichllm --version 2>/dev/null)
+    set -l cache_base $HOME/.cache
+    # whichllm ignores a relative XDG_CACHE_HOME and refuses an empty HF_ENDPOINT
+    string match -q '/*' -- "$XDG_CACHE_HOME"; and set cache_base $XDG_CACHE_HOME
+    set -l hf_endpoint https://huggingface.co
+    if set -q HF_ENDPOINT
+        set -l hf (string trim -- "$HF_ENDPOINT")
+        if test -z "$hf"
+            set hf_endpoint "empty, so whichllm stops with an error; unset it"
+        else if string match -qr '^https?://' -- $hf
+            set hf_endpoint $hf
+        else
+            set hf_endpoint "$hf, which whichllm rejects: it must start with http:// or https://"
+        end
+    end
+    echo "Cache: $cache_base/whichllm (models 6 h, benchmarks 24 h)"
+    echo "Hugging Face endpoint: $hf_endpoint (HF_ENDPOINT)"
+    echo ""
+    echo "Commands:"
+    echo "  whichllm                     Top 10 models for this machine"
+    echo "  whichllm -n 20 -c 32k        More results, sized for a 32k context"
+    echo "  whichllm --profile coding    Rank for coding (also: vision, math)"
+    echo "  whichllm --cpu-only          Ignore the GPU"
+    echo "  whichllm --gpu \"RTX 4090\"    Rank for a GPU you don't have"
+    echo "  whichllm plan <model>        What hardware a model needs"
+    echo "  whichllm upgrade \"RTX 5090\"  Compare this machine with other GPUs"
+    echo "  whichllm hardware            Show the detected hardware"
+    echo "  whichllm --json | --markdown Machine-readable or Markdown output"
+    echo "  whichllm --refresh           Ignore the cache and re-fetch"
+    echo ""
+    echo "Source: https://github.com/Andyyyy64/whichllm"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

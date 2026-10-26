@@ -1,0 +1,259 @@
+schema-version = "1.11.0"
+
+[install]
+mcporter.pkg-path = "flox/mcporter"
+mcporter.pkg-group = "mcporter"
+# Runs the standalone CLIs `mcporter generate-cli --bundle` writes
+# (#!/usr/bin/env node; Node 24 or later)
+nodejs.pkg-path = "nodejs_24"
+nodejs.pkg-group = "mcporter-runtime"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# mcporter has no telemetry or update checks; nothing to turn off.
+# Its own settings are environment variables, e.g.
+#   MCPORTER_CONFIG=/path/to/mcporter.json flox activate
+
+# List the agent and editor MCP configs in $HOME that mcporter reads servers
+# from (it only reads them). It also reads the project-level copies
+# (.claude/, .cursor/, .codex/, .vscode/, opencode.json) in the directory
+# where it runs. A file check only; nothing is parsed or started.
+show_mcporter_imports() {
+    local f found=""
+    for f in \
+        "$HOME/.claude.json" \
+        "$HOME/.claude/settings.json" \
+        "$HOME/.claude/settings.local.json" \
+        "$HOME/.claude/mcp.json" \
+        "$HOME/.cursor/mcp.json" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/Cursor/User/mcp.json" \
+        "$HOME/Library/Application Support/Cursor/User/mcp.json" \
+        "$HOME/.codex/config.toml" \
+        "$HOME/.config/opencode/opencode.json" \
+        "$HOME/.config/opencode/opencode.jsonc" \
+        "$HOME/.codeium/windsurf/mcp_config.json" \
+        "$HOME/.config/Code/User/mcp.json" \
+        "$HOME/Library/Application Support/Code/User/mcp.json" \
+        "$HOME/.config/Claude/claude_desktop_config.json" \
+        "$HOME/Library/Application Support/Claude/claude_desktop_config.json"; do
+        [ -f "$f" ] && found="$found
+    ~${f#"$HOME"}"
+    done
+    if [ -n "$found" ]; then
+        echo "  Imports MCP servers from:$found"
+    else
+        echo "  No agent MCP configs found in ~ to import"
+    fi
+}
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "mcporter environment ready"
+echo ""
+show_mcporter_imports
+echo ""
+echo "  mcporter list starts every configured stdio server to list its tools;"
+echo "  mcporter config list --source import shows them without starting any."
+echo ""
+
+echo "Commands:"
+echo "  mcporter config list             Your servers (--source import: agents')"
+echo "  mcporter list <server> --schema  A server's tools, with parameters"
+echo "  mcporter call <server>.<tool> key=value  Call a tool"
+echo "  mcporter generate-cli <server> --bundle  Build a standalone CLI"
+echo "  mcporter-info                    Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+# Where mcporter puts a directory given an XDG base value
+mcporter_info_xdg_dir() {
+    local v
+    v=$(printf '%s' "$1" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    case "$v" in
+        "~") v="$HOME" ;;
+        "~/"*) v="$HOME/${v#"~/"}" ;;
+    esac
+    case "$v" in
+        /*) printf '%s/mcporter' "$v" ;;
+        *) printf '%s/.mcporter' "$HOME" ;;
+    esac
+}
+
+mcporter-info() {
+    echo "mcporter Environment Configuration"
+    echo ""
+    echo "Version: $(mcporter --version 2>/dev/null)"
+    # Resolved the way mcporter resolves them: config and schema cache trim
+    # their XDG value and expand a leading ~; tokens take XDG_DATA_HOME as
+    # is. Each is used only when absolute. The daemon defaults to your
+    # account's home directory even when HOME points elsewhere.
+    local cfg data="$HOME/.mcporter" daemon
+    cfg=$(mcporter_info_xdg_dir "${XDG_CONFIG_HOME:-}")
+    case "${XDG_DATA_HOME:-}" in /*) data="$XDG_DATA_HOME/mcporter" ;; esac
+    daemon=$(printf '%s' "${MCPORTER_DAEMON_DIR:-}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    case "$daemon" in
+        "") daemon="$(eval "printf '%s' ~$(id -un)")/.mcporter" ;;
+        /*) ;;
+        *) daemon="$PWD/$daemon" ;;
+    esac
+    if [ -n "${MCPORTER_CONFIG:-}" ]; then
+        echo "Config: $MCPORTER_CONFIG"
+    elif [ "$cfg" = "$HOME/.mcporter" ]; then
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json"
+    else
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json, then $HOME/.mcporter/mcporter.json"
+    fi
+    echo "OAuth tokens: $data"
+    echo "Schema cache: $(mcporter_info_xdg_dir "${XDG_CACHE_HOME:-}")"
+    echo "Daemon socket and key: $daemon/daemon"
+    echo ""
+    mcporter config list 2>/dev/null
+    echo ""
+    echo "Commands:"
+    echo "  mcporter config list             Your servers (--source import: agents')"
+    echo "  mcporter config import <kind>    Copy imported servers into mcporter.json"
+    echo "  mcporter list [server] --schema  Tools, with parameters"
+    echo "  mcporter call <server>.<tool> key=value  Call a tool"
+    echo "  mcporter call --stdio <cmd> --name <n> <n>.<tool> ...  Call an unconfigured server"
+    echo "  mcporter generate-cli <server> --bundle  Build a standalone CLI (runs on node)"
+    echo "  mcporter emit-ts <server> --mode types   TypeScript types for a server"
+    echo "  mcporter daemon start | status | stop    Keep-alive daemon"
+    echo ""
+    echo "Source: https://github.com/openclaw/mcporter"
+}
+export -f mcporter-info
+'''
+
+zsh = '''
+# Where mcporter puts a directory given an XDG base value
+mcporter_info_xdg_dir() {
+    local v
+    v=$(printf '%s' "$1" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    case "$v" in
+        "~") v="$HOME" ;;
+        "~/"*) v="$HOME/${v#"~/"}" ;;
+    esac
+    case "$v" in
+        /*) printf '%s/mcporter' "$v" ;;
+        *) printf '%s/.mcporter' "$HOME" ;;
+    esac
+}
+
+mcporter-info() {
+    echo "mcporter Environment Configuration"
+    echo ""
+    echo "Version: $(mcporter --version 2>/dev/null)"
+    # Resolved the way mcporter resolves them: config and schema cache trim
+    # their XDG value and expand a leading ~; tokens take XDG_DATA_HOME as
+    # is. Each is used only when absolute. The daemon defaults to your
+    # account's home directory even when HOME points elsewhere.
+    local cfg data="$HOME/.mcporter" daemon
+    cfg=$(mcporter_info_xdg_dir "${XDG_CONFIG_HOME:-}")
+    case "${XDG_DATA_HOME:-}" in /*) data="$XDG_DATA_HOME/mcporter" ;; esac
+    daemon=$(printf '%s' "${MCPORTER_DAEMON_DIR:-}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    case "$daemon" in
+        "") daemon="$(eval "printf '%s' ~$(id -un)")/.mcporter" ;;
+        /*) ;;
+        *) daemon="$PWD/$daemon" ;;
+    esac
+    if [ -n "${MCPORTER_CONFIG:-}" ]; then
+        echo "Config: $MCPORTER_CONFIG"
+    elif [ "$cfg" = "$HOME/.mcporter" ]; then
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json"
+    else
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json, then $HOME/.mcporter/mcporter.json"
+    fi
+    echo "OAuth tokens: $data"
+    echo "Schema cache: $(mcporter_info_xdg_dir "${XDG_CACHE_HOME:-}")"
+    echo "Daemon socket and key: $daemon/daemon"
+    echo ""
+    mcporter config list 2>/dev/null
+    echo ""
+    echo "Commands:"
+    echo "  mcporter config list             Your servers (--source import: agents')"
+    echo "  mcporter config import <kind>    Copy imported servers into mcporter.json"
+    echo "  mcporter list [server] --schema  Tools, with parameters"
+    echo "  mcporter call <server>.<tool> key=value  Call a tool"
+    echo "  mcporter call --stdio <cmd> --name <n> <n>.<tool> ...  Call an unconfigured server"
+    echo "  mcporter generate-cli <server> --bundle  Build a standalone CLI (runs on node)"
+    echo "  mcporter emit-ts <server> --mode types   TypeScript types for a server"
+    echo "  mcporter daemon start | status | stop    Keep-alive daemon"
+    echo ""
+    echo "Source: https://github.com/openclaw/mcporter"
+}
+'''
+
+fish = '''
+# Where mcporter puts a directory given an XDG base value
+function mcporter_info_xdg_dir
+    set -l v (string trim -- "$argv[1]")
+    switch "$v"
+        case '~'
+            set v $HOME
+        case '~/*'
+            set v $HOME/(string sub -s 3 -- $v)
+    end
+    if string match -q '/*' -- "$v"
+        echo "$v/mcporter"
+    else
+        echo "$HOME/.mcporter"
+    end
+end
+
+function mcporter-info
+    echo "mcporter Environment Configuration"
+    echo ""
+    echo "Version: "(mcporter --version 2>/dev/null)
+    # Resolved the way mcporter resolves them: config and schema cache trim
+    # their XDG value and expand a leading ~; tokens take XDG_DATA_HOME as
+    # is. Each is used only when absolute. The daemon defaults to your
+    # account's home directory even when HOME points elsewhere.
+    set -l cfg (mcporter_info_xdg_dir "$XDG_CONFIG_HOME")
+    set -l data $HOME/.mcporter
+    string match -q '/*' -- "$XDG_DATA_HOME"; and set data "$XDG_DATA_HOME/mcporter"
+    set -l daemon (string trim -- "$MCPORTER_DAEMON_DIR")
+    if test -z "$daemon"
+        set daemon (eval echo ~(id -un))/.mcporter
+    else if not string match -q '/*' -- $daemon
+        set daemon $PWD/$daemon
+    end
+    if test -n "$MCPORTER_CONFIG"
+        echo "Config: $MCPORTER_CONFIG"
+    else if test "$cfg" = "$HOME/.mcporter"
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json"
+    else
+        echo "Config: ./config/mcporter.json, then $cfg/mcporter.json, then $HOME/.mcporter/mcporter.json"
+    end
+    echo "OAuth tokens: $data"
+    echo "Schema cache: "(mcporter_info_xdg_dir "$XDG_CACHE_HOME")
+    echo "Daemon socket and key: $daemon/daemon"
+    echo ""
+    mcporter config list 2>/dev/null
+    echo ""
+    echo "Commands:"
+    echo "  mcporter config list             Your servers (--source import: agents')"
+    echo "  mcporter config import <kind>    Copy imported servers into mcporter.json"
+    echo "  mcporter list [server] --schema  Tools, with parameters"
+    echo "  mcporter call <server>.<tool> key=value  Call a tool"
+    echo "  mcporter call --stdio <cmd> --name <n> <n>.<tool> ...  Call an unconfigured server"
+    echo "  mcporter generate-cli <server> --bundle  Build a standalone CLI (runs on node)"
+    echo "  mcporter emit-ts <server> --mode types   TypeScript types for a server"
+    echo "  mcporter daemon start | status | stop    Keep-alive daemon"
+    echo ""
+    echo "Source: https://github.com/openclaw/mcporter"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

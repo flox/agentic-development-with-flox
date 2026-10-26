@@ -42,6 +42,19 @@ skills-flox.pkg-group = "flox-skills"
 
 [hook]
 on-activate = '''
+# Move a freshly written script into place, unless it matches the one there.
+# The rename is atomic, so a command starting in another shell at the same
+# moment never runs an empty or partly written script.
+install_agentic_ollama_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
 # === MODEL STORAGE ===
 # Use Ollama's default location (~/.ollama/models) unless user overrides
 # To use project-local storage: OLLAMA_MODELS=$FLOX_ENV_CACHE/models flox activate
@@ -95,18 +108,19 @@ setup_claude_flox_skills() {
     local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
     local real_claude="$FLOX_ENV/bin/claude"
     local shim_dir="$FLOX_ENV_CACHE/bin"
+    export AGENTIC_OLLAMA_SHIM_DIR="$shim_dir"
     [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
 
     # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally
     mkdir -p "$shim_dir"
-    cat > "$shim_dir/claude" << EOF
+    cat > "$shim_dir/.claude.$$" << EOF
 #!/usr/bin/env bash
 if grep -qs '"flox@flox-skills"' "\$HOME/.claude/plugins/installed_plugins.json" && grep -Eqs '"flox@flox-skills"[[:space:]]*:[[:space:]]*true' "\$HOME/.claude/settings.json"; then
     exec "$real_claude" "\$@"
 fi
 exec "$real_claude" --plugin-dir "$plugin_dir" "\$@"
 EOF
-    chmod +x "$shim_dir/claude"
+    install_agentic_ollama_script "$shim_dir/.claude.$$" "$shim_dir/claude"
     case ":$PATH:" in
         *":$shim_dir:"*) ;;
         *) export PATH="$shim_dir:$PATH" ;;
@@ -190,6 +204,23 @@ ollama.command = "ollama serve"
 
 [profile]
 bash = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$AGENTIC_OLLAMA_SHIM_DIR" ] && [ -x "$AGENTIC_OLLAMA_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$AGENTIC_OLLAMA_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            agentic_ollama_path=":$PATH:"
+            while [ "${agentic_ollama_path#*:"$AGENTIC_OLLAMA_SHIM_DIR":}" != "$agentic_ollama_path" ]; do
+                agentic_ollama_path="${agentic_ollama_path%%:"$AGENTIC_OLLAMA_SHIM_DIR":*}:${agentic_ollama_path#*:"$AGENTIC_OLLAMA_SHIM_DIR":}"
+            done
+            agentic_ollama_path="${agentic_ollama_path#:}"
+            PATH="$AGENTIC_OLLAMA_SHIM_DIR${agentic_ollama_path:+:${agentic_ollama_path%:}}"
+            unset agentic_ollama_path
+            ;;
+    esac
+fi
 
 ollama-info() {
     echo "Ollama Headless Environment Configuration"
@@ -326,6 +357,23 @@ export -f ollama-health
 '''
 
 zsh = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$AGENTIC_OLLAMA_SHIM_DIR" ] && [ -x "$AGENTIC_OLLAMA_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$AGENTIC_OLLAMA_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            agentic_ollama_path=":$PATH:"
+            while [ "${agentic_ollama_path#*:"$AGENTIC_OLLAMA_SHIM_DIR":}" != "$agentic_ollama_path" ]; do
+                agentic_ollama_path="${agentic_ollama_path%%:"$AGENTIC_OLLAMA_SHIM_DIR":*}:${agentic_ollama_path#*:"$AGENTIC_OLLAMA_SHIM_DIR":}"
+            done
+            agentic_ollama_path="${agentic_ollama_path#:}"
+            PATH="$AGENTIC_OLLAMA_SHIM_DIR${agentic_ollama_path:+:${agentic_ollama_path%:}}"
+            unset agentic_ollama_path
+            ;;
+    esac
+fi
 
 ollama-info() {
     echo "Ollama Headless Environment Configuration"
@@ -459,6 +507,11 @@ ollama-health() {
 '''
 
 fish = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if set -q AGENTIC_OLLAMA_SHIM_DIR; and test -x "$AGENTIC_OLLAMA_SHIM_DIR/claude"
+    set -gx PATH $AGENTIC_OLLAMA_SHIM_DIR (string match -v -- $AGENTIC_OLLAMA_SHIM_DIR $PATH)
+end
 
 function ollama-info
     echo "Ollama Headless Environment Configuration"

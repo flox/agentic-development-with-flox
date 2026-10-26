@@ -1,0 +1,182 @@
+schema-version = "1.11.0"
+
+[install]
+# The Flox build points Herdr's background version check at 127.0.0.1, and
+# Herdr turns off `herdr update` for Nix installs; upgrade with `flox upgrade`.
+herdr.pkg-path = "flox/herdr"
+herdr.pkg-group = "herdr"
+# The agent integrations (`herdr integration install claude`, ...) are hook
+# scripts that need python3; without it they exit silently and do nothing
+python3.pkg-path = "python3"
+python3.pkg-group = "herdr-tools"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# List the coding agents Herdr can run and track from this shell
+show_herdr_agents() {
+    local agent found=""
+    for agent in claude codex gemini opencode pi hermes amp copilot droid qwen kilo; do
+        command -v "$agent" >/dev/null 2>&1 && found="$found $agent"
+    done
+    if [ -n "$found" ]; then
+        echo "  Agents on PATH:$found"
+    else
+        echo "  Agents on PATH: none found"
+        echo "  Activate an agent environment first (e.g. ../claude-code),"
+        echo "  then this one, or install an agent another way."
+    fi
+}
+
+# Panes get the environment of the shell that started the Herdr server, so a
+# server started elsewhere doesn't see this environment's tools
+show_herdr_server_state() {
+    if herdr status server 2>/dev/null | grep -q 'status: running'; then
+        echo "  Server: already running; new panes use the environment it was"
+        echo "  started in (herdr server stop, then herdr, to start it here)"
+    fi
+}
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Herdr environment ready"
+echo ""
+show_herdr_agents
+show_herdr_server_state
+echo "  Panes keep running after you detach or exit; herdr server stop ends them."
+echo ""
+
+echo "Commands:"
+echo "  herdr                            Launch or attach to the session"
+echo "  herdr integration install claude Agent state and session restore"
+echo "                                   (also: codex, pi, opencode, ...)"
+echo "  herdr agent list                 Agents Herdr sees, and their state"
+echo "  herdr server stop                Stop the server and every pane"
+echo "  herdr-info                       Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+herdr-info() {
+    echo "Herdr Environment Configuration"
+    echo ""
+    echo "Version: $(herdr --version 2>/dev/null | sed 's/^herdr //')"
+    if herdr status server 2>/dev/null | grep -q 'status: running'; then
+        echo "Server: running"
+    else
+        echo "Server: not running (herdr starts it)"
+    fi
+    # Herdr reads a set-but-empty XDG directory as the current directory
+    local herdr_dir="${XDG_CONFIG_HOME-$HOME/.config}" herdr_state="${XDG_STATE_HOME-$HOME/.local/state}"
+    herdr_dir="${herdr_dir:-.}/herdr" herdr_state="${herdr_state:-.}/herdr"
+    echo "Config: ${HERDR_CONFIG_PATH:-$herdr_dir/config.toml}"
+    echo "Logs and session state: $herdr_dir"
+    echo "Agent detection state: $herdr_state"
+    echo ""
+    echo "Commands:"
+    echo "  herdr                            Launch or attach to the session"
+    echo "  herdr session attach <name>      Use a separate named session"
+    echo "  prefix (ctrl+b), then q          Detach; everything keeps running"
+    echo "  prefix (ctrl+b), then ?          Show every key binding"
+    echo "  herdr integration install <agent>  Agent state and session restore"
+    echo "  herdr integration status         Show installed integrations"
+    echo "  herdr agent list                 Agents Herdr sees, and their state"
+    echo "  herdr --default-config           Print every setting with its default"
+    echo "  herdr --skill                    Skill that teaches agents to drive Herdr"
+    echo "  herdr server stop                Stop the server and every pane"
+    echo ""
+    echo "Docs: https://herdr.dev/docs/"
+    echo "Source: https://github.com/ogulcancelik/herdr"
+}
+export -f herdr-info
+'''
+
+zsh = '''
+herdr-info() {
+    echo "Herdr Environment Configuration"
+    echo ""
+    echo "Version: $(herdr --version 2>/dev/null | sed 's/^herdr //')"
+    if herdr status server 2>/dev/null | grep -q 'status: running'; then
+        echo "Server: running"
+    else
+        echo "Server: not running (herdr starts it)"
+    fi
+    # Herdr reads a set-but-empty XDG directory as the current directory
+    local herdr_dir="${XDG_CONFIG_HOME-$HOME/.config}" herdr_state="${XDG_STATE_HOME-$HOME/.local/state}"
+    herdr_dir="${herdr_dir:-.}/herdr" herdr_state="${herdr_state:-.}/herdr"
+    echo "Config: ${HERDR_CONFIG_PATH:-$herdr_dir/config.toml}"
+    echo "Logs and session state: $herdr_dir"
+    echo "Agent detection state: $herdr_state"
+    echo ""
+    echo "Commands:"
+    echo "  herdr                            Launch or attach to the session"
+    echo "  herdr session attach <name>      Use a separate named session"
+    echo "  prefix (ctrl+b), then q          Detach; everything keeps running"
+    echo "  prefix (ctrl+b), then ?          Show every key binding"
+    echo "  herdr integration install <agent>  Agent state and session restore"
+    echo "  herdr integration status         Show installed integrations"
+    echo "  herdr agent list                 Agents Herdr sees, and their state"
+    echo "  herdr --default-config           Print every setting with its default"
+    echo "  herdr --skill                    Skill that teaches agents to drive Herdr"
+    echo "  herdr server stop                Stop the server and every pane"
+    echo ""
+    echo "Docs: https://herdr.dev/docs/"
+    echo "Source: https://github.com/ogulcancelik/herdr"
+}
+'''
+
+fish = '''
+function herdr-info
+    echo "Herdr Environment Configuration"
+    echo ""
+    echo "Version: "(herdr --version 2>/dev/null | sed 's/^herdr //')
+    if herdr status server 2>/dev/null | grep -q 'status: running'
+        echo "Server: running"
+    else
+        echo "Server: not running (herdr starts it)"
+    end
+    # Herdr reads a set-but-empty XDG directory as the current directory
+    set -l dir "$HOME/.config/herdr"
+    if set -q XDG_CONFIG_HOME
+        test -n "$XDG_CONFIG_HOME"; and set dir "$XDG_CONFIG_HOME/herdr"; or set dir ./herdr
+    end
+    set -l state "$HOME/.local/state/herdr"
+    if set -q XDG_STATE_HOME
+        test -n "$XDG_STATE_HOME"; and set state "$XDG_STATE_HOME/herdr"; or set state ./herdr
+    end
+    if test -n "$HERDR_CONFIG_PATH"
+        echo "Config: $HERDR_CONFIG_PATH"
+    else
+        echo "Config: $dir/config.toml"
+    end
+    echo "Logs and session state: $dir"
+    echo "Agent detection state: $state"
+    echo ""
+    echo "Commands:"
+    echo "  herdr                            Launch or attach to the session"
+    echo "  herdr session attach <name>      Use a separate named session"
+    echo "  prefix (ctrl+b), then q          Detach; everything keeps running"
+    echo "  prefix (ctrl+b), then ?          Show every key binding"
+    echo "  herdr integration install <agent>  Agent state and session restore"
+    echo "  herdr integration status         Show installed integrations"
+    echo "  herdr agent list                 Agents Herdr sees, and their state"
+    echo "  herdr --default-config           Print every setting with its default"
+    echo "  herdr --skill                    Skill that teaches agents to drive Herdr"
+    echo "  herdr server stop                Stop the server and every pane"
+    echo ""
+    echo "Docs: https://herdr.dev/docs/"
+    echo "Source: https://github.com/ogulcancelik/herdr"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

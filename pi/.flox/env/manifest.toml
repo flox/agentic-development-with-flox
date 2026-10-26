@@ -46,6 +46,7 @@ setup_pi_flox_skills() {
     local skills_dir="$FLOX_ENV/share/flox/codex/flox"
     local real_pi="$FLOX_ENV/bin/pi"
     local shim_dir="$FLOX_ENV_CACHE/bin"
+    export FLOXENV_PI_SHIM_DIR="$shim_dir"
     [ -n "$FLOX_ENV_CACHE" ] || return 0
     if [ ! -d "$skills_dir" ] || [ ! -x "$real_pi" ]; then
         # Remove a shim from an earlier activation that no longer applies
@@ -113,6 +114,24 @@ unset _has_key _var
 
 [profile]
 bash = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$FLOXENV_PI_SHIM_DIR" ] && [ -x "$FLOXENV_PI_SHIM_DIR/pi" ]; then
+    case ":$PATH:" in
+        ":$FLOXENV_PI_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_pi_path=":$PATH:"
+            while [ "${floxenv_pi_path#*:"$FLOXENV_PI_SHIM_DIR":}" != "$floxenv_pi_path" ]; do
+                floxenv_pi_path="${floxenv_pi_path%%:"$FLOXENV_PI_SHIM_DIR":*}:${floxenv_pi_path#*:"$FLOXENV_PI_SHIM_DIR":}"
+            done
+            floxenv_pi_path="${floxenv_pi_path#:}"
+            PATH="$FLOXENV_PI_SHIM_DIR${floxenv_pi_path:+:${floxenv_pi_path%:}}"
+            unset floxenv_pi_path
+            ;;
+    esac
+fi
+
 pi-info() {
     echo "pi Environment Configuration"
     echo ""
@@ -137,6 +156,24 @@ export -f pi-info
 '''
 
 zsh = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$FLOXENV_PI_SHIM_DIR" ] && [ -x "$FLOXENV_PI_SHIM_DIR/pi" ]; then
+    case ":$PATH:" in
+        ":$FLOXENV_PI_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_pi_path=":$PATH:"
+            while [ "${floxenv_pi_path#*:"$FLOXENV_PI_SHIM_DIR":}" != "$floxenv_pi_path" ]; do
+                floxenv_pi_path="${floxenv_pi_path%%:"$FLOXENV_PI_SHIM_DIR":*}:${floxenv_pi_path#*:"$FLOXENV_PI_SHIM_DIR":}"
+            done
+            floxenv_pi_path="${floxenv_pi_path#:}"
+            PATH="$FLOXENV_PI_SHIM_DIR${floxenv_pi_path:+:${floxenv_pi_path%:}}"
+            unset floxenv_pi_path
+            ;;
+    esac
+fi
+
 pi-info() {
     echo "pi Environment Configuration"
     echo ""
@@ -160,6 +197,12 @@ pi-info() {
 '''
 
 fish = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if set -q FLOXENV_PI_SHIM_DIR; and test -x "$FLOXENV_PI_SHIM_DIR/pi"
+    set -gx PATH $FLOXENV_PI_SHIM_DIR (string match -v -- $FLOXENV_PI_SHIM_DIR $PATH)
+end
+
 function pi-info
     echo "pi Environment Configuration"
     echo ""

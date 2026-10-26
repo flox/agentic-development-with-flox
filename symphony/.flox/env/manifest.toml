@@ -1,0 +1,352 @@
+schema-version = "1.11.0"
+
+[install]
+# OpenAI's Elixir reference implementation of Symphony (an escript)
+symphony.pkg-path = "flox/symphony"
+symphony.pkg-group = "symphony"
+# Symphony runs every issue in `codex app-server`
+codex.pkg-path = "flox/codex"
+codex.pkg-group = "codex"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# Runtime settings; override at activation, e.g.
+#   SYMPHONY_WORKFLOW=~/src/myrepo/WORKFLOW.md SYMPHONY_PORT=14100 flox activate -s
+export SYMPHONY_DATA="${SYMPHONY_DATA:-$FLOX_ENV_CACHE/symphony}"
+# The workflow file: YAML front matter (tracker, workspaces, Codex policy)
+# plus the Markdown prompt sent to Codex for each issue
+export SYMPHONY_WORKFLOW="${SYMPHONY_WORKFLOW:-$SYMPHONY_DATA/WORKFLOW.md}"
+# One directory per issue is created under here; the starter workflow
+# reads it as $SYMPHONY_WORKSPACE_ROOT
+export SYMPHONY_WORKSPACE_ROOT="${SYMPHONY_WORKSPACE_ROOT:-$SYMPHONY_DATA/workspaces}"
+# Symphony writes its log to $SYMPHONY_LOGS_ROOT/log/symphony.log*
+export SYMPHONY_LOGS_ROOT="${SYMPHONY_LOGS_ROOT:-$SYMPHONY_DATA}"
+# Port for the web dashboard and JSON API. The listen address comes from
+# server.host in the workflow file (default 127.0.0.1).
+export SYMPHONY_PORT="${SYMPHONY_PORT:-14000}"
+# Symphony refuses to start until you acknowledge that it runs Codex
+# unattended. The service and symphony-start pass that acknowledgement
+# only when this is "true"; see the README before setting it.
+export SYMPHONY_ACCEPT_NO_GUARDRAILS="${SYMPHONY_ACCEPT_NO_GUARDRAILS:-false}"
+# Symphony starts Codex with `bash -lc` and workflow hooks with `sh -lc`.
+# Login shells read /etc/profile, which on Debian and Ubuntu resets PATH,
+# so neither would find this environment's tools. The starter workflow
+# restores this PATH from SYMPHONY_PATH; do the same in your own. Symphony
+# runs the Codex command as `exec <command>`, so it must be a command:
+# `env PATH="$SYMPHONY_PATH" codex app-server`, not `PATH=... codex ...`.
+export SYMPHONY_PATH="$PATH"
+mkdir -p "$SYMPHONY_DATA" "$FLOX_ENV_CACHE/logs"
+
+# Write a starter workflow the first time. It uses the in-memory tracker,
+# which never has issues, so Symphony starts and serves its dashboard but
+# runs no agents. It is yours to edit afterwards; it is never overwritten.
+setup_symphony_starter_workflow() {
+    local dest="$SYMPHONY_DATA/WORKFLOW.md" tmp
+    [ -n "$FLOX_ENV_CACHE" ] && [ ! -e "$dest" ] || return 0
+    tmp="$dest.$$"
+    cat > "$tmp" << 'EOF'
+---
+# Starter workflow from the Flox symphony environment.
+# The memory tracker never has issues: Symphony starts and serves its
+# dashboard, but no agent runs. For real work, copy the workflow from
+# https://github.com/openai/symphony/blob/main/elixir/WORKFLOW.md into
+# your repository and point SYMPHONY_WORKFLOW at it.
+tracker:
+  kind: memory
+  # kind: linear
+  # provider:
+  #   project_slug: "your-project-slug"   # api_key defaults to $LINEAR_API_KEY
+  # active_states: [Todo, In Progress]
+  # terminal_states: [Done, Closed, Cancelled, Canceled, Duplicate]
+workspace:
+  root: $SYMPHONY_WORKSPACE_ROOT
+# hooks:
+#   after_create: |
+#     PATH="$SYMPHONY_PATH"
+#     git clone --depth 1 git@github.com:your-org/your-repo.git .
+agent:
+  max_concurrent_agents: 2
+  max_turns: 10
+# Omitted Codex policies keep Symphony's safer defaults: approval
+# requests are rejected and Codex is sandboxed to the issue's workspace.
+codex:
+  command: env PATH="$SYMPHONY_PATH" codex app-server
+---
+
+You are working on issue {{ issue.identifier }}: {{ issue.title }}
+
+{{ issue.description }}
+EOF
+    mv -f "$tmp" "$dest"
+}
+
+setup_symphony_starter_workflow
+
+# Load tracker credentials (LINEAR_API_KEY, GITHUB_TOKEN, JIRA_API_TOKEN,
+# ASANA_PAT, GITLAB_PAT, ...) from a KEY=value file, if there is one.
+# Variables already set, e.g. `LINEAR_API_KEY=... flox activate`, win.
+# Blank lines, `#` comments (also after an unquoted value), `export`,
+# indentation, and Windows line endings are fine. Codex and the hooks
+# inherit what is loaded, and many variables make programs run commands
+# (BASH_ENV, LD_PRELOAD, RUSTC_WRAPPER, npm_config_script_shell, ...), so
+# only names shaped like credentials and tracker settings load (*_TOKEN,
+# *_KEY, *_PAT, *_SECRET, *_PASSWORD, *_EMAIL, *_USER, *_USERNAME, *_URL,
+# *_SLUG, *_ID). Of those, names for how shells, programs, git, and package
+# managers start or where they download from (LD_*, GIT_*, XDG_*, PIP_*,
+# CARGO_*, ...) are still refused. Quoted values end at the next matching
+# quote; there are no backslash escapes, and a value with no closing quote
+# is skipped. A UTF-8 byte-order mark at the start of the file is ignored.
+load_symphony_credentials() {
+    local file="${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}" line key value n=0
+    [ -f "$file" ] || return 0
+    while IFS= read -r line || [ -n "$line" ]; do
+        n=$((n + 1))
+        line="${line%$'\r'}"
+        [ "$n" = 1 ] && line="${line#$'\xef\xbb\xbf'}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        case "$line" in
+            export[[:space:]]*)
+                line="${line#export}"
+                line="${line#"${line%%[![:space:]]*}"}"
+                ;;
+        esac
+        case "$line" in
+            ''|'#'*) continue ;;
+            *=*) ;;
+            *)
+                echo "symphony: ignoring line $n of $file (not KEY=value)" >&2
+                continue ;;
+        esac
+        key="${line%%=*}" value="${line#*=}"
+        case "$key" in
+            ''|[0-9]*|*[!A-Za-z0-9_]*)
+                echo "symphony: ignoring line $n of $file (not NAME=value: a name of letters, digits, and _, with no space before =)" >&2
+                continue ;;
+        esac
+        case "$key" in
+            BASH_ENV|ENV|BASH_FUNC_*|SHELLOPTS|BASHOPTS|PS4|PROMPT_COMMAND|IFS|LD_*|DYLD_*|\
+            NODE_OPTIONS|PYTHONSTARTUP|PYTHONPATH|PYTHONHOME|PERL5OPT|PERL5LIB|RUBYOPT|RUBYLIB|\
+            JAVA_TOOL_OPTIONS|_JAVA_OPTIONS|ERL_*|ELIXIR_ERL_OPTIONS|\
+            NODE_PATH|GIT_*|SSH_ASKPASS|SSH_ASKPASS_REQUIRE|XDG_*|CODEX_HOME|ZDOTDIR|\
+            EDITOR|VISUAL|PAGER|MANPAGER|LESSOPEN|LESSCLOSE|BROWSER|\
+            PIP_*|UV_*|NPM_CONFIG_*|npm_config_*|YARN_*|PNPM_*|BUN_*|CARGO_*|RUSTUP_*|\
+            POETRY_*|PDM_*|CONDA_*|GEM_*|BUNDLE_*)
+                echo "symphony: ignoring $key in $file (only tracker credentials belong there)" >&2
+                continue ;;
+            *_TOKEN|*_KEY|*_PAT|*_SECRET|*_PASSWORD|*_EMAIL|*_USER|*_USERNAME|*_URL|*_SLUG|*_ID) ;;
+            *)
+                echo "symphony: ignoring $key in $file (only names ending in _TOKEN, _KEY, _PAT, _SECRET, _PASSWORD, _EMAIL, _USER, _USERNAME, _URL, _SLUG, or _ID load from it)" >&2
+                continue ;;
+        esac
+        value="${value#"${value%%[![:space:]]*}"}"
+        case "$value" in
+            \"*)
+                value="${value#\"}"
+                case "$value" in *\"*) ;; *)
+                    echo "symphony: ignoring line $n of $file (no closing quote)" >&2
+                    continue ;;
+                esac
+                value="${value%%\"*}"
+                case "$value" in *\\)
+                    echo "symphony: $key in $file ends in a backslash; quoted values have no escapes, so it may be cut short" >&2 ;;
+                esac
+                ;;
+            \'*)
+                value="${value#\'}"
+                case "$value" in *\'*) ;; *)
+                    echo "symphony: ignoring line $n of $file (no closing quote)" >&2
+                    continue ;;
+                esac
+                value="${value%%\'*}"
+                ;;
+            *)
+                value="${value%%[[:space:]]#*}"
+                value="${value%"${value##*[![:space:]]}"}"
+                ;;
+        esac
+        [ -n "${!key+set}" ] || export "$key=$value"
+    done < "$file"
+}
+
+load_symphony_credentials
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Symphony environment ready"
+echo ""
+echo "  Workflow: $SYMPHONY_WORKFLOW"
+if [ "$FLOX_ACTIVATE_START_SERVICES" = "true" ]; then
+  if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" = "true" ]; then
+    echo "  Dashboard: starting at http://127.0.0.1:$SYMPHONY_PORT"
+  else
+    echo "  Service: not started; set SYMPHONY_ACCEPT_NO_GUARDRAILS=true"
+    echo "           to acknowledge that Codex runs unattended (see README)"
+  fi
+else
+  echo "  Dashboard: not started (flox activate -s)"
+fi
+echo ""
+echo "  Symphony is an engineering preview: it runs Codex on tracker"
+echo "  issues with no one approving each step. Sign in to Codex first"
+echo "  (codex login)."
+echo ""
+
+echo "Commands:"
+echo "  symphony-start               Run Symphony in this terminal (status view)"
+echo "  codex login                  Sign in to Codex"
+echo "  symphony-info                Show configuration"
+echo ""
+'''
+
+[services]
+# The terminal status view is redrawn about once a second, so stdout is
+# discarded; Symphony's own log is under $SYMPHONY_LOGS_ROOT/log, and
+# startup errors go to logs/symphony.log.
+symphony.command = '''
+log="$FLOX_ENV_CACHE/logs/symphony.log"
+# Without a UTF-8 locale (e.g. services started from cron or CI), the
+# Erlang VM falls back to latin1 file names and logs a warning
+if [ -z "${LC_ALL:-}${LC_CTYPE:-}${LANG:-}" ]; then
+  case "$(uname -s)" in
+    Darwin) export LANG=en_US.UTF-8 ;;
+    *) export LANG=C.UTF-8 ;;
+  esac
+fi
+if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
+  echo "$(date '+%F %T') Not starting: set SYMPHONY_ACCEPT_NO_GUARDRAILS=true to acknowledge that Symphony runs Codex without approvals (see README)" >> "$log"
+  exit 1
+fi
+exec symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
+  --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" \
+  "$SYMPHONY_WORKFLOW" > /dev/null 2>> "$log"
+'''
+
+[profile]
+bash = '''
+symphony-start() {
+    if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
+        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
+        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
+        return 1
+    fi
+    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
+        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" "$@" "$SYMPHONY_WORKFLOW"
+}
+export -f symphony-start
+
+symphony-info() {
+    echo "Symphony Environment Configuration"
+    echo ""
+    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
+    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
+    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
+    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
+    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
+    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
+    local v found=""
+    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT; do
+        [ -n "$(printenv "$v")" ] && found="$found $v"
+    done
+    echo "Tracker credentials set:${found:- none}"
+    echo "Credentials file: ${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}"
+    echo ""
+    echo "Commands:"
+    echo "  symphony-start               Run Symphony in this terminal (status view)"
+    echo "  flox services start symphony Run it as a background service"
+    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
+    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
+    echo ""
+    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
+    echo "Source: https://github.com/openai/symphony"
+}
+export -f symphony-info
+'''
+
+zsh = '''
+symphony-start() {
+    if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
+        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
+        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
+        return 1
+    fi
+    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
+        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" "$@" "$SYMPHONY_WORKFLOW"
+}
+
+symphony-info() {
+    echo "Symphony Environment Configuration"
+    echo ""
+    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
+    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
+    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
+    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
+    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
+    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
+    local v found=""
+    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT; do
+        [ -n "$(printenv "$v")" ] && found="$found $v"
+    done
+    echo "Tracker credentials set:${found:- none}"
+    echo "Credentials file: ${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}"
+    echo ""
+    echo "Commands:"
+    echo "  symphony-start               Run Symphony in this terminal (status view)"
+    echo "  flox services start symphony Run it as a background service"
+    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
+    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
+    echo ""
+    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
+    echo "Source: https://github.com/openai/symphony"
+}
+'''
+
+fish = '''
+function symphony-start
+    if test "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true"
+        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
+        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
+        return 1
+    end
+    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
+        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" $argv "$SYMPHONY_WORKFLOW"
+end
+
+function symphony-info
+    echo "Symphony Environment Configuration"
+    echo ""
+    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
+    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
+    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
+    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
+    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
+    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
+    set -l found
+    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT
+        test -n "$$v"; and set found $found $v
+    end
+    test -n "$found"; or set found none
+    echo "Tracker credentials set: $found"
+    if test -n "$SYMPHONY_ENV_FILE"; echo "Credentials file: $SYMPHONY_ENV_FILE"; else; echo "Credentials file: $HOME/.config/symphony/env"; end
+    echo ""
+    echo "Commands:"
+    echo "  symphony-start               Run Symphony in this terminal (status view)"
+    echo "  flox services start symphony Run it as a background service"
+    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
+    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
+    echo ""
+    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
+    echo "Source: https://github.com/openai/symphony"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

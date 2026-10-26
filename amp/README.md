@@ -19,6 +19,8 @@ This is a Flox environment for Amp, the frontier coding agent.
    amp-config
    ```
 
+The first activation in a terminal runs a short setup (mode, API key, editor, proxy) and saves it to `.flox/cache/amp-config/amp.config`; `amp-config` runs it again. Setup needs a terminal: a script started from your terminal still opens it, even with `flox activate -- amp ...`. Only where there is no terminal at all, such as cron or CI, is it skipped, and Amp uses smart mode until you run `amp-config`. Empty proxy settings are never applied, so the `HTTP_PROXY` and `HTTPS_PROXY` you already have are kept, including with a configuration saved by an earlier version of this environment. You can also edit `amp.config` by hand; `AMP_MODE=rush`, with or without `export` and quotes, is accepted.
+
 ## Learn More
 
 - Documentation: https://docs.ampcode.com/

@@ -29,6 +29,15 @@ skills-flox.pkg-group = "flox-skills"
 ccusage.pkg-path = "flox/ccusage"
 ccusage.pkg-group = "ccusage"
 
+# ccstatusline - configurable, widget-based status line (model, context,
+# git, usage limits, custom commands); see setup_claude_ccstatusline below
+ccstatusline.pkg-path = "flox/ccstatusline"
+ccstatusline.pkg-group = "ccstatusline"
+# 2.2.31 and 2.2.32 fail to start (ERR_MODULE_NOT_FOUND): the package copies
+# only dist/ccstatusline.js, and those releases split it into chunk files.
+# Remove the pin once a newer version runs.
+ccstatusline.version = "2.2.30"
+
 ## Environment Variables ---------------------------------------------
 ##  ... available for use in the activated environment
 ##      as well as [hook], [profile] scripts and [services] below.
@@ -42,6 +51,19 @@ ccusage.pkg-group = "ccusage"
 ## -------------------------------------------------------------------
 [hook]
 on-activate = '''
+# Move a freshly written script into place, unless it matches the one there.
+# The rename is atomic, so a command starting in another shell at the same
+# moment never runs an empty or partly written script.
+install_claude_env_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
 # Load the Flox skills plugin into every claude session started from this
 # environment, via a PATH shim that adds --plugin-dir. Skipped when the
 # flox@flox-skills plugin is already installed and enabled globally.
@@ -49,17 +71,18 @@ setup_claude_flox_skills() {
     local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
     local real_claude="$FLOX_ENV/bin/claude"
     local shim_dir="$FLOX_ENV_CACHE/bin"
+    export FLOXENV_CLAUDE_CODE_SHIM_DIR="$shim_dir"
     [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
 
     mkdir -p "$shim_dir"
-    cat > "$shim_dir/claude" << EOF
+    cat > "$shim_dir/.claude.$$" << EOF
 #!/usr/bin/env bash
 if grep -qs '"flox@flox-skills"' "\$HOME/.claude/plugins/installed_plugins.json" && grep -Eqs '"flox@flox-skills"[[:space:]]*:[[:space:]]*true' "\$HOME/.claude/settings.json"; then
     exec "$real_claude" "\$@"
 fi
 exec "$real_claude" --plugin-dir "$plugin_dir" "\$@"
 EOF
-    chmod +x "$shim_dir/claude"
+    install_claude_env_script "$shim_dir/.claude.$$" "$shim_dir/claude"
     case ":$PATH:" in
         *":$shim_dir:"*) ;;
         *) export PATH="$shim_dir:$PATH" ;;
@@ -74,16 +97,6 @@ EOF
 #     "command": "<this directory>/.flox/cache/bin/ccusage-statusline" }
 # The script is written to a temporary file and renamed into place (only
 # when it changed), so a status line refresh never runs a partial file.
-install_claude_ccusage_script() {
-    local tmp="$1" dest="$2"
-    if cmp -s "$tmp" "$dest"; then
-        rm -f "$tmp"
-    else
-        chmod +x "$tmp"
-        mv -f "$tmp" "$dest"
-    fi
-}
-
 setup_claude_ccusage_statusline() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     [ -n "$FLOX_ENV_CACHE" ] && [ -x "$FLOX_ENV/bin/ccusage" ] || return 0
@@ -92,7 +105,32 @@ setup_claude_ccusage_statusline() {
 #!/usr/bin/env bash
 exec "$FLOX_ENV/bin/ccusage" statusline "\$@"
 EOF
-    install_claude_ccusage_script "$bin_dir/.ccusage-statusline.$$" "$bin_dir/ccusage-statusline"
+    install_claude_env_script "$bin_dir/.ccusage-statusline.$$" "$bin_dir/ccusage-statusline"
+}
+
+# Write ccstatusline-statusline into $FLOX_ENV_CACHE/bin, for the same reason:
+# it runs this environment's ccstatusline by absolute path. Claude Code takes
+# one statusLine command, so pick ccusage-statusline (costs) or this one
+# (configurable widgets). To use it, add to ~/.claude/settings.json:
+#   "statusLine": { "type": "command",
+#     "command": "<this directory>/.flox/cache/bin/ccstatusline-statusline" }
+# Run `ccstatusline` in a terminal to choose widgets; it saves them to
+# ~/.config/ccstatusline/settings.json. Skip its "Install to Claude Code"
+# step, which points Claude Code at `npx -y ccstatusline@latest` or a global
+# `ccstatusline` instead of this environment. ccusage costs can still be
+# shown: add a Custom Command widget running ccusage-statusline, with a
+# timeout of a few seconds. Most widgets work offline; the git pull request
+# widgets run `gh` (or `glab` for GitLab), which call the forge's API with
+# your login (results are cached between refreshes).
+setup_claude_ccstatusline() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    [ -n "$FLOX_ENV_CACHE" ] && [ -x "$FLOX_ENV/bin/ccstatusline" ] || return 0
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.ccstatusline-statusline.$$" << EOF
+#!/usr/bin/env bash
+exec "$FLOX_ENV/bin/ccstatusline" "\$@"
+EOF
+    install_claude_env_script "$bin_dir/.ccstatusline-statusline.$$" "$bin_dir/ccstatusline-statusline"
 }
 
 # Remove the deprecated user-scope "flox" MCP server (command flox-mcp) that
@@ -109,6 +147,7 @@ remove_claude_flox_mcp() {
 
 setup_claude_flox_skills
 setup_claude_ccusage_statusline
+setup_claude_ccstatusline
 remove_claude_flox_mcp
 '''
 
@@ -116,6 +155,54 @@ remove_claude_flox_mcp
 ## ... sourced by _your shell_ when you run 'flox activate'.
 ## -------------------------------------------------------------------
 [profile]
+bash = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$FLOXENV_CLAUDE_CODE_SHIM_DIR" ] && [ -x "$FLOXENV_CLAUDE_CODE_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$FLOXENV_CLAUDE_CODE_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_claude_code_path=":$PATH:"
+            while [ "${floxenv_claude_code_path#*:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":}" != "$floxenv_claude_code_path" ]; do
+                floxenv_claude_code_path="${floxenv_claude_code_path%%:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":*}:${floxenv_claude_code_path#*:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":}"
+            done
+            floxenv_claude_code_path="${floxenv_claude_code_path#:}"
+            PATH="$FLOXENV_CLAUDE_CODE_SHIM_DIR${floxenv_claude_code_path:+:${floxenv_claude_code_path%:}}"
+            unset floxenv_claude_code_path
+            ;;
+    esac
+fi
+'''
+
+zsh = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$FLOXENV_CLAUDE_CODE_SHIM_DIR" ] && [ -x "$FLOXENV_CLAUDE_CODE_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$FLOXENV_CLAUDE_CODE_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_claude_code_path=":$PATH:"
+            while [ "${floxenv_claude_code_path#*:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":}" != "$floxenv_claude_code_path" ]; do
+                floxenv_claude_code_path="${floxenv_claude_code_path%%:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":*}:${floxenv_claude_code_path#*:"$FLOXENV_CLAUDE_CODE_SHIM_DIR":}"
+            done
+            floxenv_claude_code_path="${floxenv_claude_code_path#:}"
+            PATH="$FLOXENV_CLAUDE_CODE_SHIM_DIR${floxenv_claude_code_path:+:${floxenv_claude_code_path%:}}"
+            unset floxenv_claude_code_path
+            ;;
+    esac
+fi
+'''
+
+fish = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if set -q FLOXENV_CLAUDE_CODE_SHIM_DIR; and test -x "$FLOXENV_CLAUDE_CODE_SHIM_DIR/claude"
+    set -gx PATH $FLOXENV_CLAUDE_CODE_SHIM_DIR (string match -v -- $FLOXENV_CLAUDE_CODE_SHIM_DIR $PATH)
+end
+'''
+
 # common = '''
 #   gum style \
 #   --foreground 212 --border-foreground 212 --border double \

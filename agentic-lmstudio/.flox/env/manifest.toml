@@ -43,6 +43,19 @@ skills-flox.pkg-group = "flox-skills"
 
 [hook]
 on-activate = '''
+# Move a freshly written script into place, unless it matches the one there.
+# The rename is atomic, so a command starting in another shell at the same
+# moment never runs an empty or partly written script.
+install_agentic_lmstudio_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
 # === SERVER CONFIGURATION ===
 export LMS_PORT="${LMS_PORT:-1234}"
 export LMS_HOST="${LMS_HOST:-127.0.0.1}"
@@ -72,18 +85,19 @@ setup_claude_flox_skills() {
     local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
     local real_claude="$FLOX_ENV/bin/claude"
     local shim_dir="$FLOX_ENV_CACHE/bin"
+    export AGENTIC_LMSTUDIO_SHIM_DIR="$shim_dir"
     [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
 
     # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally
     mkdir -p "$shim_dir"
-    cat > "$shim_dir/claude" << EOF
+    cat > "$shim_dir/.claude.$$" << EOF
 #!/usr/bin/env bash
 if grep -qs '"flox@flox-skills"' "\$HOME/.claude/plugins/installed_plugins.json" && grep -Eqs '"flox@flox-skills"[[:space:]]*:[[:space:]]*true' "\$HOME/.claude/settings.json"; then
     exec "$real_claude" "\$@"
 fi
 exec "$real_claude" --plugin-dir "$plugin_dir" "\$@"
 EOF
-    chmod +x "$shim_dir/claude"
+    install_agentic_lmstudio_script "$shim_dir/.claude.$$" "$shim_dir/claude"
     case ":$PATH:" in
         *":$shim_dir:"*) ;;
         *) export PATH="$shim_dir:$PATH" ;;
@@ -169,6 +183,24 @@ is-daemon = false
 
 [profile]
 bash = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$AGENTIC_LMSTUDIO_SHIM_DIR" ] && [ -x "$AGENTIC_LMSTUDIO_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$AGENTIC_LMSTUDIO_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            agentic_lmstudio_path=":$PATH:"
+            while [ "${agentic_lmstudio_path#*:"$AGENTIC_LMSTUDIO_SHIM_DIR":}" != "$agentic_lmstudio_path" ]; do
+                agentic_lmstudio_path="${agentic_lmstudio_path%%:"$AGENTIC_LMSTUDIO_SHIM_DIR":*}:${agentic_lmstudio_path#*:"$AGENTIC_LMSTUDIO_SHIM_DIR":}"
+            done
+            agentic_lmstudio_path="${agentic_lmstudio_path#:}"
+            PATH="$AGENTIC_LMSTUDIO_SHIM_DIR${agentic_lmstudio_path:+:${agentic_lmstudio_path%:}}"
+            unset agentic_lmstudio_path
+            ;;
+    esac
+fi
+
 # Wait for API server if services are starting
 if [ "${FLOX_ACTIVATE_START_SERVICES:-}" = "true" ]; then
   printf "Waiting for LM Studio API"
@@ -239,6 +271,24 @@ fi
 '''
 
 zsh = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if [ -n "$AGENTIC_LMSTUDIO_SHIM_DIR" ] && [ -x "$AGENTIC_LMSTUDIO_SHIM_DIR/claude" ]; then
+    case ":$PATH:" in
+        ":$AGENTIC_LMSTUDIO_SHIM_DIR:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            agentic_lmstudio_path=":$PATH:"
+            while [ "${agentic_lmstudio_path#*:"$AGENTIC_LMSTUDIO_SHIM_DIR":}" != "$agentic_lmstudio_path" ]; do
+                agentic_lmstudio_path="${agentic_lmstudio_path%%:"$AGENTIC_LMSTUDIO_SHIM_DIR":*}:${agentic_lmstudio_path#*:"$AGENTIC_LMSTUDIO_SHIM_DIR":}"
+            done
+            agentic_lmstudio_path="${agentic_lmstudio_path#:}"
+            PATH="$AGENTIC_LMSTUDIO_SHIM_DIR${agentic_lmstudio_path:+:${agentic_lmstudio_path%:}}"
+            unset agentic_lmstudio_path
+            ;;
+    esac
+fi
+
 # Wait for API server if services are starting
 if [ "${FLOX_ACTIVATE_START_SERVICES:-}" = "true" ]; then
   printf "Waiting for LM Studio API"
@@ -308,6 +358,12 @@ fi
 '''
 
 fish = '''
+# Layering another environment on top puts its bin directories ahead of
+# this environment's shims; move them back to the front
+if set -q AGENTIC_LMSTUDIO_SHIM_DIR; and test -x "$AGENTIC_LMSTUDIO_SHIM_DIR/claude"
+    set -gx PATH $AGENTIC_LMSTUDIO_SHIM_DIR (string match -v -- $AGENTIC_LMSTUDIO_SHIM_DIR $PATH)
+end
+
 # Wait for API server if services are starting
 if test "$FLOX_ACTIVATE_START_SERVICES" = "true"
   printf "Waiting for LM Studio API"

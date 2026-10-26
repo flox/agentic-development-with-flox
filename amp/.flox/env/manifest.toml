@@ -38,43 +38,71 @@ export AMP_CONFIG_FILE="$AMP_CONFIG_DIR/amp.config"
 DEFAULT_AMP_MODE="smart"
 DEFAULT_AMP_EDITOR="vscode"
 
-# Check if configuration exists
+# Check if a completed configuration exists (without loading it). Accepts
+# hand-edited forms too: AMP_MODE=rush, 'rush', with or without export.
 check_amp_config() {
-    [[ -f "$AMP_CONFIG_FILE" ]] || return 1
-    source "$AMP_CONFIG_FILE" 2>/dev/null || return 1
-    [[ -n "$AMP_MODE" ]] || return 1
-    return 0
+    grep -Eqs '^[[:space:]]*(export[[:space:]]+)?AMP_MODE=["'"'"']?[A-Za-z]' "$AMP_CONFIG_FILE"
 }
 
 # Load existing configuration
+# Configurations written by earlier versions of this environment set the
+# proxy variables even when empty; keep the values you already had then.
 load_amp_config() {
-    if [[ -f "$AMP_CONFIG_FILE" ]]; then
-        source "$AMP_CONFIG_FILE"
-        export AMP_MODE
-        export AMP_API_KEY
-        export AMP_EDITOR
-        export AMP_MCP_SERVERS
-        export HTTP_PROXY
-        export HTTPS_PROXY
-        export NODE_EXTRA_CA_CERTS
-        return 0
+    local http="${HTTP_PROXY:-}" https="${HTTPS_PROXY:-}" ca="${NODE_EXTRA_CA_CERTS:-}"
+    [[ -f "$AMP_CONFIG_FILE" ]] || return 1
+    set -a
+    eval "$(tr -d '\r' < "$AMP_CONFIG_FILE")"
+    set +a
+    export AMP_MODE AMP_API_KEY AMP_EDITOR AMP_MCP_SERVERS
+    if [[ -z "${HTTP_PROXY:-}" ]]; then
+        if [[ -n "$http" ]]; then export HTTP_PROXY="$http"; else unset HTTP_PROXY; fi
     fi
-    return 1
+    if [[ -z "${HTTPS_PROXY:-}" ]]; then
+        if [[ -n "$https" ]]; then export HTTPS_PROXY="$https"; else unset HTTPS_PROXY; fi
+    fi
+    if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
+        if [[ -n "$ca" ]]; then export NODE_EXTRA_CA_CERTS="$ca"; else unset NODE_EXTRA_CA_CERTS; fi
+    fi
+    return 0
 }
 
-# Save configuration
+# The first-time setup wizard lives in a script of its own, so that
+# amp-config can run it again from your shell. It needs a terminal: gum
+# reads your answers from /dev/tty.
+export AMP_SETUP_SCRIPT="$AMP_CONFIG_DIR/amp-setup"
+write_amp_setup_script() {
+    local tmp="$AMP_SETUP_SCRIPT.$$"
+    cat > "$tmp" << 'AMP_SETUP_EOF'
+#!/usr/bin/env bash
+# Amp first-time setup; writes $AMP_CONFIG_FILE
+[[ -n "$AMP_CONFIG_FILE" ]] || { echo "amp-setup: AMP_CONFIG_FILE is not set" >&2; exit 1; }
+
+# Save configuration. Proxy settings are written only when given, so an
+# empty answer never replaces the proxy settings you already have.
 save_amp_config() {
-    cat > "$AMP_CONFIG_FILE" << EOF
-# Amp configuration - Generated on $(date)
-export AMP_MODE="$AMP_MODE"
-export AMP_API_KEY="$AMP_API_KEY"
-export AMP_EDITOR="$AMP_EDITOR"
-export AMP_MCP_SERVERS="$AMP_MCP_SERVERS"
-export HTTP_PROXY="$HTTP_PROXY"
-export HTTPS_PROXY="$HTTPS_PROXY"
-export NODE_EXTRA_CA_CERTS="$NODE_EXTRA_CA_CERTS"
-EOF
-    chmod 600 "$AMP_CONFIG_FILE"
+    local tmp="$AMP_CONFIG_FILE.$$"
+    (
+        umask 077
+        {
+            echo "# Amp configuration - Generated on $(date)"
+            echo "export AMP_MODE=\"$AMP_MODE\""
+            echo "export AMP_API_KEY=\"$AMP_API_KEY\""
+            echo "export AMP_EDITOR=\"$AMP_EDITOR\""
+            echo "export AMP_MCP_SERVERS=\"$AMP_MCP_SERVERS\""
+            [[ -z "$HTTP_PROXY" ]] || echo "export HTTP_PROXY=\"$HTTP_PROXY\""
+            [[ -z "$HTTPS_PROXY" ]] || echo "export HTTPS_PROXY=\"$HTTPS_PROXY\""
+            [[ -z "$NODE_EXTRA_CA_CERTS" ]] || echo "export NODE_EXTRA_CA_CERTS=\"$NODE_EXTRA_CA_CERTS\""
+        } > "$tmp"
+    ) || { rm -f "$tmp"; return 1; }
+    # Write through a symlink (e.g. into a dotfiles repo) instead of replacing
+    # it; a file this creates is readable only by you, like the temp file
+    if [[ -L "$AMP_CONFIG_FILE" ]]; then
+        local s=0
+        (umask 077; cat "$tmp" > "$AMP_CONFIG_FILE") || s=1
+        rm -f "$tmp"
+        return "$s"
+    fi
+    mv -f "$tmp" "$AMP_CONFIG_FILE" || { rm -f "$tmp"; return 1; }
 }
 
 # Bootstrap Amp configuration
@@ -99,7 +127,7 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
     AMP_MODE=$(gum choose --header "Choose your default Amp mode:" \
         "smart" \
         "rush" \
-        "free")
+        "free") || { echo "Setup cancelled; nothing saved." >&2; exit 1; }
 
     echo ""
     case "$AMP_MODE" in
@@ -141,7 +169,7 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
         "cursor" \
         "jetbrains" \
         "neovim" \
-        "cli-only")
+        "cli-only") || { echo "Setup cancelled; nothing saved." >&2; exit 1; }
 
     case "$AMP_EDITOR" in
         "vscode"|"cursor")
@@ -193,12 +221,24 @@ $(gum style --foreground 240 'First-time setup for your Amp coding agent')"
     fi
 
     # Save configuration
-    export AMP_MODE AMP_API_KEY AMP_EDITOR AMP_MCP_SERVERS HTTP_PROXY HTTPS_PROXY NODE_EXTRA_CA_CERTS
-    save_amp_config
+    if ! save_amp_config; then
+        gum style --foreground 196 "Couldn't save the configuration to $AMP_CONFIG_FILE"
+        return 1
+    fi
 
     echo ""
     gum style --foreground 34 --bold "Amp configuration saved!"
     echo ""
+}
+
+bootstrap_amp
+AMP_SETUP_EOF
+    if cmp -s "$tmp" "$AMP_SETUP_SCRIPT"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$AMP_SETUP_SCRIPT"
+    fi
 }
 
 # Display help information
@@ -296,10 +336,15 @@ EOFREADME
 
 # Main initialization
 main() {
+    write_amp_setup_script
     if check_amp_config; then
         load_amp_config
+    elif (: < /dev/tty) 2>/dev/null; then
+        "$AMP_SETUP_SCRIPT" && load_amp_config
     else
-        bootstrap_amp
+        export AMP_MODE="$DEFAULT_AMP_MODE" AMP_EDITOR="$DEFAULT_AMP_EDITOR"
+        echo "Amp: no terminal for first-time setup; using $AMP_MODE mode for now."
+        echo "Run amp-config in a terminal to configure Amp."
     fi
 
     show_amp_help
@@ -314,8 +359,30 @@ main
 ## Profile script ----------------------------------------------------
 [profile]
 bash = '''
-# Source configuration
-source "$AMP_CONFIG_FILE" 2>/dev/null || true
+# Load the saved configuration. Configurations written by earlier versions
+# of this environment set the proxy variables even when empty; keep the
+# values you already had then.
+amp_load_config_file() {
+    [[ -f "$AMP_CONFIG_FILE" ]] || return 0
+    local http="${HTTP_PROXY:-}" https="${HTTPS_PROXY:-}" ca="${NODE_EXTRA_CA_CERTS:-}"
+    set -a
+    local amp_line
+    while IFS= read -r amp_line; do
+        eval "$amp_line" 2>/dev/null
+    done <<< "$(tr -d '\r' < "$AMP_CONFIG_FILE")"
+    set +a
+    if [[ -z "${HTTP_PROXY:-}" ]]; then
+        if [[ -n "$http" ]]; then export HTTP_PROXY="$http"; else unset HTTP_PROXY; fi
+    fi
+    if [[ -z "${HTTPS_PROXY:-}" ]]; then
+        if [[ -n "$https" ]]; then export HTTPS_PROXY="$https"; else unset HTTPS_PROXY; fi
+    fi
+    if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
+        if [[ -n "$ca" ]]; then export NODE_EXTRA_CA_CERTS="$ca"; else unset NODE_EXTRA_CA_CERTS; fi
+    fi
+    return 0
+}
+amp_load_config_file
 
 # Switch Amp mode interactively
 amp-mode() {
@@ -326,12 +393,26 @@ amp-mode() {
         AMP_MODE="$new_mode"
         export AMP_MODE
 
-        # Update config file
-        if [[ -f "$AMP_CONFIG_FILE" ]]; then
-            sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
+        # Update config file in place: a symlink keeps pointing at it, and
+        # a read-only file isn't changed
+        if [[ ! -f "$AMP_CONFIG_FILE" ]]; then
+            gum style --foreground 214 "Switched to $new_mode mode in this shell only; run amp-config to save your settings"
+        elif ! sh -c '
+                t=$(mktemp) || exit 1
+                sed -E "$1" "$2" > "$t" || { rm -f "$t"; exit 1; }
+                if ! grep -q "^export AMP_MODE=" "$t"; then
+                    [ -z "$(tail -c 1 "$t")" ] || echo >> "$t"
+                    printf "export AMP_MODE=\"%s\"\n" "$3" >> "$t" || { rm -f "$t"; exit 1; }
+                fi
+                cat "$t" > "$2"; s=$?
+                rm -f "$t"
+                exit $s' sh \
+                "s/^[[:space:]]*(export[[:space:]]+)?AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE" "$new_mode"; then
+            gum style --foreground 196 "Switched to $new_mode mode in this shell only; couldn't save it to $AMP_CONFIG_FILE"
+            return 1
+        else
+            gum style --foreground 82 "Switched to $new_mode mode"
         fi
-
-        gum style --foreground 82 "Switched to $new_mode mode"
 
         case "$new_mode" in
             "smart")
@@ -350,14 +431,10 @@ amp-mode() {
 # Reconfigure Amp
 amp-config() {
     if [[ -f "$AMP_CONFIG_FILE" ]]; then
-        if gum confirm "This will replace your current configuration. Continue?" --default=false; then
-            rm -f "$AMP_CONFIG_FILE"
-            source "${FLOX_ENV_CACHE}/amp-config/amp.config" 2>/dev/null || true
-            bootstrap_amp
-        fi
-    else
-        bootstrap_amp
+        gum confirm "This will replace your current configuration. Continue?" --default=false || return 0
     fi
+    "$AMP_SETUP_SCRIPT" || return 1
+    amp_load_config_file
 }
 
 # Show Amp info
@@ -523,8 +600,30 @@ export -f amp-mode amp-config amp-info amp-mcp-add amp-test amp-help amp-docs re
 '''
 
 zsh = '''
-# Source configuration
-source "$AMP_CONFIG_FILE" 2>/dev/null || true
+# Load the saved configuration. Configurations written by earlier versions
+# of this environment set the proxy variables even when empty; keep the
+# values you already had then.
+amp_load_config_file() {
+    [[ -f "$AMP_CONFIG_FILE" ]] || return 0
+    local http="${HTTP_PROXY:-}" https="${HTTPS_PROXY:-}" ca="${NODE_EXTRA_CA_CERTS:-}"
+    set -a
+    local amp_line
+    while IFS= read -r amp_line; do
+        eval "$amp_line" 2>/dev/null
+    done <<< "$(tr -d '\r' < "$AMP_CONFIG_FILE")"
+    set +a
+    if [[ -z "${HTTP_PROXY:-}" ]]; then
+        if [[ -n "$http" ]]; then export HTTP_PROXY="$http"; else unset HTTP_PROXY; fi
+    fi
+    if [[ -z "${HTTPS_PROXY:-}" ]]; then
+        if [[ -n "$https" ]]; then export HTTPS_PROXY="$https"; else unset HTTPS_PROXY; fi
+    fi
+    if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
+        if [[ -n "$ca" ]]; then export NODE_EXTRA_CA_CERTS="$ca"; else unset NODE_EXTRA_CA_CERTS; fi
+    fi
+    return 0
+}
+amp_load_config_file
 
 # Switch Amp mode interactively
 amp-mode() {
@@ -535,12 +634,26 @@ amp-mode() {
         AMP_MODE="$new_mode"
         export AMP_MODE
 
-        # Update config file
-        if [[ -f "$AMP_CONFIG_FILE" ]]; then
-            sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
+        # Update config file in place: a symlink keeps pointing at it, and
+        # a read-only file isn't changed
+        if [[ ! -f "$AMP_CONFIG_FILE" ]]; then
+            gum style --foreground 214 "Switched to $new_mode mode in this shell only; run amp-config to save your settings"
+        elif ! sh -c '
+                t=$(mktemp) || exit 1
+                sed -E "$1" "$2" > "$t" || { rm -f "$t"; exit 1; }
+                if ! grep -q "^export AMP_MODE=" "$t"; then
+                    [ -z "$(tail -c 1 "$t")" ] || echo >> "$t"
+                    printf "export AMP_MODE=\"%s\"\n" "$3" >> "$t" || { rm -f "$t"; exit 1; }
+                fi
+                cat "$t" > "$2"; s=$?
+                rm -f "$t"
+                exit $s' sh \
+                "s/^[[:space:]]*(export[[:space:]]+)?AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE" "$new_mode"; then
+            gum style --foreground 196 "Switched to $new_mode mode in this shell only; couldn't save it to $AMP_CONFIG_FILE"
+            return 1
+        else
+            gum style --foreground 82 "Switched to $new_mode mode"
         fi
-
-        gum style --foreground 82 "Switched to $new_mode mode"
 
         case "$new_mode" in
             "smart")
@@ -559,14 +672,10 @@ amp-mode() {
 # Reconfigure Amp
 amp-config() {
     if [[ -f "$AMP_CONFIG_FILE" ]]; then
-        if gum confirm "This will replace your current configuration. Continue?" --default=false; then
-            rm -f "$AMP_CONFIG_FILE"
-            source "${FLOX_ENV_CACHE}/amp-config/amp.config" 2>/dev/null || true
-            bootstrap_amp
-        fi
-    else
-        bootstrap_amp
+        gum confirm "This will replace your current configuration. Continue?" --default=false || return 0
     fi
+    "$AMP_SETUP_SCRIPT" || return 1
+    amp_load_config_file
 }
 
 # Show Amp info
@@ -729,8 +838,24 @@ readme() {
 '''
 
 fish = '''
-# Source configuration
-source "$AMP_CONFIG_FILE" 2>/dev/null || true
+# Load the saved configuration. The file holds bash `export KEY="value"`
+# lines; empty proxy values are skipped, so configurations written by
+# earlier versions of this environment don't clear the proxy you already
+# have. Other empty values clear the variable, as in bash and zsh.
+function amp_load_config_file
+    test -f "$AMP_CONFIG_FILE"; or return 0
+    for line in (string match -r '^\s*(?:export\s+)?[A-Z_]+=.*' < "$AMP_CONFIG_FILE")
+        set -l kv (string split -m1 = -- (string replace -r '^\s*(export\s+)?' '' -- $line))
+        set -l v (string trim -c "\"'" -- (string trim -r -c \r -- $kv[2]))
+        if test -n "$v"
+            set -gx $kv[1] $v
+        else if not contains -- $kv[1] HTTP_PROXY HTTPS_PROXY NODE_EXTRA_CA_CERTS
+            set -e $kv[1]
+        end
+    end
+    return 0
+end
+amp_load_config_file
 
 # Switch Amp mode interactively
 function amp-mode
@@ -739,12 +864,26 @@ function amp-mode
     if test -n "$new_mode"
         set -gx AMP_MODE "$new_mode"
 
-        # Update config file
-        if test -f "$AMP_CONFIG_FILE"
-            sed -i "s/^export AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE"
+        # Update config file in place: a symlink keeps pointing at it, and
+        # a read-only file isn't changed
+        if not test -f "$AMP_CONFIG_FILE"
+            gum style --foreground 214 "Switched to $new_mode mode in this shell only; run amp-config to save your settings"
+        else if not sh -c '
+                t=$(mktemp) || exit 1
+                sed -E "$1" "$2" > "$t" || { rm -f "$t"; exit 1; }
+                if ! grep -q "^export AMP_MODE=" "$t"; then
+                    [ -z "$(tail -c 1 "$t")" ] || echo >> "$t"
+                    printf "export AMP_MODE=\"%s\"\n" "$3" >> "$t" || { rm -f "$t"; exit 1; }
+                fi
+                cat "$t" > "$2"; s=$?
+                rm -f "$t"
+                exit $s' sh \
+                "s/^[[:space:]]*(export[[:space:]]+)?AMP_MODE=.*/export AMP_MODE=\"$new_mode\"/" "$AMP_CONFIG_FILE" "$new_mode"
+            gum style --foreground 196 "Switched to $new_mode mode in this shell only; couldn't save it to $AMP_CONFIG_FILE"
+            return 1
+        else
+            gum style --foreground 82 "Switched to $new_mode mode"
         end
-
-        gum style --foreground 82 "Switched to $new_mode mode"
 
         switch "$new_mode"
             case "smart"
@@ -760,14 +899,10 @@ end
 # Reconfigure Amp
 function amp-config
     if test -f "$AMP_CONFIG_FILE"
-        if gum confirm "This will replace your current configuration. Continue?" --default=false
-            rm -f "$AMP_CONFIG_FILE"
-            source "$FLOX_ENV_CACHE/amp-config/amp.config" 2>/dev/null || true
-            bootstrap_amp
-        end
-    else
-        bootstrap_amp
+        gum confirm "This will replace your current configuration. Continue?" --default=false; or return 0
     end
+    "$AMP_SETUP_SCRIPT"; or return 1
+    amp_load_config_file
 end
 
 # Show Amp info

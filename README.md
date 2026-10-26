@@ -62,7 +62,7 @@ aider --model ollama_chat/gemma4
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**amp**](./amp) - Amp frontier coding agent for the terminal
 - [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
-- [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent, with [ccusage](./ccusage) for usage and cost reports and a status line
+- [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent, with [ccusage](./ccusage) usage and cost reports and a choice of status lines (ccusage or the configurable ccstatusline)
 - [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
 - [**claw-code**](./claw-code) - Claw Code Rust-based CLI for Claude AI with tool execution and session persistence
 - [**cline**](./cline) - Cline autonomous AI coding agent with multi-provider support and browser automation
@@ -120,6 +120,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 
 - [**agent-browser**](./agent-browser) - Vercel's headless browser automation CLI and MCP server for AI agents, with Nix Chromium on Linux
 - [**agent-deck**](./agent-deck) - Terminal command center for running many coding agent sessions in tmux, with an optional web UI
+- [**agent-lint**](./agent-lint) - Security scanners and linters for agent skills and Claude Code configs (SkillSpector, skillcheck, claudelint, cclint, skill-tools, skill-validator)
 - [**agnix**](./agnix) - Linter and auto-fixer for agent configs (skills, CLAUDE.md/AGENTS.md, hooks, MCP, subagents) across Claude Code, Codex, Cursor, and more
 - [**backlog-md**](./backlog-md) - Markdown-native task manager and Kanban board with MCP integration
 - [**catnip**](./catnip) - Multi-agent orchestration for running multiple Claude Code sessions in parallel
@@ -129,12 +130,16 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**codeburn**](./codeburn) - Dashboard for AI coding token usage and costs across 40+ agents, from local session logs
 - [**coderabbit-cli**](./coderabbit-cli) - AI-powered code review tool for the terminal
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
+- [**herdr**](./herdr) - Agent-aware terminal multiplexer: persistent panes, a sidebar showing which agents are working, blocked, or done, and a CLI/socket API
+- [**iloom-cli**](./iloom-cli) - iloom control plane for Claude Code: one git worktree per issue, with the agent's analysis and plans posted to GitHub, Linear, or Jira
 - [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
 - [**sandbox-runtime**](./sandbox-runtime) - Anthropic's lightweight filesystem and network sandbox (srt) for agents, MCP servers, and commands
 - [**sfw**](./sfw) - Socket Firewall Free: blocks known-malicious npm, PyPI, and crates packages, transparently wrapping package managers for agents
 - [**spec-kit**](./spec-kit) - Spec-driven development framework for AI coding agents
+- [**symphony**](./symphony) - OpenAI's Symphony agent orchestrator: turns tracker issues (Linear, GitHub, Jira, Asana, GitLab) into unattended Codex runs, with a dashboard service
 - [**toad**](./toad) - Toad unified TUI for AI coding agents by Will McGugan (Rich/Textual)
 - [**vibe-kanban**](./vibe-kanban) - Kanban board that runs coding agents in isolated git worktrees, as a background service
+- [**whichllm**](./whichllm) - Ranks open models from Hugging Face by what fits and runs fast on your GPU, CPU, and RAM, and shows what hardware a model needs
 - [**worktrunk**](./worktrunk) - Git worktree manager for running coding agents in parallel, with shell integration loaded on activation
 
 ### MCP and Integration
@@ -142,7 +147,9 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**basic-memory**](./basic-memory) - Local-first agent memory: Markdown notes, knowledge graph, and semantic search over MCP
 - [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
+- [**honcho**](./honcho) - Self-hosted agent memory server (Plastic Labs): API, background reasoning worker, and Python SDK, with a private PostgreSQL + pgvector as Flox services
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol
+- [**mcporter**](./mcporter) - CLI and TypeScript runtime for calling MCP servers' tools from the shell, reusing the servers in your agents' configs, and generating standalone CLIs
 - [**serena**](./serena) - MCP server giving coding agents IDE-grade semantic code tools via language servers
 
 ## How It Works
@@ -164,7 +171,7 @@ When you run `flox activate`:
 3. **Profile functions** are loaded (helper commands like `tool-info`, `tool-update`)
 4. **Services** start if you used `flox activate -s` (inference servers, databases, gateways)
 
-When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system. Two exceptions are deliberate: [agent-deck](./agent-deck) keeps agent sessions running in tmux after you leave, and [agent-browser](./agent-browser)'s browser daemon exits after an hour idle (or on `agent-browser close`).
+When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system. Some things do keep running: [agent-deck](./agent-deck) keeps agent sessions running in tmux after you leave, [iloom-cli](./iloom-cli)'s tmux windows (on Linux without a display) stay open until you close them, [herdr](./herdr)'s server keeps its panes running until `herdr server stop`, [mcporter](./mcporter)'s optional daemon runs until `mcporter daemon stop`, and [agent-browser](./agent-browser)'s browser daemon exits after an hour idle (or on `agent-browser close`).
 
 ## Composing Environments
 
@@ -184,6 +191,10 @@ Or layer at runtime:
 ```bash
 flox activate -r floxrox/postgres-headless
 ```
+
+Some environments wrap an agent so it loads extra skills: [claude-code](./claude-code), [pi](./pi), [agentic-ollama](./agentic-ollama), and [agentic-lmstudio](./agentic-lmstudio) add the Flox skills. Layering another environment on top moves its packages ahead of those wrappers on `PATH`; in an interactive shell each environment moves its wrapper back to the front, so the agent still gets its skills. A command run with `flox activate -d <other> -- <command>` from inside one of them skips that step and runs the unwrapped agent, so start agents from an interactive shell.
+
+Layered Python environments also share packages. When the top environment includes Python, Flox adds the `site-packages` directory of every active environment to `PYTHONPATH`, so a Python tool from one environment can import another environment's versions of libraries they both use. The Python-based environments here were tested on their own; if one misbehaves only when layered, run it from a shell where the other environments aren't active.
 
 Additional composable environments are available from the [floxrox catalog](https://github.com/barstoolbluz/floxenvs) -- databases, container runtimes, workflow orchestrators, Python versions, and more.
 

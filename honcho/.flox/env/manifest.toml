@@ -1,0 +1,503 @@
+schema-version = "1.11.0"
+
+[install]
+# Honcho server, background deriver, migrations, and the honcho-ai Python
+# SDK, in one bundled Python venv
+honcho.pkg-path = "flox/honcho"
+honcho.pkg-group = "honcho"
+# PostgreSQL with pgvector, pinned to one major version: a major upgrade
+# can't open the old data directory
+postgresql.pkg-path = "postgresql_17"
+postgresql.pkg-group = "honcho-postgres"
+pgvector.pkg-path = "postgresql17Packages.pgvector"
+pgvector.pkg-group = "honcho-postgres"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# API listen address; override at activation, e.g.
+#   HONCHO_PORT=18001 flox activate -s
+# A non-loopback address also needs Honcho's auth turned on (see README).
+export HONCHO_HOST="${HONCHO_HOST:-127.0.0.1}"
+export HONCHO_PORT="${HONCHO_PORT:-18000}"
+# LLM keys and other Honcho settings: environment variables, or
+# config.toml in this directory (never in this manifest)
+export HONCHO_CONFIG_DIR="${HONCHO_CONFIG_DIR:-$HOME/.config/honcho}"
+export HONCHO_DATA_DIR="$FLOX_ENV_CACHE/honcho"
+export HONCHO_PGDATA="$HONCHO_DATA_DIR/pgdata"
+
+# PostgreSQL listens only on a Unix socket in a directory only you can
+# enter, so no TCP port is opened and other local users can't connect.
+# Socket paths are limited to about 100 bytes; when the cache path is too
+# long, use a per-environment directory in the user's runtime/temp dir.
+setup_honcho_socket_dir() {
+    local dir="$HONCHO_DATA_DIR/run" base
+    if [ "${#dir}" -gt 85 ]; then
+        base="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}"
+        dir="${base%/}/honcho-pg-$(printf '%s' "$HONCHO_DATA_DIR" | cksum | cut -d' ' -f1)"
+    fi
+    mkdir -p "$dir" 2>/dev/null
+    if [ -d "$dir" ] && [ ! -L "$dir" ] && [ -O "$dir" ]; then
+        chmod 700 "$dir"
+    else
+        echo "honcho: $dir is not a directory owned by you; PostgreSQL won't start" >&2
+    fi
+    export HONCHO_PG_SOCKET_DIR="$dir"
+}
+
+setup_honcho_paths() {
+    mkdir -p "$HONCHO_DATA_DIR" "$FLOX_ENV_CACHE/logs"
+    setup_honcho_socket_dir
+    # Honcho reads DB_CONNECTION_URI; set it yourself to use another
+    # PostgreSQL (with pgvector) instead of the bundled one
+    export HONCHO_LOCAL_DB_URI="postgresql+psycopg://honcho@/honcho?host=$HONCHO_PG_SOCKET_DIR"
+    export DB_CONNECTION_URI="${DB_CONNECTION_URI:-$HONCHO_LOCAL_DB_URI}"
+    # Address for clients: a wildcard listen address isn't one
+    case "$HONCHO_HOST" in
+        0.0.0.0|::|"") export HONCHO_URL="http://127.0.0.1:$HONCHO_PORT" ;;
+        *:*) export HONCHO_URL="http://[$HONCHO_HOST]:$HONCHO_PORT" ;;
+        *) export HONCHO_URL="http://$HONCHO_HOST:$HONCHO_PORT" ;;
+    esac
+}
+
+# Honcho embeds every new message, by default with OpenAI, and rejects the
+# message when it can't. This script asks Honcho's own settings loader, run
+# from the config directory, what it finds: whether an LLM key is set, and
+# whether EMBED_MESSAGES is set or an embedding key or server is configured.
+# The services run it when they start, so a key added to config.toml takes
+# effect on `flox services restart`. Prints e.g. "llm key" or "no-llm none",
+# plus "bad-toml" when config.toml can't be parsed (Honcho then ignores it).
+# "openai-default" means embeddings use the OpenAI key but not
+# LLM_OPENAI_BASE_URL, so they go to api.openai.com.
+write_honcho_config_probe() {
+    local dest="$HONCHO_DATA_DIR/honcho-config-probe.py"
+    cat > "$dest.$$" << 'EOF'
+import os
+import tomllib
+
+toml_ok = True
+if not os.getenv("HONCHO_CONFIG_TOML_DISABLED") and os.path.exists("config.toml"):
+    try:
+        with open("config.toml", "rb") as f:
+            tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        toml_ok = False
+
+from src.config import resolve_embedding_model_config, settings
+
+llm = settings.LLM
+has_llm = any((llm.OPENAI_API_KEY, llm.ANTHROPIC_API_KEY, llm.GEMINI_API_KEY,
+               llm.OPENAI_BASE_URL))
+if "EMBED_MESSAGES" in settings.model_fields_set:
+    embed = "set-true" if settings.EMBED_MESSAGES else "set-false"
+else:
+    emb = resolve_embedding_model_config(settings.EMBEDDING.MODEL_CONFIG)
+    if emb.base_url:
+        embed = "key"
+    elif emb.api_key:
+        openai_default = emb.transport == "openai" and llm.OPENAI_BASE_URL
+        embed = "openai-default" if openai_default else "key"
+    else:
+        embed = "none"
+print("llm" if has_llm else "no-llm", embed, "" if toml_ok else "bad-toml")
+EOF
+    if cmp -s "$dest.$$" "$dest"; then
+        rm -f "$dest.$$"
+    else
+        mv -f "$dest.$$" "$dest"
+    fi
+    # Honcho's own .env lookup depends on how it is started: the API's
+    # starts from Honcho's installed code and never finds
+    # ~/.config/honcho/.env, while the deriver's searches the working
+    # directory and every parent. The services turn it off and load the
+    # config directory's .env with this instead; as with Honcho's, its
+    # values win over the environment.
+    dest="$HONCHO_DATA_DIR/honcho-dotenv.py"
+    cat > "$dest.$$" << 'EOF'
+import logging
+import os
+import re
+import shlex
+import sys
+
+from dotenv import dotenv_values
+
+
+# python-dotenv logs lines it can't parse; word them like the messages below
+class DotenvWarnings(logging.Handler):
+    def emit(self, record):
+        msg = record.getMessage()
+        m = re.fullmatch(r"python-dotenv could not parse statement starting at line (\d+)", msg)
+        if m:
+            msg = f"ignoring line {m.group(1)}, which can't be parsed"
+        print(f".env: {msg}", file=sys.stderr)
+
+
+dotenv_log = logging.getLogger("dotenv.main")
+dotenv_log.addHandler(DotenvWarnings())
+dotenv_log.propagate = False
+
+# The environment derives HONCHO_URL from these at activation, so a .env
+# can't move the API without the deriver and clients losing track of it
+SKIP = {"HONCHO_HOST", "HONCHO_PORT", "HONCHO_URL"}
+
+if not os.access(".env", os.R_OK) or not os.path.isfile(".env"):
+    print(".env isn't a readable file; ignoring it", file=sys.stderr)
+    sys.exit(0)
+try:
+    values = dotenv_values(".env")
+except UnicodeDecodeError as e:
+    with open(".env", "rb") as f:
+        line = f.read()[:e.start].count(b"\n") + 1
+    print(f".env: line {line} isn't UTF-8 text; ignoring the whole file", file=sys.stderr)
+    sys.exit(0)
+for key, value in values.items():
+    if value is None:
+        continue
+    if key in SKIP:
+        print(f".env: ignoring {key}; set it when you activate", file=sys.stderr)
+    elif not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+        print(f".env: ignoring {key!r}, not a valid variable name", file=sys.stderr)
+    else:
+        print(f"export {key}={shlex.quote(value)}")
+EOF
+    if cmp -s "$dest.$$" "$dest"; then
+        rm -f "$dest.$$"
+    else
+        mv -f "$dest.$$" "$dest"
+    fi
+}
+
+# Run the probe the way the services run Honcho
+probe_honcho_config() {
+    (
+        if cd "$HONCHO_CONFIG_DIR" 2>/dev/null; then
+            if [ -f .env ]; then
+                eval "$("$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-dotenv.py" 2>/dev/null)"
+            fi
+        else
+            cd "$HONCHO_DATA_DIR" || exit 1
+            export HONCHO_CONFIG_TOML_DISABLED=1
+        fi
+        export PYTHON_DOTENV_DISABLED=1
+        "$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-config-probe.py" 2>/dev/null
+    )
+}
+
+# Where Honcho will find an LLM provider, and whether messages are embedded
+show_honcho_llm_status() {
+    local dir="$HONCHO_CONFIG_DIR" probe p_llm p_embed p_toml
+    probe=$(probe_honcho_config)
+    read -r p_llm p_embed p_toml <<< "$probe"
+    if [ -e "$dir" ] && ! { [ -d "$dir" ] && [ -x "$dir" ]; }; then
+        echo "  Warning: $dir isn't a directory you can enter;"
+        echo "  Honcho's settings come only from the environment"
+    fi
+    if [ "$p_toml" = "bad-toml" ]; then
+        echo "  Warning: $dir/config.toml isn't valid TOML; Honcho ignores all of it"
+    fi
+    # What a .env in the config directory contributes, and what it can't
+    local dotenv="" warn
+    if [ -e "$dir/.env" ]; then
+        dotenv=$(cd "$dir" && "$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-dotenv.py" 2>/dev/null)
+        (cd "$dir" && "$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-dotenv.py" 2>&1 >/dev/null) |
+            while IFS= read -r warn; do echo "  Warning: $dir/$warn"; done
+        printf '%s\n' "$dotenv" | sed -n "s/^export \([A-Za-z_][A-Za-z0-9_]*\)=''\$/\1/p" |
+            while IFS= read -r warn; do
+                [ -n "$(printenv "$warn")" ] &&
+                    echo "  Warning: $dir/.env sets $warn empty, which clears the value it has now"
+            done
+    fi
+    if [ -z "$probe" ]; then
+        echo "  LLM provider: unknown; Honcho couldn't read its settings"
+        echo "  (check $dir/config.toml and .env)"
+        return 0
+    fi
+    if [ "$p_llm" != "llm" ]; then
+        echo "  LLM provider: none; memory is stored and searchable, and"
+        echo "  reasoning needs a key (see honcho-info or the README)"
+    elif printf '%s\n' "$dotenv" |
+        grep -Eq "^export LLM_(OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|OPENAI_BASE_URL)=([^']|'[^'])"; then
+        echo "  LLM provider: from $dir/.env"
+    elif [ -n "${LLM_OPENAI_API_KEY:-}${LLM_ANTHROPIC_API_KEY:-}${LLM_GEMINI_API_KEY:-}${LLM_OPENAI_BASE_URL:-}" ]; then
+        echo "  LLM provider: from environment (LLM_*)"
+    else
+        echo "  LLM provider: from $dir"
+    fi
+    case "$p_embed" in
+        none) echo "  Embeddings: off (no embedding key); search is text only" ;;
+        set-false) echo "  Embeddings: off (EMBED_MESSAGES); search is text only" ;;
+        openai-default)
+            echo "  Warning: embeddings go to api.openai.com, not LLM_OPENAI_BASE_URL;"
+            echo "  set EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL (see the README)" ;;
+    esac
+}
+
+setup_honcho_paths
+write_honcho_config_probe
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "Honcho environment ready"
+echo ""
+if [ "$FLOX_ACTIVATE_START_SERVICES" = "true" ]; then
+  echo "  API: starting at $HONCHO_URL"
+else
+  echo "  API: not started (use flox activate -s, or flox services start)"
+fi
+show_honcho_llm_status
+echo ""
+
+echo "Commands:"
+echo "  flox services status          Check PostgreSQL, the API, and the deriver"
+echo "  curl \$HONCHO_URL/health       Check the API"
+echo "  python                        Python with the honcho-ai SDK"
+echo "  honcho-info                   Show configuration"
+echo ""
+'''
+
+[services]
+# PostgreSQL with pgvector. Creates the cluster on first start.
+honcho-postgres.command = '''
+log="$FLOX_ENV_CACHE/logs/honcho-postgres.log"
+if [ ! -f "$HONCHO_PGDATA/PG_VERSION" ]; then
+  mkdir -p "$HONCHO_PGDATA"
+  initdb -D "$HONCHO_PGDATA" -U honcho --auth=trust --encoding=UTF8 --locale=C \
+    >> "$log" 2>&1 || { echo "initdb failed; see $log" >> "$log"; exit 1; }
+fi
+postgres -D "$HONCHO_PGDATA" \
+  -c listen_addresses= \
+  -c unix_socket_directories="$HONCHO_PG_SOCKET_DIR" \
+  -c unix_socket_permissions=0700 \
+  >> "$log" 2>&1 &
+pg_pid=$!
+# `flox services stop` and `restart` send SIGTERM, which PostgreSQL takes as
+# a "smart" shutdown: it waits for every client to disconnect, and the API
+# and deriver never do. Ask for a fast shutdown (SIGINT) instead, which
+# rolls back open transactions and closes the connections.
+trap 'kill -INT "$pg_pid" 2>/dev/null' TERM INT
+wait "$pg_pid"
+status=$?
+# A trapped signal interrupts the first wait; wait again for the exit
+while kill -0 "$pg_pid" 2>/dev/null; do
+  wait "$pg_pid"
+  status=$?
+done
+exit "$status"
+'''
+
+# The Honcho API. Before starting it creates the database and pgvector
+# extension (bundled PostgreSQL only) and applies migrations, so a
+# `flox upgrade` that brings a new schema just works.
+honcho-api.command = '''
+log="$FLOX_ENV_CACHE/logs/honcho-api.log"
+# Honcho reads config.toml from its working directory. A .env there is
+# loaded here instead of by Honcho: its own lookup depends on how it is
+# started, and for `python -m` (the deriver) and `python -c` it searches
+# the working directory and every parent, so it is turned off. Without a
+# config directory, settings come only from the environment.
+if cd "$HONCHO_CONFIG_DIR" 2>/dev/null; then
+  if [ -f .env ]; then
+    eval "$("$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-dotenv.py" 2>>"$log")"
+  fi
+else
+  cd "$HONCHO_DATA_DIR" || exit 1
+  export HONCHO_CONFIG_TOML_DISABLED=1
+fi
+export PYTHON_DOTENV_DISABLED=1
+# Honcho rejects new messages it can't embed: with no embedding key or
+# server configured and EMBED_MESSAGES not set anywhere, store them unembedded
+set -- $("$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-config-probe.py" 2>>"$log")
+[ "${2:-}" = "none" ] && export EMBED_MESSAGES=false
+# Record the outcome for honcho-info
+case "${2:-}" in
+  none) echo "false (no embedding key configured)" ;;
+  set-false) echo "false (EMBED_MESSAGES)" ;;
+  set-true) echo "true (EMBED_MESSAGES)" ;;
+  key) echo "true" ;;
+  openai-default) echo "true (sent to api.openai.com, not LLM_OPENAI_BASE_URL)" ;;
+  *) echo "unknown (see honcho-api.log)" ;;
+esac > "$HONCHO_DATA_DIR/embed-messages"
+if ! printf '%s\n' "$HONCHO_HOST" | grep -Eqx '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|localhost|::1'; then
+  if [ "$("$FLOX_ENV/bin/python" -c 'from src.config import settings; print(settings.AUTH.USE_AUTH)' 2>>"$log")" != "True" ]; then
+    echo "Refusing to listen on $HONCHO_HOST without auth: set AUTH_USE_AUTH=true and AUTH_JWT_SECRET (see README)" >> "$log"
+    exit 1
+  fi
+fi
+if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
+  n=0
+  until pg_isready -q -h "$HONCHO_PG_SOCKET_DIR" -U honcho; do
+    n=$((n + 1))
+    [ "$n" -lt 120 ] || { echo "PostgreSQL did not start; see honcho-postgres.log" >> "$log"; exit 1; }
+    sleep 0.5
+  done
+  if [ "$(psql -h "$HONCHO_PG_SOCKET_DIR" -U honcho -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'honcho'")" != "1" ]; then
+    createdb -h "$HONCHO_PG_SOCKET_DIR" -U honcho honcho >> "$log" 2>&1 || exit 1
+  fi
+  psql -h "$HONCHO_PG_SOCKET_DIR" -U honcho -d honcho -qc "CREATE EXTENSION IF NOT EXISTS vector" >> "$log" 2>&1 || exit 1
+fi
+honcho-migrate upgrade head >> "$log" 2>&1 || { echo "Migrations failed" >> "$log"; exit 1; }
+exec honcho-server >> "$log" 2>&1
+'''
+
+# Background worker that turns stored messages into memory (needs an LLM)
+honcho-deriver.command = '''
+log="$FLOX_ENV_CACHE/logs/honcho-deriver.log"
+# Honcho reads config.toml from its working directory. A .env there is
+# loaded here instead of by Honcho: its own lookup depends on how it is
+# started, and for `python -m` (the deriver) and `python -c` it searches
+# the working directory and every parent, so it is turned off. Without a
+# config directory, settings come only from the environment.
+if cd "$HONCHO_CONFIG_DIR" 2>/dev/null; then
+  if [ -f .env ]; then
+    eval "$("$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-dotenv.py" 2>>"$log")"
+  fi
+else
+  cd "$HONCHO_DATA_DIR" || exit 1
+  export HONCHO_CONFIG_TOML_DISABLED=1
+fi
+export PYTHON_DOTENV_DISABLED=1
+# Honcho rejects new messages it can't embed: with no embedding key or
+# server configured and EMBED_MESSAGES not set anywhere, store them unembedded
+set -- $("$FLOX_ENV/bin/python" "$HONCHO_DATA_DIR/honcho-config-probe.py" 2>>"$log")
+[ "${2:-}" = "none" ] && export EMBED_MESSAGES=false
+# Wait for the API, which applies the migrations the deriver needs
+n=0
+until curl -fsS -o /dev/null "$HONCHO_URL/health" 2>/dev/null; do
+  n=$((n + 1))
+  [ "$n" -lt 240 ] || { echo "The API did not come up; see honcho-api.log" >> "$log"; exit 1; }
+  sleep 0.5
+done
+exec honcho-deriver >> "$log" 2>&1
+'''
+
+[profile]
+bash = '''
+honcho-info() {
+    local cfg="$HONCHO_CONFIG_DIR/config.toml" health
+    echo "Honcho Environment Configuration"
+    echo ""
+    health=$(curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null) || health="not running (flox services start)"
+    echo "API: $HONCHO_URL ($health)"
+    if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
+        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
+        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
+    else
+        echo "Database: DB_CONNECTION_URI (external)"
+    fi
+    if [ -e "$HONCHO_CONFIG_DIR" ] && ! { [ -d "$HONCHO_CONFIG_DIR" ] && [ -x "$HONCHO_CONFIG_DIR" ]; }; then
+        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
+    else
+        echo "Config: $cfg ($([ -f "$cfg" ] && echo found || echo "not created"))"
+    fi
+    echo "Embed messages: $(cat "$HONCHO_DATA_DIR/embed-messages" 2>/dev/null || echo "decided when honcho-api starts")"
+    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
+    echo ""
+    echo "LLM keys (environment, or config.toml / .env in the config directory):"
+    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
+    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
+    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
+    echo ""
+    echo "Commands:"
+    echo "  flox services status          PostgreSQL, API, and deriver"
+    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
+    echo "  curl \$HONCHO_URL/health"
+    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
+    echo "  honcho-migrate current        Show the schema revision"
+    echo ""
+    echo "Source: https://github.com/plastic-labs/honcho"
+}
+export -f honcho-info
+'''
+
+zsh = '''
+honcho-info() {
+    local cfg="$HONCHO_CONFIG_DIR/config.toml" health
+    echo "Honcho Environment Configuration"
+    echo ""
+    health=$(curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null) || health="not running (flox services start)"
+    echo "API: $HONCHO_URL ($health)"
+    if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
+        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
+        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
+    else
+        echo "Database: DB_CONNECTION_URI (external)"
+    fi
+    if [ -e "$HONCHO_CONFIG_DIR" ] && ! { [ -d "$HONCHO_CONFIG_DIR" ] && [ -x "$HONCHO_CONFIG_DIR" ]; }; then
+        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
+    else
+        echo "Config: $cfg ($([ -f "$cfg" ] && echo found || echo "not created"))"
+    fi
+    echo "Embed messages: $(cat "$HONCHO_DATA_DIR/embed-messages" 2>/dev/null || echo "decided when honcho-api starts")"
+    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
+    echo ""
+    echo "LLM keys (environment, or config.toml / .env in the config directory):"
+    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
+    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
+    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
+    echo ""
+    echo "Commands:"
+    echo "  flox services status          PostgreSQL, API, and deriver"
+    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
+    echo "  curl \$HONCHO_URL/health"
+    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
+    echo "  honcho-migrate current        Show the schema revision"
+    echo ""
+    echo "Source: https://github.com/plastic-labs/honcho"
+}
+'''
+
+fish = '''
+function honcho-info
+    set -l cfg "$HONCHO_CONFIG_DIR/config.toml"
+    echo "Honcho Environment Configuration"
+    echo ""
+    set -l health (curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null)
+    or set health "not running (flox services start)"
+    echo "API: $HONCHO_URL ($health)"
+    if test "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI"
+        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
+        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
+    else
+        echo "Database: DB_CONNECTION_URI (external)"
+    end
+    if test -e "$HONCHO_CONFIG_DIR"; and not test -d "$HONCHO_CONFIG_DIR" -a -x "$HONCHO_CONFIG_DIR"
+        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
+    else if test -f "$cfg"
+        echo "Config: $cfg (found)"
+    else
+        echo "Config: $cfg (not created)"
+    end
+    if test -f "$HONCHO_DATA_DIR/embed-messages"
+        echo "Embed messages: "(cat "$HONCHO_DATA_DIR/embed-messages")
+    else
+        echo "Embed messages: decided when honcho-api starts"
+    end
+    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
+    echo ""
+    echo "LLM keys (environment, or config.toml / .env in the config directory):"
+    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
+    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
+    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
+    echo ""
+    echo "Commands:"
+    echo "  flox services status          PostgreSQL, API, and deriver"
+    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
+    echo "  curl \$HONCHO_URL/health"
+    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
+    echo "  honcho-migrate current        Show the schema revision"
+    echo ""
+    echo "Source: https://github.com/plastic-labs/honcho"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]

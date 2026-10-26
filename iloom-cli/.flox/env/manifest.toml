@@ -1,0 +1,176 @@
+schema-version = "1.11.0"
+
+[install]
+# iloom-cli provides `il` and `iloom`; git is wrapped into the package.
+iloom-cli.pkg-path = "flox/iloom-cli"
+iloom-cli.pkg-group = "iloom"
+# GitHub CLI: iloom's default issue tracker and PR provider. It reuses your
+# existing login in ~/.config/gh, or run `gh auth login` once.
+gh.pkg-path = "gh"
+gh.pkg-group = "iloom-tools"
+# On Linux without a GUI terminal (DISPLAY/WAYLAND_DISPLAY), iloom opens
+# each loom's windows in tmux. macOS uses Terminal or iTerm.
+tmux.pkg-path = "tmux"
+tmux.pkg-group = "iloom-tools"
+tmux.systems = ["aarch64-linux", "x86_64-linux"]
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+bat.pkg-path = "bat"
+
+[hook]
+on-activate = '''
+# iloom treats this Nix store install as a global npm install, so it would
+# check the npm registry for updates once a day and `il update` would try
+# `npm install -g`. Any other value turns both off; upgrade with
+# `flox upgrade` instead.
+export OVERRIDE_INSTALLATION_METHOD="${OVERRIDE_INSTALLATION_METHOD:-flox}"
+# iloom sends anonymous usage events to PostHog unless
+# ~/.config/iloom-ai/telemetry.json says otherwise; it has no environment
+# variable for this. With ILOOM_TELEMETRY=off (the default) the hook writes
+# an opt-out there, but only when the file doesn't exist yet, so a later
+# `il telemetry on` (or off) is never overridden. Keep iloom's own default:
+#   ILOOM_TELEMETRY=on flox activate
+export ILOOM_TELEMETRY="${ILOOM_TELEMETRY:-off}"
+
+setup_iloom_telemetry() {
+    local dir="$HOME/.config/iloom-ai" tmp
+    [ "$ILOOM_TELEMETRY" = "off" ] || return 0
+    [ -n "$HOME" ] && [ ! -e "$dir/telemetry.json" ] || return 0
+    mkdir -p "$dir" || return 0
+    tmp="$dir/.telemetry.json.$$"
+    # Renamed into place, so iloom never reads a partly written file
+    printf '{\n  "enabled": false\n}\n' > "$tmp" && mv -f "$tmp" "$dir/telemetry.json"
+}
+
+# iloom runs every loom in Claude Code; Codex and Gemini CLI are optional
+# extra reviewers for its plans and code reviews
+show_iloom_agents() {
+    local agent found=""
+    if command -v claude >/dev/null 2>&1; then
+        echo "  Claude Code: on PATH"
+    else
+        echo "  Claude Code: not found. iloom needs it; activate"
+        echo "  ../claude-code first, then this environment."
+    fi
+    for agent in codex gemini; do
+        command -v "$agent" >/dev/null 2>&1 && found="$found $agent"
+    done
+    [ -z "$found" ] || echo "  Review providers on PATH:$found"
+}
+
+setup_iloom_telemetry
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "iloom environment ready"
+echo ""
+show_iloom_agents
+# `gh auth token` only reads the stored login; `gh auth status` would call
+# the GitHub API on every activation
+if gh auth token >/dev/null 2>&1; then
+  echo "  GitHub CLI: signed in"
+else
+  echo "  GitHub CLI: not signed in (run gh auth login for GitHub issues)"
+fi
+if grep -q '"enabled": *false' "$HOME/.config/iloom-ai/telemetry.json" 2>/dev/null; then
+  echo "  Telemetry: off (il telemetry on to enable)"
+else
+  echo "  Telemetry: on (il telemetry off to disable)"
+fi
+echo ""
+
+echo "Commands:"
+echo "  il init                 Configure iloom for this repository"
+echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
+echo "  il spin                 Launch Claude in the current loom"
+echo "  il list                 Show active looms"
+echo "  il finish               Validate, merge, and clean up a loom"
+echo "  iloom-info              Show configuration"
+echo ""
+'''
+
+[profile]
+bash = '''
+iloom-info() {
+    echo "iloom Environment Configuration"
+    echo ""
+    echo "Version: $(il --version 2>/dev/null)"
+    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
+    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
+    echo ""
+    echo "Commands:"
+    echo "  il init                 Configure iloom for this repository"
+    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
+    echo "  il spin                 Launch Claude in the current loom"
+    echo "  il list                 Show active looms (--all, --global)"
+    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
+    echo "  il commit               Commit with an issue reference"
+    echo "  il finish               Validate, merge, and clean up a loom"
+    echo "  il telemetry off|on|status  Manage usage telemetry"
+    echo ""
+    echo "Global settings: ~/.config/iloom-ai/settings.json"
+    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
+    echo "Looms: <repo>-looms/, next to the repository"
+    echo "Source: https://github.com/iloom-ai/iloom-cli"
+}
+export -f iloom-info
+'''
+
+zsh = '''
+iloom-info() {
+    echo "iloom Environment Configuration"
+    echo ""
+    echo "Version: $(il --version 2>/dev/null)"
+    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
+    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
+    echo ""
+    echo "Commands:"
+    echo "  il init                 Configure iloom for this repository"
+    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
+    echo "  il spin                 Launch Claude in the current loom"
+    echo "  il list                 Show active looms (--all, --global)"
+    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
+    echo "  il commit               Commit with an issue reference"
+    echo "  il finish               Validate, merge, and clean up a loom"
+    echo "  il telemetry off|on|status  Manage usage telemetry"
+    echo ""
+    echo "Global settings: ~/.config/iloom-ai/settings.json"
+    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
+    echo "Looms: <repo>-looms/, next to the repository"
+    echo "Source: https://github.com/iloom-ai/iloom-cli"
+}
+'''
+
+fish = '''
+function iloom-info
+    echo "iloom Environment Configuration"
+    echo ""
+    echo "Version: "(il --version 2>/dev/null)
+    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
+    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
+    echo ""
+    echo "Commands:"
+    echo "  il init                 Configure iloom for this repository"
+    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
+    echo "  il spin                 Launch Claude in the current loom"
+    echo "  il list                 Show active looms (--all, --global)"
+    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
+    echo "  il commit               Commit with an issue reference"
+    echo "  il finish               Validate, merge, and clean up a loom"
+    echo "  il telemetry off|on|status  Manage usage telemetry"
+    echo ""
+    echo "Global settings: ~/.config/iloom-ai/settings.json"
+    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
+    echo "Looms: <repo>-looms/, next to the repository"
+    echo "Source: https://github.com/iloom-ai/iloom-cli"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
