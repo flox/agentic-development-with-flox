@@ -25,7 +25,7 @@ The first activation in a terminal runs a short setup (mode, API key, editor, pr
 
 - Documentation: https://docs.ampcode.com/
 - Install Guide: https://ampcode.com/install
-- GitHub: https://github.com/sourcegraph/amp
+- Website: https://ampcode.com
 
 ## Helper Commands
 

@@ -55,7 +55,7 @@ claw-info    # Show configuration and API key status
 
 ## Resources
 
-- [Claw Code GitHub](https://github.com/instructkr/claw-code)
+- [Claw Code GitHub](https://github.com/ultraworkers/claw-code)
 
 ## Support
 
@@ -64,4 +64,4 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For Claw Code-specific issues:
-- [Claw Code GitHub Issues](https://github.com/instructkr/claw-code/issues)
+- [Claw Code GitHub Issues](https://github.com/ultraworkers/claw-code/issues)

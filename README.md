@@ -209,7 +209,7 @@ Additional composable environments are available from the [floxrox catalog](http
 
 This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
 
-Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `flox/skills-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
+Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `agent-stacks/agent-plugin-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
 
 ## Prerequisites
 

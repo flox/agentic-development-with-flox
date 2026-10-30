@@ -103,7 +103,7 @@ openhands-info    # Show configuration, Docker status, and API key status
 
 ## Resources
 
-- [OpenHands GitHub](https://github.com/All-Hands-AI/OpenHands)
+- [OpenHands GitHub](https://github.com/OpenHands/OpenHands)
 - [OpenHands Documentation](https://docs.all-hands.dev/)
 - [OpenHands CLI](https://github.com/OpenHands/OpenHands-CLI)
 
@@ -114,5 +114,5 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For OpenHands-specific issues:
-- [OpenHands GitHub Issues](https://github.com/All-Hands-AI/OpenHands/issues)
+- [OpenHands GitHub Issues](https://github.com/OpenHands/OpenHands/issues)
 - [OpenHands Discord](https://discord.gg/ESHStjSjD4)

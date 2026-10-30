@@ -1,6 +1,6 @@
 # Flox Environment for OpenCode
 
-A Flox environment for [OpenCode](https://github.com/sst/opencode), an AI coding agent built for the terminal. OpenCode provides a powerful TUI interface with multi-provider support, custom agents, and seamless integration with your development workflow.
+A Flox environment for [OpenCode](https://github.com/anomalyco/opencode), an AI coding agent built for the terminal. OpenCode provides a powerful TUI interface with multi-provider support, custom agents, and seamless integration with your development workflow.
 
 ## Features
 
@@ -582,7 +582,7 @@ This environment works on:
 ## Additional Resources
 
 - **OpenCode Website**: [opencode.ai](https://opencode.ai)
-- **GitHub Repository**: [github.com/sst/opencode](https://github.com/sst/opencode)
+- **GitHub Repository**: [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode)
 - **Documentation**: [opencode.ai/docs](https://opencode.ai/docs)
 - **CLI Reference**: [opencode.ai/docs/cli](https://opencode.ai/docs/cli)
 - **Configuration Guide**: [opencode.ai/docs/config](https://opencode.ai/docs/config)
@@ -607,4 +607,4 @@ This environment works on:
 
 ## License
 
-This Flox environment configuration is provided as-is. OpenCode is open source from SST - see the [OpenCode repository](https://github.com/sst/opencode) for license details.
+This Flox environment configuration is provided as-is. OpenCode is open source from SST - see the [OpenCode repository](https://github.com/anomalyco/opencode) for license details.

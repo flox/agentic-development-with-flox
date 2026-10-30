@@ -68,7 +68,7 @@ Set the environment variable for your provider, or use `/login`:
 
 ## Flox Skills
 
-The environment installs `flox/skills-flox` and wraps `pi` so it starts with `--skill` pointing at the Flox skills:
+The environment installs `agent-stacks/agent-plugin-flox` and wraps `pi` so it starts with `--skill` pointing at the Flox skills:
 
 - **flox** - Create and manage Flox environments, add packages, services
 - **floxify** - Add a Flox environment to an existing project

@@ -21,8 +21,8 @@ openssl.outputs = "all"
 jq.pkg-path = "jq"
 
 # Flox skills (flox, floxify, flox-debug) - teach Claude Code to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 # ccusage - token usage and cost reports from Claude Code's local logs,
 # plus a status line (see setup_claude_ccusage_statusline below)
@@ -68,11 +68,22 @@ install_claude_env_script() {
 # environment, via a PATH shim that adds --plugin-dir. Skipped when the
 # flox@flox-skills plugin is already installed and enabled globally.
 setup_claude_flox_skills() {
-    local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
+    local plugin_dir="$FLOX_ENV_CACHE/claude-plugin/flox"
     local real_claude="$FLOX_ENV/bin/claude"
     local shim_dir="$FLOX_ENV_CACHE/bin"
     export FLOXENV_CLAUDE_CODE_SHIM_DIR="$shim_dir"
-    [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
+    [ -n "$FLOX_ENV_CACHE" ] && [ -d "$skills_dir" ] && [ -x "$real_claude" ] || return 0
+
+    # agent-plugin-flox ships its skills without a Claude Code plugin
+    # manifest, so build a plugin directory that links to them
+    mkdir -p "$plugin_dir/.claude-plugin"
+    local version
+    version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$FLOX_ENV/share/agent-plugins/flox/plugin.json" 2>/dev/null)
+    printf '{"name":"flox","version":"%s","description":"Flox skills (flox, floxify, flox-debug) from agent-stacks/agent-plugin-flox","author":{"name":"Flox"},"license":"Apache-2.0"}\n' \
+        "${version:-0.0.0}" > "$plugin_dir/.claude-plugin/plugin.json.$$"
+    mv -f "$plugin_dir/.claude-plugin/plugin.json.$$" "$plugin_dir/.claude-plugin/plugin.json"
+    ln -sfn "$skills_dir" "$plugin_dir/skills"
 
     mkdir -p "$shim_dir"
     cat > "$shim_dir/.claude.$$" << EOF

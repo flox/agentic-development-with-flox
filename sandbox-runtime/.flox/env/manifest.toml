@@ -119,7 +119,7 @@ srt-info() {
     echo "  srt -d -- <command>          Debug logging"
     echo "  srt-init                     Write a starter ~/.srt-settings.json"
     echo ""
-    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+    echo "Source: https://github.com/anthropics/sandbox-runtime"
 }
 export -f srt-info
 '''
@@ -141,7 +141,7 @@ srt-info() {
     echo "  srt -d -- <command>          Debug logging"
     echo "  srt-init                     Write a starter ~/.srt-settings.json"
     echo ""
-    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+    echo "Source: https://github.com/anthropics/sandbox-runtime"
 }
 '''
 
@@ -162,7 +162,7 @@ function srt-info
     echo "  srt -d -- <command>          Debug logging"
     echo "  srt-init                     Write a starter ~/.srt-settings.json"
     echo ""
-    echo "Source: https://github.com/anthropic-experimental/sandbox-runtime"
+    echo "Source: https://github.com/anthropics/sandbox-runtime"
 end
 '''
 

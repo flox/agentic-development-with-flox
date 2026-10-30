@@ -14,8 +14,8 @@ curl.pkg-path = "curl"
 curl.outputs = "all"
 
 # Flox skills (flox, floxify, flox-debug) - teach Crush to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 
 ## Environment Variables ---------------------------------------------
@@ -43,7 +43,7 @@ chmod 700 "$SECRETS_DIR"
 
 # Flox skills location; crush.json references it as "$FLOX_SKILLS_DIR" so the
 # path only resolves while this environment is active
-export FLOX_SKILLS_DIR="$FLOX_ENV/share/flox/codex/flox"
+export FLOX_SKILLS_DIR="$FLOX_ENV/share/agent-plugins/flox/skills"
 
 # =============================================================================
 # OS Detection

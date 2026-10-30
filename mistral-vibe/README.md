@@ -55,7 +55,7 @@ vibe -c
 
 ## Flox Skills
 
-The environment installs `flox/skills-flox` and sets `VIBE_SKILL_PATHS` to its skills directory:
+The environment installs `agent-stacks/agent-plugin-flox` and sets `VIBE_SKILL_PATHS` to its skills directory:
 
 - **flox** - Create and manage Flox environments, add packages, services
 - **floxify** - Add a Flox environment to an existing project

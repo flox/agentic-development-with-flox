@@ -18,8 +18,8 @@ copilot-cli.pkg-path = "flox/copilot-cli"
 copilot-cli.pkg-group = "main"
 
 # Flox skills (flox, floxify, flox-debug) - teach Copilot CLI to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 
@@ -36,7 +36,7 @@ skills-flox.pkg-group = "flox-skills"
 on-activate = '''
 # Add the Flox skills to Copilot's skill search path (comma-separated)
 setup_copilot_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     [ -d "$skills_dir" ] || return 0
     case ",${COPILOT_SKILLS_DIRS:-}," in
         *",$skills_dir,"*) ;;

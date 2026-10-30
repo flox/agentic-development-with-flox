@@ -22,7 +22,7 @@ The environment includes:
 
 - `gemini` - Gemini CLI tool
 - VS Code Gemini CLI IDE Companion extension
-- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`), linked into `~/.gemini/skills`
+- `agent-plugin-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`), linked into `~/.gemini/skills`
 
 ## Getting Started
 

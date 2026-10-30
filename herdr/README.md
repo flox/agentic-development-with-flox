@@ -103,7 +103,7 @@ Herdr is licensed under the AGPL-3.0. Running it for yourself is unaffected; if 
 ## Resources
 
 - [Herdr documentation](https://herdr.dev/docs/)
-- [Herdr GitHub](https://github.com/ogulcancelik/herdr)
+- [Herdr GitHub](https://github.com/herdrdev/herdr)
 
 ## Support
 
@@ -113,4 +113,4 @@ For issues with this Flox environment:
 
 For Herdr-specific issues:
 - Run `herdr status`, and check `~/.config/herdr/herdr-server.log`
-- [Herdr GitHub Issues](https://github.com/ogulcancelik/herdr/issues)
+- [Herdr GitHub Issues](https://github.com/herdrdev/herdr/issues)

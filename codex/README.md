@@ -21,7 +21,7 @@ A Flox environment for [Codex CLI](https://github.com/openai/codex), a lightweig
 The environment includes:
 
 - `codex` - OpenAI's local AI coding agent (the Flox build, `flox/codex`, which can load skills from the environment)
-- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`)
+- `agent-plugin-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`)
 
 ## Getting Started
 

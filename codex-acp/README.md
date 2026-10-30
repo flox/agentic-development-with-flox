@@ -1,6 +1,6 @@
 # A Flox Environment for Codex ACP Adapter
 
-This Flox environment provides [Codex ACP Adapter](https://github.com/zed-industries/codex-acp)an ACP (Agent Client Protocol) adapter that bridges OpenAI's Codex with ACP-compatible editors and applications.
+This Flox environment provides [Codex ACP Adapter](https://github.com/agentclientprotocol/codex-acp)an ACP (Agent Client Protocol) adapter that bridges OpenAI's Codex with ACP-compatible editors and applications.
 
 ## What You Get
 
@@ -141,7 +141,7 @@ OPENAI_API_KEY=sk-xxx flox activate -s
 This Flox environment supports:
 - Linux (x86_64)
 
-**Note**: While the [Codex ACP Adapter](https://github.com/zed-industries/codex-acp) may support multiple platforms, the `flox/codex-acp` package is currently available for x86_64-linux.
+**Note**: While the [Codex ACP Adapter](https://github.com/agentclientprotocol/codex-acp) may support multiple platforms, the `flox/codex-acp` package is currently available for x86_64-linux.
 
 ## Power User Tips
 
@@ -156,7 +156,7 @@ This Flox environment supports:
 
 ### Upstream
 
-This environment packages [Codex ACP Adapter](https://github.com/zed-industries/codex-acp) by Zed Industries. **Thank you** to the Zed Industries team and all contributors for building and maintaining this excellent ACP adapter that bridges OpenAI's Codex with editor integrations.
+This environment packages [Codex ACP Adapter](https://github.com/agentclientprotocol/codex-acp) by Zed Industries. **Thank you** to the Zed Industries team and all contributors for building and maintaining this excellent ACP adapter that bridges OpenAI's Codex with editor integrations.
 
 ### Packaging & Distribution
 

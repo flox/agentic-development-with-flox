@@ -3,6 +3,10 @@
   "manifest": {
     "schema-version": "1.11.0",
     "install": {
+      "agent-plugin-flox": {
+        "pkg-path": "agent-stacks/agent-plugin-flox",
+        "pkg-group": "flox-skills"
+      },
       "bat": {
         "pkg-path": "bat",
         "pkg-group": "tools",
@@ -35,19 +39,15 @@
         "pkg-path": "opencode",
         "pkg-group": "agentic",
         "outputs": "all"
-      },
-      "skills-flox": {
-        "pkg-path": "flox/skills-flox",
-        "pkg-group": "flox-skills"
       }
     },
     "hook": {
-      "on-activate": "# === SERVER CONFIGURATION ===\nexport LMS_PORT=\"${LMS_PORT:-1234}\"\nexport LMS_HOST=\"${LMS_HOST:-127.0.0.1}\"\nexport LMS_GUI=\"${LMS_GUI:-false}\"\nexport LMS_CORS_ORIGIN=\"${LMS_CORS_ORIGIN:-*}\"\nexport LMS_CONTEXT_LENGTH=\"${LMS_CONTEXT_LENGTH:-131072}\"\n\n# Constructed base URL for helper functions\nexport LMS_API_BASE=\"http://${LMS_HOST}:${LMS_PORT}\"\n\n# === DATA DIRECTORIES ===\nexport LMS_LOG_DIR=\"$FLOX_ENV_CACHE/logs\"\nmkdir -p \"$LMS_LOG_DIR\"\n\n# === GPU DETECTION ===\nexport _FLOX_ENV_CUDA_DETECTION=0\nif command -v nvidia-smi >/dev/null 2>&1; then\n  if nvidia-smi -L 2>/dev/null | grep -q \"GPU\"; then\n    export _FLOX_ENV_CUDA_DETECTION=1\n  fi\nfi\n\n# === FLOX SKILLS ===\n# Load the Flox skills (flox, floxify, flox-debug) into the agentic CLI tools.\n# Applies to direct launches and to the launcher's tool sessions alike.\nsetup_claude_flox_skills() {\n    local plugin_dir=\"$FLOX_ENV/share/flox/claude/flox\"\n    local real_claude=\"$FLOX_ENV/bin/claude\"\n    local shim_dir=\"$FLOX_ENV_CACHE/bin\"\n    [ -d \"$plugin_dir\" ] && [ -x \"$real_claude\" ] || return 0\n\n    # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally\n    mkdir -p \"$shim_dir\"\n    cat > \"$shim_dir/claude\" << EOF\n#!/usr/bin/env bash\nif grep -qs '\"flox@flox-skills\"' \"\\$HOME/.claude/plugins/installed_plugins.json\" && grep -Eqs '\"flox@flox-skills\"[[:space:]]*:[[:space:]]*true' \"\\$HOME/.claude/settings.json\"; then\n    exec \"$real_claude\" \"\\$@\"\nfi\nexec \"$real_claude\" --plugin-dir \"$plugin_dir\" \"\\$@\"\nEOF\n    chmod +x \"$shim_dir/claude\"\n    case \":$PATH:\" in\n        *\":$shim_dir:\"*) ;;\n        *) export PATH=\"$shim_dir:$PATH\" ;;\n    esac\n}\nsetup_claude_flox_skills\n\n# The Flox build of Codex reads skills from CODEX_FLOX_SKILL_ROOTS\n# (colon-separated; any roots you set yourself are kept)\nsetup_codex_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/flox/codex/flox\"\n    [ -d \"$skills_dir\" ] || return 0\n    case \":${CODEX_FLOX_SKILL_ROOTS:-}:\" in\n        *\":$skills_dir:\"*) ;;\n        *) export CODEX_FLOX_SKILL_ROOTS=\"$skills_dir${CODEX_FLOX_SKILL_ROOTS:+:$CODEX_FLOX_SKILL_ROOTS}\" ;;\n    esac\n}\nsetup_codex_flox_skills\n\n# OpenCode merges the file named by OPENCODE_CONFIG with its other config, and\n# launchers that set OPENCODE_CONFIG_CONTENT (e.g. newer `ollama launch`) don't\n# override it. Falls back to OPENCODE_CONFIG_CONTENT if OPENCODE_CONFIG is taken.\nsetup_opencode_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/flox/opencode/flox/skills\"\n    local config=\"$FLOX_ENV_CACHE/opencode-flox-skills.json\"\n    local content=\"{\\\"skills\\\":{\\\"paths\\\":[\\\"$skills_dir\\\"]}}\"\n    [ -d \"$skills_dir\" ] || return 0\n    if [ -z \"${OPENCODE_CONFIG:-}\" ] || [ \"$OPENCODE_CONFIG\" = \"$config\" ]; then\n        printf '%s\\n' \"$content\" > \"$config\"\n        export OPENCODE_CONFIG=\"$config\"\n    elif [ -z \"${OPENCODE_CONFIG_CONTENT:-}\" ]; then\n        export OPENCODE_CONFIG_CONTENT=\"$content\"\n    else\n        echo \"Note: OPENCODE_CONFIG and OPENCODE_CONFIG_CONTENT are both set; Flox skills not added to OpenCode\" >&2\n    fi\n}\nsetup_opencode_flox_skills\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"LM Studio + Agentic Tools environment ready\"\necho \"\"\necho \"Server:\"\necho \"  API: ${LMS_API_BASE}\"\necho \"  GUI: ${LMS_GUI}\"\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: Available (CUDA detected)\"\nelse\n  echo \"  GPU: Not detected (CPU mode)\"\nfi\necho \"\"\necho \"Quick Start:\"\necho \"  flox activate -s                                  Start LM Studio server\"\necho \"  lms-launch claude --model zai-org/glm-4.7-flash   Download, load, launch\"\necho \"\"\necho \"  Context window: ${LMS_CONTEXT_LENGTH} (override: --context-length or LMS_CONTEXT_LENGTH)\"\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: auto-detected (override: --gpu max|off)\"\nelse\n  echo \"  GPU: not detected (override: --gpu max|off)\"\nfi\necho \"\"\necho \"Commands:\"\necho \"  lms-launch <tool> --model <m> [args]      Download, load, and launch tool\"\necho \"  lms ls                                    List loaded models\"\necho \"  lmstudio-info                             Show configuration\"\necho \"  lmstudio-health                           Test API endpoint\"\necho \"  helpf                                     View full README documentation\"\necho \"\"\n\n# Fetch README.md if not present\nREADME_FILE=\"$FLOX_ENV_PROJECT/README.md\"\nif [ ! -f \"$README_FILE\" ]; then\n  if curl -fsSL https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md -o \"$README_FILE\" 2>/dev/null; then\n    echo \"Downloaded README.md (use 'helpf' to view)\"\n  fi\nfi\n"
+      "on-activate": "# Move a freshly written script into place, unless it matches the one there.\n# The rename is atomic, so a command starting in another shell at the same\n# moment never runs an empty or partly written script.\ninstall_agentic_lmstudio_script() {\n    local tmp=\"$1\" dest=\"$2\"\n    if cmp -s \"$tmp\" \"$dest\"; then\n        rm -f \"$tmp\"\n    else\n        chmod +x \"$tmp\"\n        mv -f \"$tmp\" \"$dest\"\n    fi\n}\n\n# === SERVER CONFIGURATION ===\nexport LMS_PORT=\"${LMS_PORT:-1234}\"\nexport LMS_HOST=\"${LMS_HOST:-127.0.0.1}\"\nexport LMS_GUI=\"${LMS_GUI:-false}\"\nexport LMS_CORS_ORIGIN=\"${LMS_CORS_ORIGIN:-*}\"\nexport LMS_CONTEXT_LENGTH=\"${LMS_CONTEXT_LENGTH:-131072}\"\n\n# Constructed base URL for helper functions\nexport LMS_API_BASE=\"http://${LMS_HOST}:${LMS_PORT}\"\n\n# === DATA DIRECTORIES ===\nexport LMS_LOG_DIR=\"$FLOX_ENV_CACHE/logs\"\nmkdir -p \"$LMS_LOG_DIR\"\n\n# === GPU DETECTION ===\nexport _FLOX_ENV_CUDA_DETECTION=0\nif command -v nvidia-smi >/dev/null 2>&1; then\n  if nvidia-smi -L 2>/dev/null | grep -q \"GPU\"; then\n    export _FLOX_ENV_CUDA_DETECTION=1\n  fi\nfi\n\n# === FLOX SKILLS ===\n# Load the Flox skills (flox, floxify, flox-debug) into the agentic CLI tools.\n# Applies to direct launches and to the launcher's tool sessions alike.\nsetup_claude_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/agent-plugins/flox/skills\"\n    local plugin_dir=\"$FLOX_ENV_CACHE/claude-plugin/flox\"\n    local real_claude=\"$FLOX_ENV/bin/claude\"\n    local shim_dir=\"$FLOX_ENV_CACHE/bin\"\n    export AGENTIC_LMSTUDIO_SHIM_DIR=\"$shim_dir\"\n    [ -n \"$FLOX_ENV_CACHE\" ] && [ -d \"$skills_dir\" ] && [ -x \"$real_claude\" ] || return 0\n\n    # agent-plugin-flox ships its skills without a Claude Code plugin\n    # manifest, so build a plugin directory that links to them\n    mkdir -p \"$plugin_dir/.claude-plugin\"\n    local version\n    version=$(sed -n 's/.*\"version\": *\"\\([^\"]*\\)\".*/\\1/p' \"$FLOX_ENV/share/agent-plugins/flox/plugin.json\" 2>/dev/null)\n    printf '{\"name\":\"flox\",\"version\":\"%s\",\"description\":\"Flox skills (flox, floxify, flox-debug) from agent-stacks/agent-plugin-flox\",\"author\":{\"name\":\"Flox\"},\"license\":\"Apache-2.0\"}\\n' \\\n        \"${version:-0.0.0}\" > \"$plugin_dir/.claude-plugin/plugin.json.$$\"\n    mv -f \"$plugin_dir/.claude-plugin/plugin.json.$$\" \"$plugin_dir/.claude-plugin/plugin.json\"\n    ln -sfn \"$skills_dir\" \"$plugin_dir/skills\"\n\n    # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally\n    mkdir -p \"$shim_dir\"\n    cat > \"$shim_dir/.claude.$$\" << EOF\n#!/usr/bin/env bash\nif grep -qs '\"flox@flox-skills\"' \"\\$HOME/.claude/plugins/installed_plugins.json\" && grep -Eqs '\"flox@flox-skills\"[[:space:]]*:[[:space:]]*true' \"\\$HOME/.claude/settings.json\"; then\n    exec \"$real_claude\" \"\\$@\"\nfi\nexec \"$real_claude\" --plugin-dir \"$plugin_dir\" \"\\$@\"\nEOF\n    install_agentic_lmstudio_script \"$shim_dir/.claude.$$\" \"$shim_dir/claude\"\n    case \":$PATH:\" in\n        *\":$shim_dir:\"*) ;;\n        *) export PATH=\"$shim_dir:$PATH\" ;;\n    esac\n}\nsetup_claude_flox_skills\n\n# The Flox build of Codex reads skills from CODEX_FLOX_SKILL_ROOTS\n# (colon-separated; any roots you set yourself are kept)\nsetup_codex_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/agent-plugins/flox/skills\"\n    [ -d \"$skills_dir\" ] || return 0\n    case \":${CODEX_FLOX_SKILL_ROOTS:-}:\" in\n        *\":$skills_dir:\"*) ;;\n        *) export CODEX_FLOX_SKILL_ROOTS=\"$skills_dir${CODEX_FLOX_SKILL_ROOTS:+:$CODEX_FLOX_SKILL_ROOTS}\" ;;\n    esac\n}\nsetup_codex_flox_skills\n\n# OpenCode merges the file named by OPENCODE_CONFIG with its other config, and\n# launchers that set OPENCODE_CONFIG_CONTENT (e.g. newer `ollama launch`) don't\n# override it. Falls back to OPENCODE_CONFIG_CONTENT if OPENCODE_CONFIG is taken.\nsetup_opencode_flox_skills() {\n    local skills_dir=\"$FLOX_ENV/share/agent-plugins/flox/skills\"\n    local config=\"$FLOX_ENV_CACHE/opencode-flox-skills.json\"\n    local content=\"{\\\"skills\\\":{\\\"paths\\\":[\\\"$skills_dir\\\"]}}\"\n    [ -d \"$skills_dir\" ] || return 0\n    if [ -z \"${OPENCODE_CONFIG:-}\" ] || [ \"$OPENCODE_CONFIG\" = \"$config\" ]; then\n        printf '%s\\n' \"$content\" > \"$config\"\n        export OPENCODE_CONFIG=\"$config\"\n    elif [ -z \"${OPENCODE_CONFIG_CONTENT:-}\" ]; then\n        export OPENCODE_CONFIG_CONTENT=\"$content\"\n    else\n        echo \"Note: OPENCODE_CONFIG and OPENCODE_CONFIG_CONTENT are both set; Flox skills not added to OpenCode\" >&2\n    fi\n}\nsetup_opencode_flox_skills\n\n# === DISPLAY CONFIGURATION ===\necho \"\"\necho \"LM Studio + Agentic Tools environment ready\"\necho \"\"\necho \"Server:\"\necho \"  API: ${LMS_API_BASE}\"\necho \"  GUI: ${LMS_GUI}\"\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: Available (CUDA detected)\"\nelse\n  echo \"  GPU: Not detected (CPU mode)\"\nfi\necho \"\"\necho \"Quick Start:\"\necho \"  flox activate -s                                  Start LM Studio server\"\necho \"  lms-launch claude --model zai-org/glm-4.7-flash   Download, load, launch\"\necho \"\"\necho \"  Context window: ${LMS_CONTEXT_LENGTH} (override: --context-length or LMS_CONTEXT_LENGTH)\"\nif [ \"$_FLOX_ENV_CUDA_DETECTION\" = \"1\" ]; then\n  echo \"  GPU: auto-detected (override: --gpu max|off)\"\nelse\n  echo \"  GPU: not detected (override: --gpu max|off)\"\nfi\necho \"\"\necho \"Commands:\"\necho \"  lms-launch <tool> --model <m> [args]      Download, load, and launch tool\"\necho \"  lms ls                                    List loaded models\"\necho \"  lmstudio-info                             Show configuration\"\necho \"  lmstudio-health                           Test API endpoint\"\necho \"  helpf                                     View full README documentation\"\necho \"\"\n\n# Fetch README.md if not present\nREADME_FILE=\"$FLOX_ENV_PROJECT/README.md\"\nif [ ! -f \"$README_FILE\" ]; then\n  if curl -fsSL https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md -o \"$README_FILE\" 2>/dev/null; then\n    echo \"Downloaded README.md (use 'helpf' to view)\"\n  fi\nfi\n"
     },
     "profile": {
-      "bash": "# Wait for API server if services are starting\nif [ \"${FLOX_ACTIVATE_START_SERVICES:-}\" = \"true\" ]; then\n  printf \"Waiting for LM Studio API\"\n  _lms_ready=false\n  for _i in $(seq 1 30); do\n    if curl -sf \"http://${LMS_HOST}:${LMS_PORT}/v1/models\" >/dev/null 2>&1; then\n      _lms_ready=true\n      break\n    fi\n    printf \".\"\n    sleep 2\n  done\n  if [ \"$_lms_ready\" = \"true\" ]; then\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  fi\nfi\n\nhelpf() {\n    local README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n    local README_URL=\"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if [ \"$1\" = \"--help\" ]; then\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    fi\n\n    if [ \"$1\" = \"--force\" ]; then\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    elif [ ! -f \"$README_FILE\" ]; then\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    fi\n\n    if [ -f \"$README_FILE\" ]; then\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    fi\n}\nexport -f helpf\n\n# Optionally launch GUI on activation\nif [ \"${LMS_GUI}\" = \"true\" ]; then\n    lm-studio &\nfi\n",
-      "zsh": "# Wait for API server if services are starting\nif [ \"${FLOX_ACTIVATE_START_SERVICES:-}\" = \"true\" ]; then\n  printf \"Waiting for LM Studio API\"\n  _lms_ready=false\n  for _i in $(seq 1 30); do\n    if curl -sf \"http://${LMS_HOST}:${LMS_PORT}/v1/models\" >/dev/null 2>&1; then\n      _lms_ready=true\n      break\n    fi\n    printf \".\"\n    sleep 2\n  done\n  if [ \"$_lms_ready\" = \"true\" ]; then\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  fi\nfi\n\nhelpf() {\n    local README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n    local README_URL=\"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if [ \"$1\" = \"--help\" ]; then\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    fi\n\n    if [ \"$1\" = \"--force\" ]; then\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    elif [ ! -f \"$README_FILE\" ]; then\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    fi\n\n    if [ -f \"$README_FILE\" ]; then\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    fi\n}\n\n# Optionally launch GUI on activation\nif [ \"${LMS_GUI}\" = \"true\" ]; then\n    lm-studio &\nfi\n",
-      "fish": "# Wait for API server if services are starting\nif test \"$FLOX_ACTIVATE_START_SERVICES\" = \"true\"\n  printf \"Waiting for LM Studio API\"\n  set _lms_ready false\n  for _i in (seq 1 30)\n    if curl -sf \"http://$LMS_HOST:$LMS_PORT/v1/models\" >/dev/null 2>&1\n      set _lms_ready true\n      break\n    end\n    printf \".\"\n    sleep 2\n  end\n  if test \"$_lms_ready\" = \"true\"\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  end\nend\n\nfunction helpf\n    set README_FILE \"$FLOX_ENV_PROJECT/README.md\"\n    set README_URL \"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if test \"$argv[1]\" = \"--help\"\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    end\n\n    if test \"$argv[1]\" = \"--force\"\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        end\n    else if not test -f \"$README_FILE\"\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        end\n    end\n\n    if test -f \"$README_FILE\"\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    end\nend\n\n# Optionally launch GUI on activation\nif test \"$LMS_GUI\" = \"true\"\n    lm-studio &\nend\n"
+      "bash": "# Layering another environment on top puts its bin directories ahead of\n# this environment's shims; move them back to the front\nif [ -n \"$AGENTIC_LMSTUDIO_SHIM_DIR\" ] && [ -x \"$AGENTIC_LMSTUDIO_SHIM_DIR/claude\" ]; then\n    case \":$PATH:\" in\n        \":$AGENTIC_LMSTUDIO_SHIM_DIR:\"*) ;;\n        *)\n            # Drop the copy further down, so PATH doesn't grow each time\n            agentic_lmstudio_path=\":$PATH:\"\n            while [ \"${agentic_lmstudio_path#*:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":}\" != \"$agentic_lmstudio_path\" ]; do\n                agentic_lmstudio_path=\"${agentic_lmstudio_path%%:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":*}:${agentic_lmstudio_path#*:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":}\"\n            done\n            agentic_lmstudio_path=\"${agentic_lmstudio_path#:}\"\n            PATH=\"$AGENTIC_LMSTUDIO_SHIM_DIR${agentic_lmstudio_path:+:${agentic_lmstudio_path%:}}\"\n            unset agentic_lmstudio_path\n            ;;\n    esac\nfi\n\n# Wait for API server if services are starting\nif [ \"${FLOX_ACTIVATE_START_SERVICES:-}\" = \"true\" ]; then\n  printf \"Waiting for LM Studio API\"\n  _lms_ready=false\n  for _i in $(seq 1 30); do\n    if curl -sf \"http://${LMS_HOST}:${LMS_PORT}/v1/models\" >/dev/null 2>&1; then\n      _lms_ready=true\n      break\n    fi\n    printf \".\"\n    sleep 2\n  done\n  if [ \"$_lms_ready\" = \"true\" ]; then\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  fi\nfi\n\nhelpf() {\n    local README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n    local README_URL=\"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if [ \"$1\" = \"--help\" ]; then\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    fi\n\n    if [ \"$1\" = \"--force\" ]; then\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    elif [ ! -f \"$README_FILE\" ]; then\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    fi\n\n    if [ -f \"$README_FILE\" ]; then\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    fi\n}\nexport -f helpf\n\n# Optionally launch GUI on activation\nif [ \"${LMS_GUI}\" = \"true\" ]; then\n    lm-studio &\nfi\n",
+      "zsh": "# Layering another environment on top puts its bin directories ahead of\n# this environment's shims; move them back to the front\nif [ -n \"$AGENTIC_LMSTUDIO_SHIM_DIR\" ] && [ -x \"$AGENTIC_LMSTUDIO_SHIM_DIR/claude\" ]; then\n    case \":$PATH:\" in\n        \":$AGENTIC_LMSTUDIO_SHIM_DIR:\"*) ;;\n        *)\n            # Drop the copy further down, so PATH doesn't grow each time\n            agentic_lmstudio_path=\":$PATH:\"\n            while [ \"${agentic_lmstudio_path#*:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":}\" != \"$agentic_lmstudio_path\" ]; do\n                agentic_lmstudio_path=\"${agentic_lmstudio_path%%:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":*}:${agentic_lmstudio_path#*:\"$AGENTIC_LMSTUDIO_SHIM_DIR\":}\"\n            done\n            agentic_lmstudio_path=\"${agentic_lmstudio_path#:}\"\n            PATH=\"$AGENTIC_LMSTUDIO_SHIM_DIR${agentic_lmstudio_path:+:${agentic_lmstudio_path%:}}\"\n            unset agentic_lmstudio_path\n            ;;\n    esac\nfi\n\n# Wait for API server if services are starting\nif [ \"${FLOX_ACTIVATE_START_SERVICES:-}\" = \"true\" ]; then\n  printf \"Waiting for LM Studio API\"\n  _lms_ready=false\n  for _i in $(seq 1 30); do\n    if curl -sf \"http://${LMS_HOST}:${LMS_PORT}/v1/models\" >/dev/null 2>&1; then\n      _lms_ready=true\n      break\n    fi\n    printf \".\"\n    sleep 2\n  done\n  if [ \"$_lms_ready\" = \"true\" ]; then\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  fi\nfi\n\nhelpf() {\n    local README_FILE=\"$FLOX_ENV_PROJECT/README.md\"\n    local README_URL=\"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if [ \"$1\" = \"--help\" ]; then\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    fi\n\n    if [ \"$1\" = \"--force\" ]; then\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    elif [ ! -f \"$README_FILE\" ]; then\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"; then\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        fi\n    fi\n\n    if [ -f \"$README_FILE\" ]; then\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    fi\n}\n\n# Optionally launch GUI on activation\nif [ \"${LMS_GUI}\" = \"true\" ]; then\n    lm-studio &\nfi\n",
+      "fish": "# Layering another environment on top puts its bin directories ahead of\n# this environment's shims; move them back to the front\nif set -q AGENTIC_LMSTUDIO_SHIM_DIR; and test -x \"$AGENTIC_LMSTUDIO_SHIM_DIR/claude\"\n    set -gx PATH $AGENTIC_LMSTUDIO_SHIM_DIR (string match -v -- $AGENTIC_LMSTUDIO_SHIM_DIR $PATH)\nend\n\n# Wait for API server if services are starting\nif test \"$FLOX_ACTIVATE_START_SERVICES\" = \"true\"\n  printf \"Waiting for LM Studio API\"\n  set _lms_ready false\n  for _i in (seq 1 30)\n    if curl -sf \"http://$LMS_HOST:$LMS_PORT/v1/models\" >/dev/null 2>&1\n      set _lms_ready true\n      break\n    end\n    printf \".\"\n    sleep 2\n  end\n  if test \"$_lms_ready\" = \"true\"\n    echo \" ready!\"\n  else\n    echo \" not responding (check: flox services logs lm-studio)\"\n  end\nend\n\nfunction helpf\n    set README_FILE \"$FLOX_ENV_PROJECT/README.md\"\n    set README_URL \"https://raw.githubusercontent.com/floxrox/agentic-development-with-flox/main/agentic-lmstudio/README.md\"\n\n    if test \"$argv[1]\" = \"--help\"\n        echo \"Usage: helpf [OPTIONS]\"\n        echo \"\"\n        echo \"View environment documentation\"\n        echo \"\"\n        echo \"Options:\"\n        echo \"  --force    Force download fresh copy from GitHub\"\n        echo \"  --help     Show this help message\"\n        echo \"\"\n        echo \"The README is cached locally and only downloaded if missing.\"\n        return 0\n    end\n\n    if test \"$argv[1]\" = \"--force\"\n        echo \"Fetching latest README.md from GitHub...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        end\n    else if not test -f \"$README_FILE\"\n        echo \"README.md not found, downloading...\"\n        if curl -fsSL \"$README_URL\" -o \"$README_FILE\"\n            echo \"Downloaded README.md\"\n        else\n            echo \"Failed to download README.md\"\n            return 1\n        end\n    end\n\n    if test -f \"$README_FILE\"\n        bat --style=auto --paging=always \"$README_FILE\"\n    else\n        echo \"README.md not found at $README_FILE\"\n        return 1\n    end\nend\n\n# Optionally launch GUI on activation\nif test \"$LMS_GUI\" = \"true\"\n    lm-studio &\nend\n"
     },
     "options": {
       "systems": [
@@ -335,90 +335,6 @@
       },
       "system": "x86_64-linux",
       "group": "codex",
-      "priority": 5
-    },
-    {
-      "attr_path": "skills-flox",
-      "derivation": "/nix/store/jhfpq33zrskjyr6kgdi085jm178kyn5g-skills-flox-1.1.0.drv",
-      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
-      "install_id": "skills-flox",
-      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "name": "skills-flox-1.1.0",
-      "pname": "skills-flox",
-      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "rev_count": 195,
-      "rev_date": "2026-08-11T18:19:17Z",
-      "scrape_date": "2026-10-11T19:59:41.081509248Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "version": "1.1.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/xc1kla9dhndllini9df5vclc7f6s78sl-skills-flox-1.1.0"
-      },
-      "system": "aarch64-darwin",
-      "group": "flox-skills",
-      "priority": 5
-    },
-    {
-      "attr_path": "skills-flox",
-      "derivation": "/nix/store/plbgw01r210yxcm5rgxy44w23rl092ic-skills-flox-1.1.0.drv",
-      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
-      "install_id": "skills-flox",
-      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "name": "skills-flox-1.1.0",
-      "pname": "skills-flox",
-      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "rev_count": 195,
-      "rev_date": "2026-08-11T18:19:17Z",
-      "scrape_date": "2026-10-11T19:59:41.081509650Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "version": "1.1.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/2q9iyvxxwfiq6qa67wsay06agjlzpb95-skills-flox-1.1.0"
-      },
-      "system": "aarch64-linux",
-      "group": "flox-skills",
-      "priority": 5
-    },
-    {
-      "attr_path": "skills-flox",
-      "derivation": "/nix/store/kz4p280p7gdb30z3qdckbm73gw3xwxj4-skills-flox-1.1.0.drv",
-      "description": "Flox skills (flox, floxify, flox-debug) packaged for Claude Code, Codex, Pi, and OpenCode",
-      "install_id": "skills-flox",
-      "locked_url": "https://github.com/flox/flox-skills?rev=11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "name": "skills-flox-1.1.0",
-      "pname": "skills-flox",
-      "rev": "11ba5803fcfb59149d3caa8cfd9fa69155ec3436",
-      "rev_count": 195,
-      "rev_date": "2026-08-11T18:19:17Z",
-      "scrape_date": "2026-10-11T19:59:41.081511172Z",
-      "stabilities": [
-        "staging",
-        "unstable",
-        "stable"
-      ],
-      "version": "1.1.0",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/d9d393gxmk06g80ly56pkywvd92h76si-skills-flox-1.1.0"
-      },
-      "system": "x86_64-linux",
-      "group": "flox-skills",
       "priority": 5
     },
     {
@@ -817,6 +733,93 @@
       },
       "system": "x86_64-linux",
       "group": "tools",
+      "priority": 5
+    },
+    {
+      "attr_path": "agent-plugin-flox",
+      "broken": false,
+      "derivation": "/nix/store/swggyxgmmf572wvgzw01l28aj4c06azw-agent-plugin-flox-1.1.0.drv",
+      "description": "Flox development environment and deployment plugin",
+      "install_id": "agent-plugin-flox",
+      "locked_url": "file:///tmp/tmp.Es9v4SEXFH?rev=e869bdded11d42ff71d900aaae4b39ba6a93bd08",
+      "name": "agent-plugin-flox-1.1.0",
+      "pname": "agent-plugin-flox",
+      "rev": "e869bdded11d42ff71d900aaae4b39ba6a93bd08",
+      "rev_count": 1,
+      "rev_date": "2026-10-27T22:11:39Z",
+      "scrape_date": "2026-10-30T17:17:49.184083853Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.1.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/z86cp5a0g85z2rspjd93pdb07nyfzcwl-agent-plugin-flox-1.1.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "flox-skills",
+      "priority": 5
+    },
+    {
+      "attr_path": "agent-plugin-flox",
+      "broken": false,
+      "derivation": "/nix/store/n90rabqqyasffg68dk3vi56y3gh1953g-agent-plugin-flox-1.1.0.drv",
+      "description": "Flox development environment and deployment plugin",
+      "install_id": "agent-plugin-flox",
+      "locked_url": "file:///tmp/tmp.aNZhbQiqdz?rev=69710e7600c94e2f82756241520374e491c564f9",
+      "name": "agent-plugin-flox-1.1.0",
+      "pname": "agent-plugin-flox",
+      "rev": "69710e7600c94e2f82756241520374e491c564f9",
+      "rev_count": 1,
+      "rev_date": "2026-10-27T21:12:26Z",
+      "scrape_date": "2026-10-30T17:17:49.184093670Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.1.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/nk4yddf3gygg53kfvwbg0lk0k8sghh0h-agent-plugin-flox-1.1.0"
+      },
+      "system": "aarch64-linux",
+      "group": "flox-skills",
+      "priority": 5
+    },
+    {
+      "attr_path": "agent-plugin-flox",
+      "broken": false,
+      "derivation": "/nix/store/f077fmq1drpm79028cr44ldfii7fg20w-agent-plugin-flox-1.1.0.drv",
+      "description": "Flox development environment and deployment plugin",
+      "install_id": "agent-plugin-flox",
+      "locked_url": "file:///tmp/tmp.uT8PL37HJ9?rev=39b2d377cd7a674dcf40e50a61094472f93fb61a",
+      "name": "agent-plugin-flox-1.1.0",
+      "pname": "agent-plugin-flox",
+      "rev": "39b2d377cd7a674dcf40e50a61094472f93fb61a",
+      "rev_count": 1,
+      "rev_date": "2026-10-27T20:09:22Z",
+      "scrape_date": "2026-10-30T17:17:49.184096314Z",
+      "stabilities": [
+        "staging",
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.1.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/bzjlvvc177zl8y8rmzmzswz3vlm7y87s-agent-plugin-flox-1.1.0"
+      },
+      "system": "x86_64-linux",
+      "group": "flox-skills",
       "priority": 5
     }
   ]

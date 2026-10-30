@@ -82,7 +82,7 @@ ccusage-info() {
     echo "  ccusage --json               JSON output"
     echo ""
     echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
-    echo "Source: https://github.com/ryoppippi/ccusage"
+    echo "Source: https://github.com/ccusage/ccusage"
 }
 export -f ccusage-info
 '''
@@ -110,7 +110,7 @@ ccusage-info() {
     echo "  ccusage --json               JSON output"
     echo ""
     echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
-    echo "Source: https://github.com/ryoppippi/ccusage"
+    echo "Source: https://github.com/ccusage/ccusage"
 }
 '''
 
@@ -137,7 +137,7 @@ function ccusage-info
     echo "  ccusage --json               JSON output"
     echo ""
     echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
-    echo "Source: https://github.com/ryoppippi/ccusage"
+    echo "Source: https://github.com/ccusage/ccusage"
 end
 '''
 

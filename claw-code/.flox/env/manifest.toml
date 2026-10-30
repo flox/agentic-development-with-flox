@@ -50,7 +50,7 @@ claw-info() {
     echo "  claw prompt \"<prompt>\"       Run a single prompt"
     echo "  claw doctor                  Health check"
     echo ""
-    echo "Source: https://github.com/instructkr/claw-code"
+    echo "Source: https://github.com/ultraworkers/claw-code"
 }
 export -f claw-info
 '''
@@ -67,7 +67,7 @@ claw-info() {
     echo "  claw prompt \"<prompt>\"       Run a single prompt"
     echo "  claw doctor                  Health check"
     echo ""
-    echo "Source: https://github.com/instructkr/claw-code"
+    echo "Source: https://github.com/ultraworkers/claw-code"
 }
 '''
 
@@ -87,7 +87,7 @@ function claw-info
     echo "  claw prompt \"<prompt>\"       Run a single prompt"
     echo "  claw doctor                  Health check"
     echo ""
-    echo "Source: https://github.com/instructkr/claw-code"
+    echo "Source: https://github.com/ultraworkers/claw-code"
 end
 '''
 

@@ -94,7 +94,7 @@ context_window = 32768
 
 ## Flox Skills
 
-The environment installs `flox/skills-flox` and links its skills into `~/.codewhale/skills` (or `$CODEWHALE_HOME/skills`, or `$CODEWHALE_SKILLS_DIR` when you set it):
+The environment installs `agent-stacks/agent-plugin-flox` and links its skills into `~/.codewhale/skills` (or `$CODEWHALE_HOME/skills`, or `$CODEWHALE_SKILLS_DIR` when you set it):
 
 - **flox** - Create and manage Flox environments, add packages, services
 - **floxify** - Add a Flox environment to an existing project

@@ -5,8 +5,8 @@ pi.pkg-path = "flox/pi"
 pi.pkg-group = "pi"
 
 # Flox skills (flox, floxify, flox-debug) - teach pi to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 git.pkg-path = "gitFull"
 git.outputs = "all"
@@ -43,7 +43,7 @@ install_pi_shim() {
 }
 
 setup_pi_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     local real_pi="$FLOX_ENV/bin/pi"
     local shim_dir="$FLOX_ENV_CACHE/bin"
     export FLOXENV_PI_SHIM_DIR="$shim_dir"
@@ -141,7 +141,7 @@ pi-info() {
     [ -n "$GEMINI_API_KEY" ] && echo "  Gemini: set" || echo "  Gemini: not set"
     [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
     echo ""
-    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo "Flox skills: $FLOX_ENV/share/agent-plugins/flox/skills"
     echo ""
     echo "Commands:"
     echo "  pi                           Start interactive session"
@@ -183,7 +183,7 @@ pi-info() {
     [ -n "$GEMINI_API_KEY" ] && echo "  Gemini: set" || echo "  Gemini: not set"
     [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
     echo ""
-    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo "Flox skills: $FLOX_ENV/share/agent-plugins/flox/skills"
     echo ""
     echo "Commands:"
     echo "  pi                           Start interactive session"
@@ -212,7 +212,7 @@ function pi-info
     if test -n "$GEMINI_API_KEY"; echo "  Gemini: set"; else; echo "  Gemini: not set"; end
     if test -n "$OPENROUTER_API_KEY"; echo "  OpenRouter: set"; else; echo "  OpenRouter: not set"; end
     echo ""
-    echo "Flox skills: $FLOX_ENV/share/flox/codex/flox"
+    echo "Flox skills: $FLOX_ENV/share/agent-plugins/flox/skills"
     echo ""
     echo "Commands:"
     echo "  pi                           Start interactive session"

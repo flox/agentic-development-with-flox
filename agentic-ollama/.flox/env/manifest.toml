@@ -32,8 +32,8 @@ opencode.outputs = "all"
 #openclaw.flake = "github:barstoolbluz/openclaw-nix"	# uncomment to use openclaw
 
 # flox skills (flox, floxify, flox-debug) for the agentic cli tools
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 [vars]
 # Model storage - defaults to Ollama's standard location
@@ -105,11 +105,22 @@ export OLLAMA_AUTH="${OLLAMA_AUTH:-}"  # Experimental authentication
 # Load the Flox skills (flox, floxify, flox-debug) into the agentic CLI tools.
 # Applies to direct launches and to the launcher's tool sessions alike.
 setup_claude_flox_skills() {
-    local plugin_dir="$FLOX_ENV/share/flox/claude/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
+    local plugin_dir="$FLOX_ENV_CACHE/claude-plugin/flox"
     local real_claude="$FLOX_ENV/bin/claude"
     local shim_dir="$FLOX_ENV_CACHE/bin"
     export AGENTIC_OLLAMA_SHIM_DIR="$shim_dir"
-    [ -d "$plugin_dir" ] && [ -x "$real_claude" ] || return 0
+    [ -n "$FLOX_ENV_CACHE" ] && [ -d "$skills_dir" ] && [ -x "$real_claude" ] || return 0
+
+    # agent-plugin-flox ships its skills without a Claude Code plugin
+    # manifest, so build a plugin directory that links to them
+    mkdir -p "$plugin_dir/.claude-plugin"
+    local version
+    version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$FLOX_ENV/share/agent-plugins/flox/plugin.json" 2>/dev/null)
+    printf '{"name":"flox","version":"%s","description":"Flox skills (flox, floxify, flox-debug) from agent-stacks/agent-plugin-flox","author":{"name":"Flox"},"license":"Apache-2.0"}\n' \
+        "${version:-0.0.0}" > "$plugin_dir/.claude-plugin/plugin.json.$$"
+    mv -f "$plugin_dir/.claude-plugin/plugin.json.$$" "$plugin_dir/.claude-plugin/plugin.json"
+    ln -sfn "$skills_dir" "$plugin_dir/skills"
 
     # PATH shim adds --plugin-dir unless flox@flox-skills is installed and enabled globally
     mkdir -p "$shim_dir"
@@ -131,7 +142,7 @@ setup_claude_flox_skills
 # The Flox build of Codex reads skills from CODEX_FLOX_SKILL_ROOTS
 # (colon-separated; any roots you set yourself are kept)
 setup_codex_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     [ -d "$skills_dir" ] || return 0
     case ":${CODEX_FLOX_SKILL_ROOTS:-}:" in
         *":$skills_dir:"*) ;;
@@ -144,7 +155,7 @@ setup_codex_flox_skills
 # launchers that set OPENCODE_CONFIG_CONTENT (e.g. newer `ollama launch`) don't
 # override it. Falls back to OPENCODE_CONFIG_CONTENT if OPENCODE_CONFIG is taken.
 setup_opencode_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/opencode/flox/skills"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     local config="$FLOX_ENV_CACHE/opencode-flox-skills.json"
     local content="{\"skills\":{\"paths\":[\"$skills_dir\"]}}"
     [ -d "$skills_dir" ] || return 0

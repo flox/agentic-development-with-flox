@@ -5,8 +5,8 @@ codewhale.pkg-path = "flox/codewhale"
 codewhale.pkg-group = "codewhale"
 
 # Flox skills (flox, floxify, flox-debug) - teach Codewhale to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 git.pkg-path = "gitFull"
 git.outputs = "all"
@@ -32,7 +32,7 @@ on-activate = '''
 # activation; skills you added yourself (directories, or symlinks pointing
 # anywhere else) are never replaced.
 link_codewhale_flox_skills() {
-    local skills_src="$FLOX_ENV/share/flox/codex/flox"
+    local skills_src="$FLOX_ENV/share/agent-plugins/flox/skills"
     local skills_dst="${CODEWHALE_SKILLS_DIR:-${CODEWHALE_HOME:-$HOME/.codewhale}/skills}"
     local skill name target
     [ -d "$skills_src" ] || return 0
@@ -42,7 +42,7 @@ link_codewhale_flox_skills() {
         target="$skills_dst/$name"
         if [ -L "$target" ]; then
             case "$(readlink "$target")" in
-                */share/flox/codex/flox/"$name") ;;
+                */share/flox/codex/flox/"$name"|*/share/agent-plugins/flox/skills/"$name") ;;
                 *) continue ;;
             esac
         elif [ -e "$target" ]; then

@@ -18,7 +18,7 @@ A Flox environment for [Crush](https://github.com/charmbracelet/crush), a glamor
 The environment includes:
 
 - `crush` - AI coding agent for the terminal
-- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
+- `agent-plugin-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
 
 ## Getting Started
 

@@ -1,6 +1,6 @@
 # Flox Environment for Claude Code ACP
 
-A Flox environment for [Claude Code ACP](https://github.com/zed-industries/claude-code-acp), an Agent Client Protocol adapter that bridges Claude Code capabilities with ACP-compatible development environments.
+A Flox environment for [Claude Code ACP](https://github.com/agentclientprotocol/claude-agent-acp), an Agent Client Protocol adapter that bridges Claude Code capabilities with ACP-compatible development environments.
 
 ## Overview
 
@@ -97,7 +97,7 @@ This environment works on:
 
 ## Upstream
 
-- **Source**: [github.com/zed-industries/claude-code-acp](https://github.com/zed-industries/claude-code-acp)
+- **Source**: [github.com/agentclientprotocol/claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp)
 - **Package**: `@zed-industries/claude-code-acp` (npm)
 - **Maintainer**: Zed Industries
 - **License**: Apache 2.0

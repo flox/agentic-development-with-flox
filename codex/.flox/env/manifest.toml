@@ -19,8 +19,8 @@ codex.pkg-path = "flox/codex"
 codex.pkg-group = "codex"
 
 # Flox skills (flox, floxify, flox-debug) - teach Codex to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 
 ## Environment Variables ---------------------------------------------
@@ -37,7 +37,7 @@ on-activate = '''
 # Point the Flox build of Codex at the Flox skills (colon-separated roots;
 # any roots you set yourself are kept)
 setup_codex_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     [ -d "$skills_dir" ] || return 0
     case ":${CODEX_FLOX_SKILL_ROOTS:-}:" in
         *":$skills_dir:"*) ;;

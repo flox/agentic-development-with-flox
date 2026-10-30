@@ -78,7 +78,7 @@ Each agent's default location can be overridden with an environment variable; mo
 | Copilot CLI | `COPILOT_HOME` | `~/.copilot` |
 | Qwen | `QWEN_DATA_DIR` | `~/.qwen` |
 
-See [the full list](https://github.com/ryoppippi/ccusage/blob/main/docs/guide/environment-variables.md) for the other agents.
+See [the full list](https://github.com/ccusage/ccusage/blob/main/docs/guide/environment-variables.md) for the other agents.
 
 ## Configuration
 
@@ -112,7 +112,7 @@ ccusage-info    # Status line snippet, commands, and config locations
 ## Resources
 
 - [ccusage Documentation](https://ccusage.com)
-- [ccusage GitHub](https://github.com/ryoppippi/ccusage)
+- [ccusage GitHub](https://github.com/ccusage/ccusage)
 
 ## Support
 
@@ -121,4 +121,4 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For ccusage-specific issues:
-- [ccusage GitHub Issues](https://github.com/ryoppippi/ccusage/issues)
+- [ccusage GitHub Issues](https://github.com/ccusage/ccusage/issues)

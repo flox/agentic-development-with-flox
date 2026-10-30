@@ -91,7 +91,7 @@ herdr-info() {
     echo "  herdr server stop                Stop the server and every pane"
     echo ""
     echo "Docs: https://herdr.dev/docs/"
-    echo "Source: https://github.com/ogulcancelik/herdr"
+    echo "Source: https://github.com/herdrdev/herdr"
 }
 export -f herdr-info
 '''
@@ -126,7 +126,7 @@ herdr-info() {
     echo "  herdr server stop                Stop the server and every pane"
     echo ""
     echo "Docs: https://herdr.dev/docs/"
-    echo "Source: https://github.com/ogulcancelik/herdr"
+    echo "Source: https://github.com/herdrdev/herdr"
 }
 '''
 
@@ -170,7 +170,7 @@ function herdr-info
     echo "  herdr server stop                Stop the server and every pane"
     echo ""
     echo "Docs: https://herdr.dev/docs/"
-    echo "Source: https://github.com/ogulcancelik/herdr"
+    echo "Source: https://github.com/herdrdev/herdr"
 end
 '''
 

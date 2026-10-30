@@ -1,6 +1,6 @@
 # Flox Environment for Goose CLI
 
-A Flox environment for [Goose](https://github.com/block/goose), a local, extensible, open-source AI agent that automates engineering tasks. Goose goes beyond code suggestions to autonomously build projects, execute code, debug, orchestrate workflows, and interact with APIs.
+A Flox environment for [Goose](https://github.com/aaif-goose/goose), a local, extensible, open-source AI agent that automates engineering tasks. Goose goes beyond code suggestions to autonomously build projects, execute code, debug, orchestrate workflows, and interact with APIs.
 
 ## Features
 
@@ -542,7 +542,7 @@ This environment works on:
 
 ## Additional Resources
 
-- **Goose Repository**: [github.com/block/goose](https://github.com/block/goose)
+- **Goose Repository**: [github.com/aaif-goose/goose](https://github.com/aaif-goose/goose)
 - **Documentation**: [block.github.io/goose](https://block.github.io/goose)
 - **Quickstart**: [block.github.io/goose/docs/quickstart](https://block.github.io/goose/docs/quickstart)
 - **Installation**: [block.github.io/goose/docs/getting-started/installation](https://block.github.io/goose/docs/getting-started/installation)
@@ -565,4 +565,4 @@ This environment works on:
 
 ## License
 
-This Flox environment configuration is provided as-is. Goose is open source from Block - see the [Goose repository](https://github.com/block/goose) for license details.
+This Flox environment configuration is provided as-is. Goose is open source from Block - see the [Goose repository](https://github.com/aaif-goose/goose) for license details.

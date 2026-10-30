@@ -94,7 +94,7 @@ interpreter-info    # Show configuration, API key status, and command reference
 
 ## Resources
 
-- [Open Interpreter GitHub](https://github.com/OpenInterpreter/open-interpreter)
+- [Open Interpreter GitHub](https://github.com/openinterpreter/openinterpreter)
 - [Open Interpreter Documentation](https://docs.openinterpreter.com/)
 
 ## Support
@@ -104,5 +104,5 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For Open Interpreter-specific issues:
-- [Open Interpreter GitHub Issues](https://github.com/OpenInterpreter/open-interpreter/issues)
+- [Open Interpreter GitHub Issues](https://github.com/openinterpreter/openinterpreter/issues)
 - [Open Interpreter Discord](https://discord.gg/Hvz9Axh84z)

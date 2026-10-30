@@ -102,7 +102,7 @@ If the agent doesn't run inside this environment, start srt through it instead:
 | `filesystem.denyRead` | Paths that cannot be read |
 | `filesystem.allowRead` | Paths re-allowed inside a `denyRead` path |
 
-See the [full reference](https://github.com/anthropic-experimental/sandbox-runtime#configuration) for all options.
+See the [full reference](https://github.com/anthropics/sandbox-runtime#configuration) for all options.
 
 ## Linux Note
 
@@ -121,7 +121,7 @@ srt-init    # Write a starter ~/.srt-settings.json
 
 ## Resources
 
-- [Sandbox Runtime GitHub](https://github.com/anthropic-experimental/sandbox-runtime)
+- [Sandbox Runtime GitHub](https://github.com/anthropics/sandbox-runtime)
 
 ## Support
 
@@ -130,4 +130,4 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For srt-specific issues:
-- [Sandbox Runtime GitHub Issues](https://github.com/anthropic-experimental/sandbox-runtime/issues)
+- [Sandbox Runtime GitHub Issues](https://github.com/anthropics/sandbox-runtime/issues)

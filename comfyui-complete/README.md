@@ -331,7 +331,7 @@ Models must be pre-loaded onto the PVC or downloaded after the pod starts. First
 - [build-comfyui](https://github.com/barstoolbluz/build-comfyui) -- Build repo: Nix derivation, custom nodes, patches, Python deps, build versioning
 - [build-torchsde](https://github.com/barstoolbluz/build-torchsde) -- torchsde without scipy/numpy dependencies (prevents profile merge conflicts)
 - [build-comfyui-packages](https://github.com/barstoolbluz/build-comfyui-packages) -- Torch-agnostic Python packages (ultralytics, timm, open-clip, etc.)
-- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) -- Upstream application
+- [ComfyUI](https://github.com/Comfy-Org/ComfyUI) -- Upstream application
 
 ## License
 

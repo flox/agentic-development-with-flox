@@ -5,8 +5,8 @@ mistral-vibe.pkg-path = "flox/mistral-vibe"
 mistral-vibe.pkg-group = "mistral-vibe"
 
 # Flox skills (flox, floxify, flox-debug) - teach Vibe to manage Flox environments
-skills-flox.pkg-path = "flox/skills-flox"
-skills-flox.pkg-group = "flox-skills"
+agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
+agent-plugin-flox.pkg-group = "flox-skills"
 
 git.pkg-path = "gitFull"
 git.outputs = "all"
@@ -26,7 +26,7 @@ on-activate = '''
 # merges with skill_paths from ~/.vibe/config.toml; any paths you set in
 # VIBE_SKILL_PATHS yourself are kept.
 setup_vibe_flox_skills() {
-    local skills_dir="$FLOX_ENV/share/flox/codex/flox"
+    local skills_dir="$FLOX_ENV/share/agent-plugins/flox/skills"
     local merged
     [ -d "$skills_dir" ] || return 0
     if [ -z "${VIBE_SKILL_PATHS:-}" ]; then

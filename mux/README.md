@@ -230,7 +230,7 @@ mux-info    # Show current configuration, API key status, and command reference
 ## Resources
 
 - [Mux Documentation](https://mux.coder.com/)
-- [Mux GitHub](https://github.com/coder/mux)
+- [Mux GitHub](https://github.com/coder/xum)
 - [CLI Reference](https://mux.coder.com/reference/cli.md)
 - [Provider Configuration](https://mux.coder.com/config/providers.md)
 - [Models Configuration](https://mux.coder.com/config/models.md)
@@ -242,5 +242,5 @@ For issues with this Flox environment:
 - Review the manifest: `.flox/env/manifest.toml`
 
 For Mux-specific issues:
-- [Mux GitHub Issues](https://github.com/coder/mux/issues)
+- [Mux GitHub Issues](https://github.com/coder/xum/issues)
 - [Mux Discord](https://discord.gg/coder)

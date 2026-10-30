@@ -18,7 +18,7 @@ A Flox environment for [GitHub Copilot CLI](https://github.com/github/copilot-cl
 The environment includes:
 
 - `copilot` - GitHub Copilot CLI (also available as `github-copilot`)
-- `skills-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
+- `agent-plugin-flox` - Flox agent skills (`flox`, `floxify`, `flox-debug`) for managing Flox environments
 
 ## Getting Started
 

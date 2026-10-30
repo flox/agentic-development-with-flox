@@ -60,7 +60,7 @@ echo "Usage:"
 echo "  ANTHROPIC_API_KEY=sk-... claude-code-acp   # Start ACP server"
 echo ""
 echo "ACP Clients: Zed, Neovim, Emacs, marimo"
-echo "Documentation: https://github.com/zed-industries/claude-code-acp"
+echo "Documentation: https://github.com/agentclientprotocol/claude-agent-acp"
 echo ""
 '''
 
