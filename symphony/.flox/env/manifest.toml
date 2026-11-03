@@ -15,6 +15,72 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# symphony-start, symphony-info are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_symphony_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_symphony_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.symphony-start.$$" << 'SYMPHONY_START_SCRIPT'
+#!/usr/bin/env bash
+symphony-start() {
+    if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
+        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
+        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
+        return 1
+    fi
+    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
+        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" "$@" "$SYMPHONY_WORKFLOW"
+}
+symphony-start "$@"
+SYMPHONY_START_SCRIPT
+    install_symphony_script "$bin_dir/.symphony-start.$$" "$bin_dir/symphony-start"
+    cat > "$bin_dir/.symphony-info.$$" << 'SYMPHONY_INFO_SCRIPT'
+#!/usr/bin/env bash
+symphony-info() {
+    echo "Symphony Environment Configuration"
+    echo ""
+    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
+    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
+    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
+    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
+    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
+    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
+    local v found=""
+    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT; do
+        [ -n "$(printenv "$v")" ] && found="$found $v"
+    done
+    echo "Tracker credentials set:${found:- none}"
+    echo "Credentials file: ${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}"
+    echo ""
+    echo "Commands:"
+    echo "  symphony-start               Run Symphony in this terminal (status view)"
+    echo "  flox services start symphony Run it as a background service"
+    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
+    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
+    echo ""
+    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
+    echo "Source: https://github.com/openai/symphony"
+}
+symphony-info "$@"
+SYMPHONY_INFO_SCRIPT
+    install_symphony_script "$bin_dir/.symphony-info.$$" "$bin_dir/symphony-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_symphony_helpers
+
 # Runtime settings; override at activation, e.g.
 #   SYMPHONY_WORKFLOW=~/src/myrepo/WORKFLOW.md SYMPHONY_PORT=14100 flox activate -s
 export SYMPHONY_DATA="${SYMPHONY_DATA:-$FLOX_ENV_CACHE/symphony}"
@@ -224,124 +290,6 @@ fi
 exec symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
   --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" \
   "$SYMPHONY_WORKFLOW" > /dev/null 2>> "$log"
-'''
-
-[profile]
-bash = '''
-symphony-start() {
-    if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
-        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
-        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
-        return 1
-    fi
-    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
-        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" "$@" "$SYMPHONY_WORKFLOW"
-}
-export -f symphony-start
-
-symphony-info() {
-    echo "Symphony Environment Configuration"
-    echo ""
-    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
-    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
-    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
-    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
-    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
-    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
-    local v found=""
-    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT; do
-        [ -n "$(printenv "$v")" ] && found="$found $v"
-    done
-    echo "Tracker credentials set:${found:- none}"
-    echo "Credentials file: ${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}"
-    echo ""
-    echo "Commands:"
-    echo "  symphony-start               Run Symphony in this terminal (status view)"
-    echo "  flox services start symphony Run it as a background service"
-    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
-    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
-    echo ""
-    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
-    echo "Source: https://github.com/openai/symphony"
-}
-export -f symphony-info
-'''
-
-zsh = '''
-symphony-start() {
-    if [ "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true" ]; then
-        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
-        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
-        return 1
-    fi
-    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
-        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" "$@" "$SYMPHONY_WORKFLOW"
-}
-
-symphony-info() {
-    echo "Symphony Environment Configuration"
-    echo ""
-    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
-    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
-    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
-    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
-    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
-    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
-    local v found=""
-    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT; do
-        [ -n "$(printenv "$v")" ] && found="$found $v"
-    done
-    echo "Tracker credentials set:${found:- none}"
-    echo "Credentials file: ${SYMPHONY_ENV_FILE:-$HOME/.config/symphony/env}"
-    echo ""
-    echo "Commands:"
-    echo "  symphony-start               Run Symphony in this terminal (status view)"
-    echo "  flox services start symphony Run it as a background service"
-    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
-    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
-    echo ""
-    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
-    echo "Source: https://github.com/openai/symphony"
-}
-'''
-
-fish = '''
-function symphony-start
-    if test "$SYMPHONY_ACCEPT_NO_GUARDRAILS" != "true"
-        echo "Symphony runs Codex on tracker issues without anyone approving each step." >&2
-        echo "To acknowledge that, set SYMPHONY_ACCEPT_NO_GUARDRAILS=true (see the README)." >&2
-        return 1
-    end
-    command symphony --i-understand-that-this-will-be-running-without-the-usual-guardrails \
-        --port "$SYMPHONY_PORT" --logs-root "$SYMPHONY_LOGS_ROOT" $argv "$SYMPHONY_WORKFLOW"
-end
-
-function symphony-info
-    echo "Symphony Environment Configuration"
-    echo ""
-    echo "Workflow: $SYMPHONY_WORKFLOW (SYMPHONY_WORKFLOW)"
-    echo "Workspaces: $SYMPHONY_WORKSPACE_ROOT (SYMPHONY_WORKSPACE_ROOT)"
-    echo "Dashboard: http://127.0.0.1:$SYMPHONY_PORT (SYMPHONY_PORT; host from server.host)"
-    echo "Symphony log: $SYMPHONY_LOGS_ROOT/log/symphony.log.1"
-    echo "Service log: $FLOX_ENV_CACHE/logs/symphony.log"
-    echo "Service acknowledgement: $SYMPHONY_ACCEPT_NO_GUARDRAILS (SYMPHONY_ACCEPT_NO_GUARDRAILS)"
-    set -l found
-    for v in LINEAR_API_KEY GITHUB_TOKEN JIRA_API_TOKEN ASANA_PAT GITLAB_PAT
-        test -n "$$v"; and set found $found $v
-    end
-    test -n "$found"; or set found none
-    echo "Tracker credentials set: $found"
-    if test -n "$SYMPHONY_ENV_FILE"; echo "Credentials file: $SYMPHONY_ENV_FILE"; else; echo "Credentials file: $HOME/.config/symphony/env"; end
-    echo ""
-    echo "Commands:"
-    echo "  symphony-start               Run Symphony in this terminal (status view)"
-    echo "  flox services start symphony Run it as a background service"
-    echo "  curl localhost:$SYMPHONY_PORT/api/v1/state   Runtime state as JSON"
-    echo "  codex login                  Sign in to Codex (or set OPENAI_API_KEY)"
-    echo ""
-    echo "Workflow reference: https://github.com/openai/symphony/blob/main/elixir/README.md"
-    echo "Source: https://github.com/openai/symphony"
-end
 '''
 
 [options]

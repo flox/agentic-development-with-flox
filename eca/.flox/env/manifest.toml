@@ -32,6 +32,137 @@ eca.pkg-group = "eca"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# eca-init-context, eca-config are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_eca_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_eca_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.eca-init-context.$$" << 'ECA_INIT_CONTEXT_SCRIPT'
+#!/usr/bin/env bash
+eca-init-context() {
+    if [[ -f .eca/context.md ]]; then
+        echo ".eca/context.md already exists"
+        echo "Edit it directly or remove it first"
+        return 1
+    fi
+
+    mkdir -p .eca
+    cat > .eca/context.md <<'EOF'
+# Project Context
+
+## Overview
+[Brief project description]
+
+## Architecture
+[System design and components]
+
+## Coding Standards
+[Style guide, patterns, conventions]
+
+## Dependencies
+[Key libraries and frameworks]
+
+## Notes
+[Additional context for AI assistance]
+EOF
+    echo "Created .eca/context.md"
+    echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
+}
+eca-init-context "$@"
+ECA_INIT_CONTEXT_SCRIPT
+    install_eca_script "$bin_dir/.eca-init-context.$$" "$bin_dir/eca-init-context"
+    cat > "$bin_dir/.eca-config.$$" << 'ECA_CONFIG_SCRIPT'
+#!/usr/bin/env bash
+eca-config() {
+    local config_file="${HOME}/.config/eca/config.json"
+    local editor
+    read -r -a editor <<< "${EDITOR:-nano}"
+
+    # Create config directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create template config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        cat > "$config_file" <<'EOF'
+{
+  "_comment": "ECA Configuration - https://eca.dev/configuration",
+
+  "defaultBehavior": "agent",
+
+  "toolCall": {
+    "approval": {
+      "byDefault": "ask",
+      "allow": {
+        "eca__read_file": {},
+        "eca__list_directory": {}
+      }
+    }
+  },
+
+  "_comment_providers": "Uncomment and configure your preferred provider below",
+
+  "_provider_openai": {
+    "openai": {
+      "keyEnv": "OPENAI_API_KEY",
+      "models": {
+        "gpt-4": {},
+        "gpt-4o": {},
+        "o1": {}
+      }
+    }
+  },
+
+  "_provider_anthropic": {
+    "anthropic": {
+      "keyEnv": "ANTHROPIC_API_KEY",
+      "models": {
+        "claude-sonnet-4-5": {},
+        "claude-opus-4": {}
+      }
+    }
+  },
+
+  "_provider_ollama": {
+    "_comment": "Requires: flox activate -r flox/ollama",
+    "ollama": {
+      "url": "http://localhost:11434",
+      "models": {
+        "qwen2.5-coder:7b": {},
+        "qwen2.5-coder:32b": {},
+        "deepseek-coder-v2": {},
+        "codellama": {}
+      }
+    }
+  }
+}
+EOF
+        echo "Created config template at $config_file"
+        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
+        echo "   See template comments for examples"
+    fi
+
+    "${editor[@]}" "$config_file"
+}
+eca-config "$@"
+ECA_CONFIG_SCRIPT
+    install_eca_script "$bin_dir/.eca-config.$$" "$bin_dir/eca-config"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_eca_helpers
+
 echo ""
 echo "ECA - Editor Code Assistant"
 echo ""
@@ -60,319 +191,6 @@ echo "  • Layer Ollama: flox activate -r flox/ollama"
 echo ""
 echo "Open Source • Apache-2.0 License"
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Helper: Create project context template
-eca-init-context() {
-    if [[ -f .eca/context.md ]]; then
-        echo ".eca/context.md already exists"
-        echo "Edit it directly or remove it first"
-        return 1
-    fi
-
-    mkdir -p .eca
-    cat > .eca/context.md <<'EOF'
-# Project Context
-
-## Overview
-[Brief project description]
-
-## Architecture
-[System design and components]
-
-## Coding Standards
-[Style guide, patterns, conventions]
-
-## Dependencies
-[Key libraries and frameworks]
-
-## Notes
-[Additional context for AI assistance]
-EOF
-    echo "Created .eca/context.md"
-    echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
-}
-
-# Helper: Edit ECA configuration
-eca-config() {
-    local config_file="${HOME}/.config/eca/config.json"
-    local editor="${EDITOR:-nano}"
-
-    # Create config directory if it doesn't exist
-    mkdir -p "$(dirname "$config_file")"
-
-    # Create template config if it doesn't exist
-    if [[ ! -f "$config_file" ]]; then
-        cat > "$config_file" <<'EOF'
-{
-  "_comment": "ECA Configuration - https://eca.dev/configuration",
-
-  "defaultBehavior": "agent",
-
-  "toolCall": {
-    "approval": {
-      "byDefault": "ask",
-      "allow": {
-        "eca__read_file": {},
-        "eca__list_directory": {}
-      }
-    }
-  },
-
-  "_comment_providers": "Uncomment and configure your preferred provider below",
-
-  "_provider_openai": {
-    "openai": {
-      "keyEnv": "OPENAI_API_KEY",
-      "models": {
-        "gpt-4": {},
-        "gpt-4o": {},
-        "o1": {}
-      }
-    }
-  },
-
-  "_provider_anthropic": {
-    "anthropic": {
-      "keyEnv": "ANTHROPIC_API_KEY",
-      "models": {
-        "claude-sonnet-4-5": {},
-        "claude-opus-4": {}
-      }
-    }
-  },
-
-  "_provider_ollama": {
-    "_comment": "Requires: flox activate -r flox/ollama",
-    "ollama": {
-      "url": "http://localhost:11434",
-      "models": {
-        "qwen2.5-coder:7b": {},
-        "qwen2.5-coder:32b": {},
-        "deepseek-coder-v2": {},
-        "codellama": {}
-      }
-    }
-  }
-}
-EOF
-        echo "Created config template at $config_file"
-        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
-        echo "   See template comments for examples"
-    fi
-
-    "$editor" "$config_file"
-}
-
-export -f eca-init-context eca-config
-'''
-
-zsh = '''
-# Helper: Create project context template
-eca-init-context() {
-    if [[ -f .eca/context.md ]]; then
-        echo ".eca/context.md already exists"
-        echo "Edit it directly or remove it first"
-        return 1
-    fi
-
-    mkdir -p .eca
-    cat > .eca/context.md <<'EOF'
-# Project Context
-
-## Overview
-[Brief project description]
-
-## Architecture
-[System design and components]
-
-## Coding Standards
-[Style guide, patterns, conventions]
-
-## Dependencies
-[Key libraries and frameworks]
-
-## Notes
-[Additional context for AI assistance]
-EOF
-    echo "Created .eca/context.md"
-    echo "   Edit with: ${EDITOR:-nano} .eca/context.md"
-}
-
-# Helper: Edit ECA configuration
-eca-config() {
-    local config_file="${HOME}/.config/eca/config.json"
-    local editor="${EDITOR:-nano}"
-
-    # Create config directory if it doesn't exist
-    mkdir -p "$(dirname "$config_file")"
-
-    # Create template config if it doesn't exist
-    if [[ ! -f "$config_file" ]]; then
-        cat > "$config_file" <<'EOF'
-{
-  "_comment": "ECA Configuration - https://eca.dev/configuration",
-
-  "defaultBehavior": "agent",
-
-  "toolCall": {
-    "approval": {
-      "byDefault": "ask",
-      "allow": {
-        "eca__read_file": {},
-        "eca__list_directory": {}
-      }
-    }
-  },
-
-  "_comment_providers": "Uncomment and configure your preferred provider below",
-
-  "_provider_openai": {
-    "openai": {
-      "keyEnv": "OPENAI_API_KEY",
-      "models": {
-        "gpt-4": {},
-        "gpt-4o": {},
-        "o1": {}
-      }
-    }
-  },
-
-  "_provider_anthropic": {
-    "anthropic": {
-      "keyEnv": "ANTHROPIC_API_KEY",
-      "models": {
-        "claude-sonnet-4-5": {},
-        "claude-opus-4": {}
-      }
-    }
-  },
-
-  "_provider_ollama": {
-    "_comment": "Requires: flox activate -r flox/ollama",
-    "ollama": {
-      "url": "http://localhost:11434",
-      "models": {
-        "qwen2.5-coder:7b": {},
-        "qwen2.5-coder:32b": {},
-        "deepseek-coder-v2": {},
-        "codellama": {}
-      }
-    }
-  }
-}
-EOF
-        echo "Created config template at $config_file"
-        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
-        echo "   See template comments for examples"
-    fi
-
-    "$editor" "$config_file"
-}
-'''
-
-fish = '''
-# Helper: Create project context template
-function eca-init-context
-    if test -f .eca/context.md
-        echo ".eca/context.md already exists"
-        echo "Edit it directly or remove it first"
-        return 1
-    end
-
-    mkdir -p .eca
-    echo "# Project Context
-
-## Overview
-[Brief project description]
-
-## Architecture
-[System design and components]
-
-## Coding Standards
-[Style guide, patterns, conventions]
-
-## Dependencies
-[Key libraries and frameworks]
-
-## Notes
-[Additional context for AI assistance]" > .eca/context.md
-    echo "Created .eca/context.md"
-    echo "   Edit with: "(set -q EDITOR; and echo $EDITOR; or echo "nano")" .eca/context.md"
-end
-
-# Helper: Edit ECA configuration
-function eca-config
-    set config_file "$HOME/.config/eca/config.json"
-    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
-
-    # Create config directory if it doesn't exist
-    mkdir -p (dirname "$config_file")
-
-    # Create template config if it doesn't exist
-    if not test -f "$config_file"
-        echo '{
-  "_comment": "ECA Configuration - https://eca.dev/configuration",
-
-  "defaultBehavior": "agent",
-
-  "toolCall": {
-    "approval": {
-      "byDefault": "ask",
-      "allow": {
-        "eca__read_file": {},
-        "eca__list_directory": {}
-      }
-    }
-  },
-
-  "_comment_providers": "Uncomment and configure your preferred provider below",
-
-  "_provider_openai": {
-    "openai": {
-      "keyEnv": "OPENAI_API_KEY",
-      "models": {
-        "gpt-4": {},
-        "gpt-4o": {},
-        "o1": {}
-      }
-    }
-  },
-
-  "_provider_anthropic": {
-    "anthropic": {
-      "keyEnv": "ANTHROPIC_API_KEY",
-      "models": {
-        "claude-sonnet-4-5": {},
-        "claude-opus-4": {}
-      }
-    }
-  },
-
-  "_provider_ollama": {
-    "_comment": "Requires: flox activate -r flox/ollama",
-    "ollama": {
-      "url": "http://localhost:11434",
-      "models": {
-        "qwen2.5-coder:7b": {},
-        "qwen2.5-coder:32b": {},
-        "deepseek-coder-v2": {},
-        "codellama": {}
-      }
-    }
-  }
-}' > "$config_file"
-        echo "Created config template at $config_file"
-        echo "   Configure your AI provider (OpenAI, Anthropic, or Ollama)"
-        echo "   See template comments for examples"
-    end
-
-    eval $editor "$config_file"
-end
 '''
 
 

@@ -25,6 +25,57 @@ agent-plugin-flox.pkg-group = "flox-skills"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# crush_rollback, crush_reset are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_crush_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_crush_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.crush_rollback.$$" << 'CRUSH_ROLLBACK_SCRIPT'
+#!/usr/bin/env bash
+crush_rollback() {
+    local backup="$HOME/.local/share/crush/crush.json.backup"
+    local config="$HOME/.local/share/crush/crush.json"
+    if [[ -f "$backup" ]]; then
+        cp "$backup" "$config"
+        echo "Rolled back to previous configuration"
+        echo "  Restart Crush to use restored settings"
+    else
+        echo "No backup found at $backup"
+        return 1
+    fi
+}
+crush_rollback "$@"
+CRUSH_ROLLBACK_SCRIPT
+    install_crush_script "$bin_dir/.crush_rollback.$$" "$bin_dir/crush_rollback"
+    cat > "$bin_dir/.crush_reset.$$" << 'CRUSH_RESET_SCRIPT'
+#!/usr/bin/env bash
+crush_reset() {
+    echo "This will reset Crush configuration and re-run the setup wizard."
+    read -p "Continue? [y/N] " -r
+    [[ $REPLY =~ ^[Yy]$ ]] || return 1
+    rm -f "$HOME/.config/crush/.flox_setup_done"
+    echo "Run 'flox activate' to restart the setup wizard"
+}
+crush_reset "$@"
+CRUSH_RESET_SCRIPT
+    install_crush_script "$bin_dir/.crush_reset.$$" "$bin_dir/crush_reset"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_crush_helpers
+
 # =============================================================================
 # Crush Setup Wizard - Comprehensive Configuration with Encrypted Secrets
 # =============================================================================
@@ -565,59 +616,6 @@ else
     ensure_crush_flox_skills
     show_status
 fi
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Crush configuration helper functions
-
-crush_rollback() {
-    local backup="$HOME/.local/share/crush/crush.json.backup"
-    local config="$HOME/.local/share/crush/crush.json"
-    if [[ -f "$backup" ]]; then
-        cp "$backup" "$config"
-        echo "Rolled back to previous configuration"
-        echo "  Restart Crush to use restored settings"
-    else
-        echo "No backup found at $backup"
-        return 1
-    fi
-}
-
-crush_reset() {
-    echo "This will reset Crush configuration and re-run the setup wizard."
-    read -p "Continue? [y/N] " -r
-    [[ $REPLY =~ ^[Yy]$ ]] || return 1
-    rm -f "$HOME/.config/crush/.flox_setup_done"
-    echo "Run 'flox activate' to restart the setup wizard"
-}
-'''
-
-zsh = '''
-# Crush configuration helper functions
-
-crush_rollback() {
-    local backup="$HOME/.local/share/crush/crush.json.backup"
-    local config="$HOME/.local/share/crush/crush.json"
-    if [[ -f "$backup" ]]; then
-        cp "$backup" "$config"
-        echo "Rolled back to previous configuration"
-        echo "  Restart Crush to use restored settings"
-    else
-        echo "No backup found at $backup"
-        return 1
-    fi
-}
-
-crush_reset() {
-    echo "This will reset Crush configuration and re-run the setup wizard."
-    read -q "?Continue? [y/N] " || return 1
-    echo
-    rm -f "$HOME/.config/crush/.flox_setup_done"
-    echo "Run 'flox activate' to restart the setup wizard"
-}
 '''
 
 

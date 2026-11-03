@@ -18,6 +18,38 @@ NODE_OPTIONS = "--no-deprecation"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# openclaw-config is a script rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_openclaw_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_openclaw_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.openclaw-config.$$" << 'OPENCLAW_CONFIG_SCRIPT'
+#!/usr/bin/env bash
+openclaw-config() {
+    local editor
+    read -r -a editor <<< "${EDITOR:-nano}"
+    "${editor[@]}" "$OPENCLAW_CONFIG_PATH"
+}
+openclaw-config "$@"
+OPENCLAW_CONFIG_SCRIPT
+    install_openclaw_script "$bin_dir/.openclaw-config.$$" "$bin_dir/openclaw-config"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_openclaw_helpers
+
 # Point OpenClaw config/state at the Flox environment cache (not $HOME)
 export OPENCLAW_CONFIG_PATH="$FLOX_ENV_CACHE/openclaw/openclaw.json"
 export OPENCLAW_STATE_DIR="$FLOX_ENV_CACHE/openclaw"
@@ -50,25 +82,6 @@ echo "  openclaw agent --message \"..\" # Run one agent turn"
 echo "  openclaw doctor               # Health checks and quick fixes"
 echo "  openclaw --help               # Show all commands"
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Helper: Edit OpenClaw configuration
-openclaw-config() {
-    "${EDITOR:-nano}" "$OPENCLAW_CONFIG_PATH"
-}
-
-export -f openclaw-config
-'''
-
-zsh = '''
-# Helper: Edit OpenClaw configuration
-openclaw-config() {
-    "${EDITOR:-nano}" "$OPENCLAW_CONFIG_PATH"
-}
 '''
 
 

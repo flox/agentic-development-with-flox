@@ -34,6 +34,60 @@ bat.pkg-path = "bat"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# claudebox-vertical, claudebox-no-monitor, claudebox-minimal, claudebox-help are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_claudebox_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_claudebox_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.claudebox-vertical.$$" << 'CLAUDEBOX_VERTICAL_SCRIPT'
+#!/usr/bin/env bash
+claudebox-vertical() {
+    claudebox --split-direction vertical "$@"
+}
+claudebox-vertical "$@"
+CLAUDEBOX_VERTICAL_SCRIPT
+    install_claudebox_script "$bin_dir/.claudebox-vertical.$$" "$bin_dir/claudebox-vertical"
+    cat > "$bin_dir/.claudebox-no-monitor.$$" << 'CLAUDEBOX_NO_MONITOR_SCRIPT'
+#!/usr/bin/env bash
+claudebox-no-monitor() {
+    claudebox --no-monitor "$@"
+}
+claudebox-no-monitor "$@"
+CLAUDEBOX_NO_MONITOR_SCRIPT
+    install_claudebox_script "$bin_dir/.claudebox-no-monitor.$$" "$bin_dir/claudebox-no-monitor"
+    cat > "$bin_dir/.claudebox-minimal.$$" << 'CLAUDEBOX_MINIMAL_SCRIPT'
+#!/usr/bin/env bash
+claudebox-minimal() {
+    claudebox --no-tmux-config --no-monitor "$@"
+}
+claudebox-minimal "$@"
+CLAUDEBOX_MINIMAL_SCRIPT
+    install_claudebox_script "$bin_dir/.claudebox-minimal.$$" "$bin_dir/claudebox-minimal"
+    cat > "$bin_dir/.claudebox-help.$$" << 'CLAUDEBOX_HELP_SCRIPT'
+#!/usr/bin/env bash
+claudebox-help() {
+    claudebox --help
+}
+claudebox-help "$@"
+CLAUDEBOX_HELP_SCRIPT
+    install_claudebox_script "$bin_dir/.claudebox-help.$$" "$bin_dir/claudebox-help"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_claudebox_helpers
+
 echo ""
 echo "Claudebox - Sandboxed Claude Code Environment"
 echo ""
@@ -50,77 +104,6 @@ echo "  claudebox --help             # Show all options"
 echo ""
 echo "Note: Not a security boundary - designed for transparency, not isolation."
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Helper: Start claudebox with vertical split
-claudebox-vertical() {
-    claudebox --split-direction vertical "$@"
-}
-
-# Helper: Start claudebox without tmux monitoring
-claudebox-no-monitor() {
-    claudebox --no-monitor "$@"
-}
-
-# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
-claudebox-minimal() {
-    claudebox --no-tmux-config --no-monitor "$@"
-}
-
-# Helper: Show claudebox help
-claudebox-help() {
-    claudebox --help
-}
-
-export -f claudebox-vertical claudebox-no-monitor claudebox-minimal claudebox-help
-'''
-
-zsh = '''
-# Helper: Start claudebox with vertical split
-claudebox-vertical() {
-    claudebox --split-direction vertical "$@"
-}
-
-# Helper: Start claudebox without tmux monitoring
-claudebox-no-monitor() {
-    claudebox --no-monitor "$@"
-}
-
-# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
-claudebox-minimal() {
-    claudebox --no-tmux-config --no-monitor "$@"
-}
-
-# Helper: Show claudebox help
-claudebox-help() {
-    claudebox --help
-}
-'''
-
-fish = '''
-# Helper: Start claudebox with vertical split
-function claudebox-vertical
-    claudebox --split-direction vertical $argv
-end
-
-# Helper: Start claudebox without tmux monitoring
-function claudebox-no-monitor
-    claudebox --no-monitor $argv
-end
-
-# Helper: Start claudebox with minimal settings (no tmux config, no monitor)
-function claudebox-minimal
-    claudebox --no-tmux-config --no-monitor $argv
-end
-
-# Helper: Show claudebox help
-function claudebox-help
-    claudebox --help
-end
 '''
 
 

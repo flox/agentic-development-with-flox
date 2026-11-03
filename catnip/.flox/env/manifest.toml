@@ -34,6 +34,158 @@ CATNIP_RUST_VERSION = "${CATNIP_RUST_VERSION:-1.75.0}"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# catnip-start, catnip-start-dind, catnip-info are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_catnip_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_catnip_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.catnip-start.$$" << 'CATNIP_START_SCRIPT'
+#!/usr/bin/env bash
+setup_catnip_ssh_keys() {
+  local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
+  mkdir -p "$catnip_ssh_dir"
+
+  # Generate keys in Flox cache if they don't exist
+  if [ ! -f "$catnip_ssh_dir/catnip_remote" ]; then
+    ssh-keygen -t ed25519 -f "$catnip_ssh_dir/catnip_remote" -N "" -C "catnip@flox" >/dev/null 2>&1
+  fi
+
+  # Ensure ~/.ssh directory exists
+  mkdir -p ~/.ssh
+
+  # Copy keys to ~/.ssh where Catnip expects them
+  # Note: Catnip hardcodes ~/.ssh/catnip_remote, so we must place files there
+  # If your ~/.ssh is a symlink to a location outside $HOME, you may need to:
+  # 1. Mount that location in your container runtime (e.g., Colima mounts config)
+  # 2. Or make ~/.ssh a regular directory instead of a symlink
+  # See CATNIP_SETUP.md for detailed troubleshooting
+  cp -f "$catnip_ssh_dir/catnip_remote" ~/.ssh/catnip_remote
+  cp -f "$catnip_ssh_dir/catnip_remote.pub" ~/.ssh/catnip_remote.pub
+  chmod 600 ~/.ssh/catnip_remote
+  chmod 644 ~/.ssh/catnip_remote.pub
+}
+catnip-start() {
+  setup_catnip_ssh_keys
+
+  # Check for API keys
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo "Warning: ANTHROPIC_API_KEY not set" >&2
+    echo "Set it with: export ANTHROPIC_API_KEY=your-key" >&2
+    echo "Or: ANTHROPIC_API_KEY=your-key flox activate" >&2
+  fi
+
+  # Check for GitHub CLI authentication (for private repo access)
+  if ! gh auth status >/dev/null 2>&1; then
+    echo "" >&2
+    echo "GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
+    echo "To enable private repo access: gh auth login" >&2
+    echo "" >&2
+  fi
+
+  local extra_args=()
+  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
+  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
+  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
+
+  catnip run "${extra_args[@]}" "$@"
+}
+catnip-start "$@"
+CATNIP_START_SCRIPT
+    install_catnip_script "$bin_dir/.catnip-start.$$" "$bin_dir/catnip-start"
+    cat > "$bin_dir/.catnip-start-dind.$$" << 'CATNIP_START_DIND_SCRIPT'
+#!/usr/bin/env bash
+setup_catnip_ssh_keys() {
+  local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
+  mkdir -p "$catnip_ssh_dir"
+
+  # Generate keys in Flox cache if they don't exist
+  if [ ! -f "$catnip_ssh_dir/catnip_remote" ]; then
+    ssh-keygen -t ed25519 -f "$catnip_ssh_dir/catnip_remote" -N "" -C "catnip@flox" >/dev/null 2>&1
+  fi
+
+  # Ensure ~/.ssh directory exists
+  mkdir -p ~/.ssh
+
+  # Copy keys to ~/.ssh where Catnip expects them
+  # Note: Catnip hardcodes ~/.ssh/catnip_remote, so we must place files there
+  # If your ~/.ssh is a symlink to a location outside $HOME, you may need to:
+  # 1. Mount that location in your container runtime (e.g., Colima mounts config)
+  # 2. Or make ~/.ssh a regular directory instead of a symlink
+  # See CATNIP_SETUP.md for detailed troubleshooting
+  cp -f "$catnip_ssh_dir/catnip_remote" ~/.ssh/catnip_remote
+  cp -f "$catnip_ssh_dir/catnip_remote.pub" ~/.ssh/catnip_remote.pub
+  chmod 600 ~/.ssh/catnip_remote
+  chmod 644 ~/.ssh/catnip_remote.pub
+}
+catnip-start-dind() {
+  setup_catnip_ssh_keys
+
+  # Check for API keys
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo "Warning: ANTHROPIC_API_KEY not set" >&2
+  fi
+
+  # Check for GitHub CLI authentication (for private repo access)
+  if ! gh auth status >/dev/null 2>&1; then
+    echo "" >&2
+    echo "GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
+    echo "To enable private repo access: gh auth login" >&2
+    echo "" >&2
+  fi
+
+  local extra_args=()
+  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
+  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
+  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
+
+  catnip run --dind "${extra_args[@]}" "$@"
+}
+catnip-start-dind "$@"
+CATNIP_START_DIND_SCRIPT
+    install_catnip_script "$bin_dir/.catnip-start-dind.$$" "$bin_dir/catnip-start-dind"
+    cat > "$bin_dir/.catnip-info.$$" << 'CATNIP_INFO_SCRIPT'
+#!/usr/bin/env bash
+catnip-info() {
+  echo "Catnip Configuration:"
+  echo "  Host: $CATNIP_HOST"
+  echo "  Port: $CATNIP_PORT"
+  echo "  Access: http://$CATNIP_HOST:$CATNIP_PORT"
+  echo "  Python: $CATNIP_PYTHON_VERSION"
+  echo "  Node: $CATNIP_NODE_VERSION"
+  echo "  Go: $CATNIP_GO_VERSION"
+  echo "  Rust: $CATNIP_RUST_VERSION"
+  echo ""
+  echo "API Keys:"
+  [ -n "$ANTHROPIC_API_KEY" ] && echo "  ANTHROPIC_API_KEY set" || echo "  ANTHROPIC_API_KEY missing"
+  [ -n "$OPENAI_API_KEY" ] && echo "  OPENAI_API_KEY set" || echo "  OPENAI_API_KEY missing"
+  echo ""
+  echo "GitHub Access:"
+  if gh auth status >/dev/null 2>&1; then
+    echo "  GitHub CLI authenticated"
+  else
+    echo "  GitHub CLI not authenticated (run: gh auth login)"
+  fi
+}
+catnip-info "$@"
+CATNIP_INFO_SCRIPT
+    install_catnip_script "$bin_dir/.catnip-info.$$" "$bin_dir/catnip-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_catnip_helpers
+
 setup_catnip_env() {
   cd "$FLOX_ENV_PROJECT"
 
@@ -68,112 +220,6 @@ setup_catnip_env() {
   echo "Access: http://$CATNIP_HOST:$CATNIP_PORT" >&2
 }
 setup_catnip_env
-'''
-
-## Profile script ----------------------------------------------------
-[profile]
-common = '''
-# Setup Catnip SSH keys in Flox-managed location
-# This ensures SSH keys are stored in a portable location that works
-# with different container runtime configurations
-setup_catnip_ssh_keys() {
-  local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
-  mkdir -p "$catnip_ssh_dir"
-
-  # Generate keys in Flox cache if they don't exist
-  if [ ! -f "$catnip_ssh_dir/catnip_remote" ]; then
-    ssh-keygen -t ed25519 -f "$catnip_ssh_dir/catnip_remote" -N "" -C "catnip@flox" >/dev/null 2>&1
-  fi
-
-  # Ensure ~/.ssh directory exists
-  mkdir -p ~/.ssh
-
-  # Copy keys to ~/.ssh where Catnip expects them
-  # Note: Catnip hardcodes ~/.ssh/catnip_remote, so we must place files there
-  # If your ~/.ssh is a symlink to a location outside $HOME, you may need to:
-  # 1. Mount that location in your container runtime (e.g., Colima mounts config)
-  # 2. Or make ~/.ssh a regular directory instead of a symlink
-  # See CATNIP_SETUP.md for detailed troubleshooting
-  cp -f "$catnip_ssh_dir/catnip_remote" ~/.ssh/catnip_remote
-  cp -f "$catnip_ssh_dir/catnip_remote.pub" ~/.ssh/catnip_remote.pub
-  chmod 600 ~/.ssh/catnip_remote
-  chmod 644 ~/.ssh/catnip_remote.pub
-}
-
-# Convenient launcher functions
-catnip-start() {
-  setup_catnip_ssh_keys
-
-  # Check for API keys
-  if [ -z "$ANTHROPIC_API_KEY" ]; then
-    echo "Warning: ANTHROPIC_API_KEY not set" >&2
-    echo "Set it with: export ANTHROPIC_API_KEY=your-key" >&2
-    echo "Or: ANTHROPIC_API_KEY=your-key flox activate" >&2
-  fi
-
-  # Check for GitHub CLI authentication (for private repo access)
-  if ! gh auth status >/dev/null 2>&1; then
-    echo "" >&2
-    echo "GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
-    echo "To enable private repo access: gh auth login" >&2
-    echo "" >&2
-  fi
-
-  local extra_args=()
-  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
-  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
-  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
-
-  catnip run "${extra_args[@]}" "$@"
-}
-
-# Launch with Docker-in-Docker support
-catnip-start-dind() {
-  setup_catnip_ssh_keys
-
-  # Check for API keys
-  if [ -z "$ANTHROPIC_API_KEY" ]; then
-    echo "Warning: ANTHROPIC_API_KEY not set" >&2
-  fi
-
-  # Check for GitHub CLI authentication (for private repo access)
-  if ! gh auth status >/dev/null 2>&1; then
-    echo "" >&2
-    echo "GitHub CLI not authenticated - private repos won't be accessible in Catnip" >&2
-    echo "To enable private repo access: gh auth login" >&2
-    echo "" >&2
-  fi
-
-  local extra_args=()
-  [ -n "$ANTHROPIC_API_KEY" ] && extra_args+=(-e ANTHROPIC_API_KEY)
-  [ -n "$OPENAI_API_KEY" ] && extra_args+=(-e OPENAI_API_KEY)
-  [ -n "$CATNIP_PORT" ] && extra_args+=(-p "${CATNIP_HOST:-127.0.0.1}:$CATNIP_PORT:6369")
-
-  catnip run --dind "${extra_args[@]}" "$@"
-}
-
-# Quick status check
-catnip-info() {
-  echo "Catnip Configuration:"
-  echo "  Host: $CATNIP_HOST"
-  echo "  Port: $CATNIP_PORT"
-  echo "  Access: http://$CATNIP_HOST:$CATNIP_PORT"
-  echo "  Python: $CATNIP_PYTHON_VERSION"
-  echo "  Node: $CATNIP_NODE_VERSION"
-  echo "  Go: $CATNIP_GO_VERSION"
-  echo "  Rust: $CATNIP_RUST_VERSION"
-  echo ""
-  echo "API Keys:"
-  [ -n "$ANTHROPIC_API_KEY" ] && echo "  ANTHROPIC_API_KEY set" || echo "  ANTHROPIC_API_KEY missing"
-  [ -n "$OPENAI_API_KEY" ] && echo "  OPENAI_API_KEY set" || echo "  OPENAI_API_KEY missing"
-  echo ""
-  echo "GitHub Access:"
-  if gh auth status >/dev/null 2>&1; then
-    echo "  GitHub CLI authenticated"
-  else
-    echo "  GitHub CLI not authenticated (run: gh auth login)"
-  fi
-}
 '''
 
 ## Include ----------------------------------------------------------

@@ -34,6 +34,79 @@ agent-plugin-flox.pkg-group = "flox-skills"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# codex-config, codex-policy are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_codex_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_codex_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.codex-config.$$" << 'CODEX_CONFIG_SCRIPT'
+#!/usr/bin/env bash
+codex-config() {
+    local config_file="$HOME/.codex/config.toml"
+    local editor
+    read -r -a editor <<< "${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$(dirname "$config_file")"
+
+    # Create empty config if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        echo "# Codex configuration" > "$config_file"
+        echo "# See https://github.com/openai/codex for options" >> "$config_file"
+    fi
+
+    "${editor[@]}" "$config_file"
+}
+codex-config "$@"
+CODEX_CONFIG_SCRIPT
+    install_codex_script "$bin_dir/.codex-config.$$" "$bin_dir/codex-config"
+    cat > "$bin_dir/.codex-policy.$$" << 'CODEX_POLICY_SCRIPT'
+#!/usr/bin/env bash
+codex-policy() {
+    local policy_dir="$HOME/.codex/policy"
+    local editor
+    read -r -a editor <<< "${EDITOR:-nano}"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$policy_dir"
+
+    if [[ -n "$1" ]]; then
+        # Edit specific policy file
+        "${editor[@]}" "$policy_dir/$1"
+    else
+        # Show policy directory
+        echo "Codex policy directory: $policy_dir"
+        echo ""
+        if command -v tree &> /dev/null; then
+            tree "$policy_dir"
+        else
+            ls -la "$policy_dir"
+        fi
+        echo ""
+        echo "Usage: codex-policy <filename>  # Edit a policy file"
+        echo "Example: codex-policy default.codexpolicy"
+    fi
+}
+codex-policy "$@"
+CODEX_POLICY_SCRIPT
+    install_codex_script "$bin_dir/.codex-policy.$$" "$bin_dir/codex-policy"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_codex_helpers
+
 # Point the Flox build of Codex at the Flox skills (colon-separated roots;
 # any roots you set yourself are kept)
 setup_codex_flox_skills() {
@@ -92,146 +165,6 @@ echo "  • Memory system via AGENTS.md files"
 echo "  • Flox skills for managing Flox environments"
 echo "  • Zero Data Retention option"
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Helper: Edit Codex configuration
-codex-config() {
-    local config_file="$HOME/.codex/config.toml"
-    local editor="${EDITOR:-nano}"
-
-    # Create directory if it doesn't exist
-    mkdir -p "$(dirname "$config_file")"
-
-    # Create empty config if it doesn't exist
-    if [[ ! -f "$config_file" ]]; then
-        echo "# Codex configuration" > "$config_file"
-        echo "# See https://github.com/openai/codex for options" >> "$config_file"
-    fi
-
-    "$editor" "$config_file"
-}
-
-# Helper: Manage execution policies
-codex-policy() {
-    local policy_dir="$HOME/.codex/policy"
-    local editor="${EDITOR:-nano}"
-
-    # Create directory if it doesn't exist
-    mkdir -p "$policy_dir"
-
-    if [[ -n "$1" ]]; then
-        # Edit specific policy file
-        "$editor" "$policy_dir/$1"
-    else
-        # Show policy directory
-        echo "Codex policy directory: $policy_dir"
-        echo ""
-        if command -v tree &> /dev/null; then
-            tree "$policy_dir"
-        else
-            ls -la "$policy_dir"
-        fi
-        echo ""
-        echo "Usage: codex-policy <filename>  # Edit a policy file"
-        echo "Example: codex-policy default.codexpolicy"
-    fi
-}
-
-export -f codex-config codex-policy
-'''
-
-zsh = '''
-# Helper: Edit Codex configuration
-codex-config() {
-    local config_file="$HOME/.codex/config.toml"
-    local editor="${EDITOR:-nano}"
-
-    # Create directory if it doesn't exist
-    mkdir -p "$(dirname "$config_file")"
-
-    # Create empty config if it doesn't exist
-    if [[ ! -f "$config_file" ]]; then
-        echo "# Codex configuration" > "$config_file"
-        echo "# See https://github.com/openai/codex for options" >> "$config_file"
-    fi
-
-    "$editor" "$config_file"
-}
-
-# Helper: Manage execution policies
-codex-policy() {
-    local policy_dir="$HOME/.codex/policy"
-    local editor="${EDITOR:-nano}"
-
-    # Create directory if it doesn't exist
-    mkdir -p "$policy_dir"
-
-    if [[ -n "$1" ]]; then
-        # Edit specific policy file
-        "$editor" "$policy_dir/$1"
-    else
-        # Show policy directory
-        echo "Codex policy directory: $policy_dir"
-        echo ""
-        if command -v tree &> /dev/null; then
-            tree "$policy_dir"
-        else
-            ls -la "$policy_dir"
-        fi
-        echo ""
-        echo "Usage: codex-policy <filename>  # Edit a policy file"
-        echo "Example: codex-policy default.codexpolicy"
-    fi
-}
-'''
-
-fish = '''
-# Helper: Edit Codex configuration
-function codex-config
-    set config_file "$HOME/.codex/config.toml"
-    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
-
-    # Create directory if it doesn't exist
-    mkdir -p (dirname "$config_file")
-
-    # Create empty config if it doesn't exist
-    if not test -f "$config_file"
-        echo "# Codex configuration" > "$config_file"
-        echo "# See https://github.com/openai/codex for options" >> "$config_file"
-    end
-
-    eval $editor "$config_file"
-end
-
-# Helper: Manage execution policies
-function codex-policy
-    set policy_dir "$HOME/.codex/policy"
-    set editor (set -q EDITOR; and echo $EDITOR; or echo "nano")
-
-    # Create directory if it doesn't exist
-    mkdir -p "$policy_dir"
-
-    if test (count $argv) -gt 0
-        # Edit specific policy file
-        eval $editor "$policy_dir/$argv[1]"
-    else
-        # Show policy directory
-        echo "Codex policy directory: $policy_dir"
-        echo ""
-        if command -v tree &> /dev/null
-            tree "$policy_dir"
-        else
-            ls -la "$policy_dir"
-        end
-        echo ""
-        echo "Usage: codex-policy <filename>  # Edit a policy file"
-        echo "Example: codex-policy default.codexpolicy"
-    end
-end
 '''
 
 

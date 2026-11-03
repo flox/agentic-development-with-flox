@@ -19,6 +19,73 @@ coderabbit-cli.pkg-group = "coderabbit-cli"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# coderabbit-uncommitted, coderabbit-plain, coderabbit-ai, coderabbit-base, coderabbit-help are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_coderabbit_cli_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_coderabbit_cli_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.coderabbit-uncommitted.$$" << 'CODERABBIT_UNCOMMITTED_SCRIPT'
+#!/usr/bin/env bash
+coderabbit-uncommitted() {
+    coderabbit --type uncommitted "$@"
+}
+coderabbit-uncommitted "$@"
+CODERABBIT_UNCOMMITTED_SCRIPT
+    install_coderabbit_cli_script "$bin_dir/.coderabbit-uncommitted.$$" "$bin_dir/coderabbit-uncommitted"
+    cat > "$bin_dir/.coderabbit-plain.$$" << 'CODERABBIT_PLAIN_SCRIPT'
+#!/usr/bin/env bash
+coderabbit-plain() {
+    coderabbit --plain "$@"
+}
+coderabbit-plain "$@"
+CODERABBIT_PLAIN_SCRIPT
+    install_coderabbit_cli_script "$bin_dir/.coderabbit-plain.$$" "$bin_dir/coderabbit-plain"
+    cat > "$bin_dir/.coderabbit-ai.$$" << 'CODERABBIT_AI_SCRIPT'
+#!/usr/bin/env bash
+coderabbit-ai() {
+    coderabbit --prompt-only "$@"
+}
+coderabbit-ai "$@"
+CODERABBIT_AI_SCRIPT
+    install_coderabbit_cli_script "$bin_dir/.coderabbit-ai.$$" "$bin_dir/coderabbit-ai"
+    cat > "$bin_dir/.coderabbit-base.$$" << 'CODERABBIT_BASE_SCRIPT'
+#!/usr/bin/env bash
+coderabbit-base() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: coderabbit-base <branch>"
+        echo "Example: coderabbit-base develop"
+        return 1
+    fi
+    coderabbit --base "$1" "${@:2}"
+}
+coderabbit-base "$@"
+CODERABBIT_BASE_SCRIPT
+    install_coderabbit_cli_script "$bin_dir/.coderabbit-base.$$" "$bin_dir/coderabbit-base"
+    cat > "$bin_dir/.coderabbit-help.$$" << 'CODERABBIT_HELP_SCRIPT'
+#!/usr/bin/env bash
+coderabbit-help() {
+    coderabbit --help
+}
+coderabbit-help "$@"
+CODERABBIT_HELP_SCRIPT
+    install_coderabbit_cli_script "$bin_dir/.coderabbit-help.$$" "$bin_dir/coderabbit-help"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_coderabbit_cli_helpers
+
 echo ""
 echo "CodeRabbit CLI - AI Code Reviews in Your Terminal"
 echo ""
@@ -41,107 +108,6 @@ echo "  • Reads claude.md, .cursorrules for team standards"
 echo "  • Catches race conditions, memory leaks, security issues"
 echo "  • Provides actionable fix suggestions"
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-[profile]
-bash = '''
-# Helper: Review uncommitted changes only
-coderabbit-uncommitted() {
-    coderabbit --type uncommitted "$@"
-}
-
-# Helper: Plain text output (no colors)
-coderabbit-plain() {
-    coderabbit --plain "$@"
-}
-
-# Helper: Prompt-only mode for AI agents
-coderabbit-ai() {
-    coderabbit --prompt-only "$@"
-}
-
-# Helper: Review with custom base branch
-coderabbit-base() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: coderabbit-base <branch>"
-        echo "Example: coderabbit-base develop"
-        return 1
-    fi
-    coderabbit --base "$1" "${@:2}"
-}
-
-# Helper: Show help
-coderabbit-help() {
-    coderabbit --help
-}
-
-export -f coderabbit-uncommitted coderabbit-plain coderabbit-ai coderabbit-base coderabbit-help
-'''
-
-zsh = '''
-# Helper: Review uncommitted changes only
-coderabbit-uncommitted() {
-    coderabbit --type uncommitted "$@"
-}
-
-# Helper: Plain text output (no colors)
-coderabbit-plain() {
-    coderabbit --plain "$@"
-}
-
-# Helper: Prompt-only mode for AI agents
-coderabbit-ai() {
-    coderabbit --prompt-only "$@"
-}
-
-# Helper: Review with custom base branch
-coderabbit-base() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: coderabbit-base <branch>"
-        echo "Example: coderabbit-base develop"
-        return 1
-    fi
-    coderabbit --base "$1" "${@:2}"
-}
-
-# Helper: Show help
-coderabbit-help() {
-    coderabbit --help
-}
-'''
-
-fish = '''
-# Helper: Review uncommitted changes only
-function coderabbit-uncommitted
-    coderabbit --type uncommitted $argv
-end
-
-# Helper: Plain text output (no colors)
-function coderabbit-plain
-    coderabbit --plain $argv
-end
-
-# Helper: Prompt-only mode for AI agents
-function coderabbit-ai
-    coderabbit --prompt-only $argv
-end
-
-# Helper: Review with custom base branch
-function coderabbit-base
-    if test (count $argv) -eq 0
-        echo "Usage: coderabbit-base <branch>"
-        echo "Example: coderabbit-base develop"
-        return 1
-    end
-    coderabbit --base $argv[1] $argv[2..-1]
-end
-
-# Helper: Show help
-function coderabbit-help
-    coderabbit --help
-end
 '''
 
 

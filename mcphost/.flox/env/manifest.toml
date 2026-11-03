@@ -40,6 +40,82 @@ GITHUB_TOKEN = "${GITHUB_TOKEN:-}"
 ## -------------------------------------------------------------------
 [hook]
 on-activate = '''
+# mcphost-init is a script rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_mcphost_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_mcphost_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.mcphost-init.$$" << 'MCPHOST_INIT_SCRIPT'
+#!/usr/bin/env bash
+mcphost-init() {
+    local config_file="$HOME/.mcphost.yml"
+
+    if [[ -f "$config_file" ]]; then
+        echo "Config already exists at: $config_file"
+        return 0
+    fi
+
+    cat > "$config_file" << 'EOF'
+# MCPHost Configuration
+# See: https://github.com/mark3labs/mcphost
+
+# MCP Servers
+mcpServers:
+  # Builtin filesystem server
+  filesystem:
+    type: "builtin"
+    name: "fs"
+    options:
+      # Note: Edit these paths to match your needs
+      # MCPHost supports ${env://HOME} syntax for environment variables
+      allowed_directories: ["/tmp", "${env://HOME}/documents"]
+
+  # Builtin bash server for command execution
+  bash:
+    type: "builtin"
+    name: "bash"
+
+  # Builtin todo manager
+  todo:
+    type: "builtin"
+    name: "todo"
+
+  # Builtin HTTP fetcher
+  http:
+    type: "builtin"
+    name: "http"
+
+# Model configuration (default)
+model: "anthropic:claude-3-5-sonnet-latest"
+
+# Generation parameters
+max-tokens: 4096
+temperature: 0.7
+EOF
+
+    echo "Created example config at: $config_file"
+    echo "  Edit it to add more MCP servers or change the model."
+}
+mcphost-init "$@"
+MCPHOST_INIT_SCRIPT
+    install_mcphost_script "$bin_dir/.mcphost-init.$$" "$bin_dir/mcphost-init"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_mcphost_helpers
+
 echo ""
 echo "MCPHost - LLM Host for Model Context Protocol"
 echo ""
@@ -61,172 +137,6 @@ echo "      It cannot be run as a background service."
 echo ""
 echo "Documentation: https://github.com/mark3labs/mcphost"
 echo ""
-'''
-
-
-## Profile script ----------------------------------------------------
-## ... sourced by _your shell_ when you run 'flox activate'.
-## -------------------------------------------------------------------
-[profile]
-bash = '''
-# Helper: Create example MCPHost configuration
-mcphost-init() {
-    local config_file="$HOME/.mcphost.yml"
-
-    if [[ -f "$config_file" ]]; then
-        echo "Config already exists at: $config_file"
-        return 0
-    fi
-
-    cat > "$config_file" << 'EOF'
-# MCPHost Configuration
-# See: https://github.com/mark3labs/mcphost
-
-# MCP Servers
-mcpServers:
-  # Builtin filesystem server
-  filesystem:
-    type: "builtin"
-    name: "fs"
-    options:
-      # Note: Edit these paths to match your needs
-      # MCPHost supports ${env://HOME} syntax for environment variables
-      allowed_directories: ["/tmp", "${env://HOME}/documents"]
-
-  # Builtin bash server for command execution
-  bash:
-    type: "builtin"
-    name: "bash"
-
-  # Builtin todo manager
-  todo:
-    type: "builtin"
-    name: "todo"
-
-  # Builtin HTTP fetcher
-  http:
-    type: "builtin"
-    name: "http"
-
-# Model configuration (default)
-model: "anthropic:claude-3-5-sonnet-latest"
-
-# Generation parameters
-max-tokens: 4096
-temperature: 0.7
-EOF
-
-    echo "Created example config at: $config_file"
-    echo "  Edit it to add more MCP servers or change the model."
-}
-
-export -f mcphost-init
-'''
-
-zsh = '''
-# Helper: Create example MCPHost configuration
-mcphost-init() {
-    local config_file="$HOME/.mcphost.yml"
-
-    if [[ -f "$config_file" ]]; then
-        echo "Config already exists at: $config_file"
-        return 0
-    fi
-
-    cat > "$config_file" << 'EOF'
-# MCPHost Configuration
-# See: https://github.com/mark3labs/mcphost
-
-# MCP Servers
-mcpServers:
-  # Builtin filesystem server
-  filesystem:
-    type: "builtin"
-    name: "fs"
-    options:
-      # Note: Edit these paths to match your needs
-      # MCPHost supports ${env://HOME} syntax for environment variables
-      allowed_directories: ["/tmp", "${env://HOME}/documents"]
-
-  # Builtin bash server for command execution
-  bash:
-    type: "builtin"
-    name: "bash"
-
-  # Builtin todo manager
-  todo:
-    type: "builtin"
-    name: "todo"
-
-  # Builtin HTTP fetcher
-  http:
-    type: "builtin"
-    name: "http"
-
-# Model configuration (default)
-model: "anthropic:claude-3-5-sonnet-latest"
-
-# Generation parameters
-max-tokens: 4096
-temperature: 0.7
-EOF
-
-    echo "Created example config at: $config_file"
-    echo "  Edit it to add more MCP servers or change the model."
-}
-'''
-
-fish = '''
-# Helper: Create example MCPHost configuration
-function mcphost-init
-    set config_file "$HOME/.mcphost.yml"
-
-    if test -f "$config_file"
-        echo "Config already exists at: $config_file"
-        return 0
-    end
-
-    cat > "$config_file" << 'EOF'
-# MCPHost Configuration
-# See: https://github.com/mark3labs/mcphost
-
-# MCP Servers
-mcpServers:
-  # Builtin filesystem server
-  filesystem:
-    type: "builtin"
-    name: "fs"
-    options:
-      # Note: Edit these paths to match your needs
-      # MCPHost supports ${env://HOME} syntax for environment variables
-      allowed_directories: ["/tmp", "${env://HOME}/documents"]
-
-  # Builtin bash server for command execution
-  bash:
-    type: "builtin"
-    name: "bash"
-
-  # Builtin todo manager
-  todo:
-    type: "builtin"
-    name: "todo"
-
-  # Builtin HTTP fetcher
-  http:
-    type: "builtin"
-    name: "http"
-
-# Model configuration (default)
-model: "anthropic:claude-3-5-sonnet-latest"
-
-# Generation parameters
-max-tokens: 4096
-temperature: 0.7
-EOF
-
-    echo "Created example config at: $config_file"
-    echo "  Edit it to add more MCP servers or change the model."
-end
 '''
 
 
