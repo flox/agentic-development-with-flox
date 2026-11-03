@@ -39,6 +39,78 @@ fi
 # Activate the venv
 export VIRTUAL_ENV="$NANOBOT_VENV"
 export PATH="$NANOBOT_VENV/bin:$PATH"
+# [profile] keeps these ahead of layered environments
+export FLOXENV_NANOBOT_VENV="$NANOBOT_VENV"
+export FLOXENV_NANOBOT_SHIM_DIR="$FLOX_ENV_CACHE/bin"
+
+# nanobot, nanobot-info are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_nanobot_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_nanobot_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'NANOBOT_SCRIPT'
+# Run nanobot without PYTHONPATH, which would mix other Python packages into
+# the venv's
+unset PYTHONPATH
+exec "$FLOX_ENV_CACHE/venv/bin/nanobot" "$@"
+NANOBOT_SCRIPT
+    } > "$bin_dir/.nanobot.$$"
+    install_nanobot_script "$bin_dir/.nanobot.$$" "$bin_dir/nanobot"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'NANOBOT_INFO_SCRIPT'
+nanobot-info() {
+    echo "Nanobot Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+    echo ""
+    echo "Config: ~/.nanobot/config.json"
+    echo "Venv:   $FLOX_ENV_CACHE/venv"
+    echo ""
+    echo "Commands:"
+    echo "  nanobot onboard --wizard     Interactive first-time setup"
+    echo "  nanobot agent                Interactive chat mode"
+    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
+    echo "  nanobot gateway              Start channel gateway"
+    echo "  nanobot serve                Start OpenAI-compatible API server"
+    echo "  nanobot status               Show status"
+    echo "  nanobot channels status      Show channel status"
+    echo "  flox activate -s             Start gateway as Flox service"
+    echo ""
+    echo "Chat commands (in-session):"
+    echo "  /new       New conversation"
+    echo "  /dream     Run memory consolidation"
+    echo "  /stop      Stop current task"
+    echo "  /status    Show status"
+    echo ""
+    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
+    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
+}
+nanobot-info "$@"
+NANOBOT_INFO_SCRIPT
+    } > "$bin_dir/.nanobot-info.$$"
+    install_nanobot_script "$bin_dir/.nanobot-info.$$" "$bin_dir/nanobot-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_nanobot_helpers
 
 # === DISPLAY CONFIGURATION ===
 echo ""
@@ -71,145 +143,87 @@ is-daemon = false
 
 [profile]
 bash = '''
-export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
-export PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Wrapper to unset PYTHONPATH before running nanobot
-nanobot() {
-    (unset PYTHONPATH; command nanobot "$@")
-}
-export -f nanobot
-
-nanobot-info() {
-    echo "Nanobot Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
-    echo ""
-    echo "Config: ~/.nanobot/config.json"
-    echo "Venv:   $FLOX_ENV_CACHE/venv"
-    echo ""
-    echo "Commands:"
-    echo "  nanobot onboard --wizard     Interactive first-time setup"
-    echo "  nanobot agent                Interactive chat mode"
-    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
-    echo "  nanobot gateway              Start channel gateway"
-    echo "  nanobot serve                Start OpenAI-compatible API server"
-    echo "  nanobot status               Show status"
-    echo "  nanobot channels status      Show channel status"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Chat commands (in-session):"
-    echo "  /new       New conversation"
-    echo "  /dream     Run memory consolidation"
-    echo "  /stop      Stop current task"
-    echo "  /status    Show status"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
-    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
-}
-export -f nanobot-info
+if [ -n "$FLOXENV_NANOBOT_VENV" ] && [ -n "$FLOXENV_NANOBOT_SHIM_DIR" ]; then
+    export VIRTUAL_ENV="$FLOXENV_NANOBOT_VENV"
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    floxenv_nanobot_venv_front_dir="$FLOXENV_NANOBOT_VENV/bin"
+    case ":$PATH:" in
+        ":$floxenv_nanobot_venv_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_nanobot_venv_front_path=":$PATH:"
+            while [ "${floxenv_nanobot_venv_front_path#*:"$floxenv_nanobot_venv_front_dir":}" != "$floxenv_nanobot_venv_front_path" ]; do
+                floxenv_nanobot_venv_front_path="${floxenv_nanobot_venv_front_path%%:"$floxenv_nanobot_venv_front_dir":*}:${floxenv_nanobot_venv_front_path#*:"$floxenv_nanobot_venv_front_dir":}"
+            done
+            floxenv_nanobot_venv_front_path="${floxenv_nanobot_venv_front_path#:}"
+            PATH="$floxenv_nanobot_venv_front_dir${floxenv_nanobot_venv_front_path:+:${floxenv_nanobot_venv_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_nanobot_venv_front_dir floxenv_nanobot_venv_front_path
+    # The nanobot wrapper (unsets PYTHONPATH) goes ahead of the venv's nanobot
+    floxenv_nanobot_shim_front_dir="$FLOXENV_NANOBOT_SHIM_DIR"
+    case ":$PATH:" in
+        ":$floxenv_nanobot_shim_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_nanobot_shim_front_path=":$PATH:"
+            while [ "${floxenv_nanobot_shim_front_path#*:"$floxenv_nanobot_shim_front_dir":}" != "$floxenv_nanobot_shim_front_path" ]; do
+                floxenv_nanobot_shim_front_path="${floxenv_nanobot_shim_front_path%%:"$floxenv_nanobot_shim_front_dir":*}:${floxenv_nanobot_shim_front_path#*:"$floxenv_nanobot_shim_front_dir":}"
+            done
+            floxenv_nanobot_shim_front_path="${floxenv_nanobot_shim_front_path#:}"
+            PATH="$floxenv_nanobot_shim_front_dir${floxenv_nanobot_shim_front_path:+:${floxenv_nanobot_shim_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_nanobot_shim_front_dir floxenv_nanobot_shim_front_path
+fi
 '''
 
 zsh = '''
-export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
-export PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Wrapper to unset PYTHONPATH before running nanobot
-nanobot() {
-    (unset PYTHONPATH; command nanobot "$@")
-}
-
-nanobot-info() {
-    echo "Nanobot Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
-    echo ""
-    echo "Config: ~/.nanobot/config.json"
-    echo "Venv:   $FLOX_ENV_CACHE/venv"
-    echo ""
-    echo "Commands:"
-    echo "  nanobot onboard --wizard     Interactive first-time setup"
-    echo "  nanobot agent                Interactive chat mode"
-    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
-    echo "  nanobot gateway              Start channel gateway"
-    echo "  nanobot serve                Start OpenAI-compatible API server"
-    echo "  nanobot status               Show status"
-    echo "  nanobot channels status      Show channel status"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Chat commands (in-session):"
-    echo "  /new       New conversation"
-    echo "  /dream     Run memory consolidation"
-    echo "  /stop      Stop current task"
-    echo "  /status    Show status"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
-    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
-}
+if [ -n "$FLOXENV_NANOBOT_VENV" ] && [ -n "$FLOXENV_NANOBOT_SHIM_DIR" ]; then
+    export VIRTUAL_ENV="$FLOXENV_NANOBOT_VENV"
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    floxenv_nanobot_venv_front_dir="$FLOXENV_NANOBOT_VENV/bin"
+    case ":$PATH:" in
+        ":$floxenv_nanobot_venv_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_nanobot_venv_front_path=":$PATH:"
+            while [ "${floxenv_nanobot_venv_front_path#*:"$floxenv_nanobot_venv_front_dir":}" != "$floxenv_nanobot_venv_front_path" ]; do
+                floxenv_nanobot_venv_front_path="${floxenv_nanobot_venv_front_path%%:"$floxenv_nanobot_venv_front_dir":*}:${floxenv_nanobot_venv_front_path#*:"$floxenv_nanobot_venv_front_dir":}"
+            done
+            floxenv_nanobot_venv_front_path="${floxenv_nanobot_venv_front_path#:}"
+            PATH="$floxenv_nanobot_venv_front_dir${floxenv_nanobot_venv_front_path:+:${floxenv_nanobot_venv_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_nanobot_venv_front_dir floxenv_nanobot_venv_front_path
+    # The nanobot wrapper (unsets PYTHONPATH) goes ahead of the venv's nanobot
+    floxenv_nanobot_shim_front_dir="$FLOXENV_NANOBOT_SHIM_DIR"
+    case ":$PATH:" in
+        ":$floxenv_nanobot_shim_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_nanobot_shim_front_path=":$PATH:"
+            while [ "${floxenv_nanobot_shim_front_path#*:"$floxenv_nanobot_shim_front_dir":}" != "$floxenv_nanobot_shim_front_path" ]; do
+                floxenv_nanobot_shim_front_path="${floxenv_nanobot_shim_front_path%%:"$floxenv_nanobot_shim_front_dir":*}:${floxenv_nanobot_shim_front_path#*:"$floxenv_nanobot_shim_front_dir":}"
+            done
+            floxenv_nanobot_shim_front_path="${floxenv_nanobot_shim_front_path#:}"
+            PATH="$floxenv_nanobot_shim_front_dir${floxenv_nanobot_shim_front_path:+:${floxenv_nanobot_shim_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_nanobot_shim_front_dir floxenv_nanobot_shim_front_path
+fi
 '''
 
 fish = '''
-set -gx VIRTUAL_ENV "$FLOX_ENV_CACHE/venv"
-set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
-
-# Wrapper to unset PYTHONPATH before running nanobot
-function nanobot
-    set -l _had_pp (set -q PYTHONPATH; and echo 1; or echo 0)
-    set -l _saved_pp $PYTHONPATH
-    set -e PYTHONPATH
-    command nanobot $argv
-    if test "$_had_pp" = "1"
-        set -gx PYTHONPATH $_saved_pp
-    end
-end
-
-function nanobot-info
-    echo "Nanobot Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    if test -n "$OPENROUTER_API_KEY"
-        echo "  OpenRouter: set"
-    else
-        echo "  OpenRouter: not set"
-    end
-    echo ""
-    echo "Config: ~/.nanobot/config.json"
-    echo "Venv:   $FLOX_ENV_CACHE/venv"
-    echo ""
-    echo "Commands:"
-    echo "  nanobot onboard --wizard     Interactive first-time setup"
-    echo "  nanobot agent                Interactive chat mode"
-    echo "  nanobot agent -m \"<msg>\"     Single-message chat"
-    echo "  nanobot gateway              Start channel gateway"
-    echo "  nanobot serve                Start OpenAI-compatible API server"
-    echo "  nanobot status               Show status"
-    echo "  nanobot channels status      Show channel status"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Chat commands (in-session):"
-    echo "  /new       New conversation"
-    echo "  /dream     Run memory consolidation"
-    echo "  /stop      Stop current task"
-    echo "  /status    Show status"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI,"
-    echo "  Google Gemini, DeepSeek, Groq, Ollama, GitHub Copilot, 25+ more"
+if set -q FLOXENV_NANOBOT_VENV; and set -q FLOXENV_NANOBOT_SHIM_DIR
+    set -gx VIRTUAL_ENV $FLOXENV_NANOBOT_VENV
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    set -gx PATH $FLOXENV_NANOBOT_VENV/bin (string match -v -- $FLOXENV_NANOBOT_VENV/bin $PATH)
+    # The nanobot wrapper (unsets PYTHONPATH) goes ahead of the venv's nanobot
+    set -gx PATH $FLOXENV_NANOBOT_SHIM_DIR (string match -v -- $FLOXENV_NANOBOT_SHIM_DIR $PATH)
 end
 '''
 

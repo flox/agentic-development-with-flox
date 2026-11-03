@@ -22,6 +22,10 @@ IRONCLAW_HOME = "$FLOX_ENV_CACHE/ironclaw"
 
 [hook]
 on-activate = '''
+# [profile] detects PostgreSQL once per activation (services start after this
+# hook), not again each time another environment is layered on top
+export IRONCLAW_PROFILE_PENDING=1
+
 # === IRONCLAW HOME ===
 export IRONCLAW_HOME="${IRONCLAW_HOME:-$FLOX_ENV_CACHE/ironclaw}"
 export IRONCLAW_BASE_DIR="$IRONCLAW_HOME"
@@ -121,96 +125,108 @@ is-daemon = false
 
 [profile]
 bash = '''
-# Detect PostgreSQL and set DATABASE_URL via bundled script
-_db_url=$(ironclaw-pg-detect 2>/dev/null)
-if [ -n "$_db_url" ]; then
-  export DATABASE_URL="$_db_url"
-  export DATABASE_BACKEND="postgres"
-  echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
-  echo ""
-elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
-  for _pg_i in $(seq 1 10); do
+# Once per activation
+if [ "${IRONCLAW_PROFILE_PENDING:-}" = "1" ]; then
+    export IRONCLAW_PROFILE_PENDING=0
+    # Detect PostgreSQL and set DATABASE_URL via bundled script
     _db_url=$(ironclaw-pg-detect 2>/dev/null)
     if [ -n "$_db_url" ]; then
       export DATABASE_URL="$_db_url"
       export DATABASE_BACKEND="postgres"
       echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
       echo ""
-      break
+    elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
+      for _pg_i in $(seq 1 10); do
+        _db_url=$(ironclaw-pg-detect 2>/dev/null)
+        if [ -n "$_db_url" ]; then
+          export DATABASE_URL="$_db_url"
+          export DATABASE_BACKEND="postgres"
+          echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+          echo ""
+          break
+        fi
+        sleep 1
+      done
+      unset _pg_i
+      if [ -z "$DATABASE_URL" ]; then
+        echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+        echo ""
+      fi
+    else
+      echo "  Database: libSQL (embedded)"
+      echo ""
     fi
-    sleep 1
-  done
-  unset _pg_i
-  if [ -z "$DATABASE_URL" ]; then
-    echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
-    echo ""
-  fi
-else
-  echo "  Database: libSQL (embedded)"
-  echo ""
+    unset _db_url
 fi
-unset _db_url
 '''
 
 zsh = '''
-# Detect PostgreSQL and set DATABASE_URL via bundled script
-_db_url=$(ironclaw-pg-detect 2>/dev/null)
-if [ -n "$_db_url" ]; then
-  export DATABASE_URL="$_db_url"
-  export DATABASE_BACKEND="postgres"
-  echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
-  echo ""
-elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
-  for _pg_i in $(seq 1 10); do
+# Once per activation
+if [ "${IRONCLAW_PROFILE_PENDING:-}" = "1" ]; then
+    export IRONCLAW_PROFILE_PENDING=0
+    # Detect PostgreSQL and set DATABASE_URL via bundled script
     _db_url=$(ironclaw-pg-detect 2>/dev/null)
     if [ -n "$_db_url" ]; then
       export DATABASE_URL="$_db_url"
       export DATABASE_BACKEND="postgres"
       echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
       echo ""
-      break
+    elif [ -d "$PGDATA" ] && flox services status 2>/dev/null | grep -q "postgres"; then
+      for _pg_i in $(seq 1 10); do
+        _db_url=$(ironclaw-pg-detect 2>/dev/null)
+        if [ -n "$_db_url" ]; then
+          export DATABASE_URL="$_db_url"
+          export DATABASE_BACKEND="postgres"
+          echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+          echo ""
+          break
+        fi
+        sleep 1
+      done
+      unset _pg_i
+      if [ -z "$DATABASE_URL" ]; then
+        echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+        echo ""
+      fi
+    else
+      echo "  Database: libSQL (embedded)"
+      echo ""
     fi
-    sleep 1
-  done
-  unset _pg_i
-  if [ -z "$DATABASE_URL" ]; then
-    echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
-    echo ""
-  fi
-else
-  echo "  Database: libSQL (embedded)"
-  echo ""
+    unset _db_url
 fi
-unset _db_url
 '''
 
 fish = '''
-# Detect PostgreSQL and set DATABASE_URL via bundled script
-set -l _db_url (ironclaw-pg-detect 2>/dev/null)
-if test -n "$_db_url"
-    set -gx DATABASE_URL "$_db_url"
-    set -gx DATABASE_BACKEND "postgres"
-    echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
-    echo ""
-else if test -d "$PGDATA"; and flox services status 2>/dev/null | grep -q "postgres"
-    for _pg_i in (seq 1 10)
-        set _db_url (ironclaw-pg-detect 2>/dev/null)
-        if test -n "$_db_url"
-            set -gx DATABASE_URL "$_db_url"
-            set -gx DATABASE_BACKEND "postgres"
-            echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
-            echo ""
-            break
+# Once per activation
+if test "$IRONCLAW_PROFILE_PENDING" = "1"
+    set -gx IRONCLAW_PROFILE_PENDING 0
+    # Detect PostgreSQL and set DATABASE_URL via bundled script
+    set -l _db_url (ironclaw-pg-detect 2>/dev/null)
+    if test -n "$_db_url"
+        set -gx DATABASE_URL "$_db_url"
+        set -gx DATABASE_BACKEND "postgres"
+        echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+        echo ""
+    else if test -d "$PGDATA"; and flox services status 2>/dev/null | grep -q "postgres"
+        for _pg_i in (seq 1 10)
+            set _db_url (ironclaw-pg-detect 2>/dev/null)
+            if test -n "$_db_url"
+                set -gx DATABASE_URL "$_db_url"
+                set -gx DATABASE_BACKEND "postgres"
+                echo "  Database: PostgreSQL (port $PGPORT, pgvector enabled)"
+                echo ""
+                break
+            end
+            sleep 1
         end
-        sleep 1
-    end
-    if not set -q DATABASE_URL
-        echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+        if not set -q DATABASE_URL
+            echo "  Database: libSQL (embedded) -- PostgreSQL starting, try 'ironclaw' in a moment"
+            echo ""
+        end
+    else
+        echo "  Database: libSQL (embedded)"
         echo ""
     end
-else
-    echo "  Database: libSQL (embedded)"
-    echo ""
 end
 '''
 

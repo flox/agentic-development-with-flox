@@ -15,9 +15,64 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# cline-info is a script rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_cline_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_cline_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'CLINE_INFO_SCRIPT'
+cline-info() {
+    echo "Cline Environment Configuration"
+    echo ""
+    echo "API Keys:"
+    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+    echo ""
+    echo "Commands:"
+    echo "  cline \"<prompt>\"             Run agent task"
+    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
+    echo "  cline -m edit \"<prompt>\"     Edit mode"
+    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
+    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
+    echo "  cline auth                   Configure provider/API key"
+    echo "  cline config                 View/edit configuration"
+    echo "  cline -acp                   ACP mode (editor integration)"
+    echo ""
+    echo "Providers:"
+    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
+    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
+    echo ""
+    echo "Update cline:"
+    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
+}
+cline-info "$@"
+CLINE_INFO_SCRIPT
+    } > "$bin_dir/.cline-info.$$"
+    install_cline_script "$bin_dir/.cline-info.$$" "$bin_dir/cline-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_cline_helpers
+
 # === CLINE INSTALLATION ===
 export NPM_GLOBAL_DIR="$FLOX_ENV_CACHE/npm-global"
 export PATH="$NPM_GLOBAL_DIR/bin:$PATH"
+# [profile] keeps this directory ahead of layered environments
+export FLOXENV_CLINE_BIN_DIR="$FLOX_ENV_CACHE/npm-global/bin"
 
 # Install cline globally if not present or outdated
 if ! command -v cline >/dev/null 2>&1; then
@@ -73,98 +128,52 @@ unset _has_key
 
 [profile]
 bash = '''
-export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
-
-cline-info() {
-    echo "Cline Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  cline \"<prompt>\"             Run agent task"
-    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
-    echo "  cline -m edit \"<prompt>\"     Edit mode"
-    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
-    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
-    echo "  cline auth                   Configure provider/API key"
-    echo "  cline config                 View/edit configuration"
-    echo "  cline -acp                   ACP mode (editor integration)"
-    echo ""
-    echo "Providers:"
-    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
-    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
-    echo ""
-    echo "Update cline:"
-    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
-}
-export -f cline-info
+if [ -n "$FLOXENV_CLINE_BIN_DIR" ]; then
+    # Layering another environment on top puts its bin directories ahead of
+    # this one's npm packages; move them back to the front
+    floxenv_cline_front_dir="$FLOXENV_CLINE_BIN_DIR"
+    case ":$PATH:" in
+        ":$floxenv_cline_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_cline_front_path=":$PATH:"
+            while [ "${floxenv_cline_front_path#*:"$floxenv_cline_front_dir":}" != "$floxenv_cline_front_path" ]; do
+                floxenv_cline_front_path="${floxenv_cline_front_path%%:"$floxenv_cline_front_dir":*}:${floxenv_cline_front_path#*:"$floxenv_cline_front_dir":}"
+            done
+            floxenv_cline_front_path="${floxenv_cline_front_path#:}"
+            PATH="$floxenv_cline_front_dir${floxenv_cline_front_path:+:${floxenv_cline_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_cline_front_dir floxenv_cline_front_path
+fi
 '''
 
 zsh = '''
-export PATH="$FLOX_ENV_CACHE/npm-global/bin:$PATH"
-
-cline-info() {
-    echo "Cline Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  cline \"<prompt>\"             Run agent task"
-    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
-    echo "  cline -m edit \"<prompt>\"     Edit mode"
-    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
-    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
-    echo "  cline auth                   Configure provider/API key"
-    echo "  cline config                 View/edit configuration"
-    echo "  cline -acp                   ACP mode (editor integration)"
-    echo ""
-    echo "Providers:"
-    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
-    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
-    echo ""
-    echo "Update cline:"
-    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
-}
+if [ -n "$FLOXENV_CLINE_BIN_DIR" ]; then
+    # Layering another environment on top puts its bin directories ahead of
+    # this one's npm packages; move them back to the front
+    floxenv_cline_front_dir="$FLOXENV_CLINE_BIN_DIR"
+    case ":$PATH:" in
+        ":$floxenv_cline_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_cline_front_path=":$PATH:"
+            while [ "${floxenv_cline_front_path#*:"$floxenv_cline_front_dir":}" != "$floxenv_cline_front_path" ]; do
+                floxenv_cline_front_path="${floxenv_cline_front_path%%:"$floxenv_cline_front_dir":*}:${floxenv_cline_front_path#*:"$floxenv_cline_front_dir":}"
+            done
+            floxenv_cline_front_path="${floxenv_cline_front_path#:}"
+            PATH="$floxenv_cline_front_dir${floxenv_cline_front_path:+:${floxenv_cline_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_cline_front_dir floxenv_cline_front_path
+fi
 '''
 
 fish = '''
-set -gx PATH "$FLOX_ENV_CACHE/npm-global/bin" $PATH
-
-function cline-info
-    echo "Cline Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  cline \"<prompt>\"             Run agent task"
-    echo "  cline -m ask \"<prompt>\"      Ask mode (no edits)"
-    echo "  cline -m edit \"<prompt>\"     Edit mode"
-    echo "  cline -y \"<prompt>\"          Auto-approve (headless/CI)"
-    echo "  cline --json \"<prompt>\"      NDJSON output for scripting"
-    echo "  cline auth                   Configure provider/API key"
-    echo "  cline config                 View/edit configuration"
-    echo "  cline -acp                   ACP mode (editor integration)"
-    echo ""
-    echo "Providers:"
-    echo "  Anthropic, OpenAI, Google Gemini, OpenRouter, AWS Bedrock,"
-    echo "  Azure OpenAI, DeepSeek, Ollama, LM Studio, and more"
-    echo ""
-    echo "Update cline:"
-    echo "  npm install -g --prefix \"\$FLOX_ENV_CACHE/npm-global\" cline"
+if set -q FLOXENV_CLINE_BIN_DIR
+    # Layering another environment on top puts its bin directories ahead of
+    # this one's npm packages; move them back to the front
+    set -gx PATH $FLOXENV_CLINE_BIN_DIR (string match -v -- $FLOXENV_CLINE_BIN_DIR $PATH)
 end
 '''
 

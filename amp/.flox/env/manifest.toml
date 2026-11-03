@@ -26,6 +26,271 @@ AMP_TOOLS_DIR = "$FLOX_ENV_CACHE/amp-tools"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
+# amp-info, amp-mcp-add, amp-docs, amp-help, readme are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_amp_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_amp_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AMP_INFO_SCRIPT'
+amp-info() {
+    local auth_status
+    if [[ -n "$AMP_API_KEY" ]]; then
+        auth_status="$(gum style --foreground 82 'Configured')"
+    else
+        auth_status="$(gum style --foreground 196 ' Not set')"
+    fi
+
+    gum style \
+        --border rounded \
+        --border-foreground 240 \
+        --padding "1 2" \
+        --margin "1 0" \
+        --width 70 \
+        "$(gum style --foreground 141 --bold 'Amp Environment Information')
+
+$(gum style --foreground 69 'Mode:')          $AMP_MODE
+$(gum style --foreground 69 'Editor:')        $AMP_EDITOR
+$(gum style --foreground 69 'API Key:')       $auth_status
+$(gum style --foreground 69 'Threads:')       $AMP_THREADS_DIR
+$(gum style --foreground 69 'Config:')        $AMP_CONFIG_FILE
+$(gum style --foreground 69 'Cache:')         $FLOX_ENV_CACHE
+
+$(gum style --foreground 240 --italic 'Run amp-config to reconfigure')"
+}
+amp-info "$@"
+AMP_INFO_SCRIPT
+    } > "$bin_dir/.amp-info.$$"
+    install_amp_script "$bin_dir/.amp-info.$$" "$bin_dir/amp-info"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AMP_MCP_ADD_SCRIPT'
+amp-mcp-add() {
+    gum style --foreground 141 --bold "Add MCP Server"
+    echo ""
+
+    local server_type
+    server_type=$(gum choose --header "Select server type:" \
+        "Local (command)" \
+        "Remote (HTTP/SSE)" \
+        "Cancel")
+
+    [[ "$server_type" == "Cancel" ]] && return 0
+
+    local server_name
+    server_name=$(gum input --prompt "Server name: " --placeholder "playwright")
+
+    [[ -z "$server_name" ]] && { echo "Server name required"; return 1; }
+
+    if [[ "$server_type" == "Local (command)" ]]; then
+        local command
+        command=$(gum input --prompt "Command: " --placeholder "npx")
+
+        local args
+        args=$(gum input --prompt "Arguments: " --placeholder "-y @playwright/mcp@latest")
+
+        echo ""
+        gum style --foreground 240 "Add this to your VS Code settings.json:"
+        echo ""
+        cat << EOF | bat --language json --plain
+{
+  "amp.mcpServers": {
+    "$server_name": {
+      "command": "$command",
+      "args": $(echo "$args" | jq -R 'split(" ")')
+    }
+  }
+}
+EOF
+    else
+        local url
+        url=$(gum input --prompt "Server URL: " --placeholder "https://mcp.semgrep.ai/mcp")
+
+        if gum confirm "Does this server require authentication?" --default=false; then
+            local auth_header
+            auth_header=$(gum input --prompt "Auth header value: " --placeholder "Bearer token" --password)
+
+            echo ""
+            gum style --foreground 240 "Add this to your VS Code settings.json:"
+            echo ""
+            cat << EOF | bat --language json --plain
+{
+  "amp.mcpServers": {
+    "$server_name": {
+      "url": "$url",
+      "headers": {
+        "Authorization": "$auth_header"
+      }
+    }
+  }
+}
+EOF
+        else
+            echo ""
+            gum style --foreground 240 "Add this to your VS Code settings.json:"
+            echo ""
+            cat << EOF | bat --language json --plain
+{
+  "amp.mcpServers": {
+    "$server_name": {
+      "url": "$url"
+    }
+  }
+}
+EOF
+        fi
+    fi
+
+    echo ""
+    gum style --foreground 82 "MCP server configuration generated"
+}
+amp-mcp-add "$@"
+AMP_MCP_ADD_SCRIPT
+    } > "$bin_dir/.amp-mcp-add.$$"
+    install_amp_script "$bin_dir/.amp-mcp-add.$$" "$bin_dir/amp-mcp-add"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AMP_DOCS_SCRIPT'
+amp-docs() {
+    local url="https://docs.ampcode.com/"
+
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "$url"
+    elif command -v open &> /dev/null; then
+        open "$url"
+    else
+        echo "Open in browser: $url"
+    fi
+}
+amp-docs "$@"
+AMP_DOCS_SCRIPT
+    } > "$bin_dir/.amp-docs.$$"
+    install_amp_script "$bin_dir/.amp-docs.$$" "$bin_dir/amp-docs"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AMP_HELP_SCRIPT'
+show_amp_help() {
+    local auth_status
+    if [[ -n "$AMP_API_KEY" ]]; then
+        auth_status="$(gum style --foreground 82 'Configured')"
+    else
+        auth_status="$(gum style --foreground 240 'Not set')"
+    fi
+
+    local header_content=$(cat << EOF
+$(gum style --foreground 141 --bold 'This is a  F l o x  Amp Environment')
+
+Core Amp Commands:
+    $(gum style --foreground 212 'amp')                    Start Amp CLI interactively
+    $(gum style --foreground 212 'amp -x "task"')          Execute a task and exit
+    $(gum style --foreground 212 'amp threads list')       List your conversation threads
+    $(gum style --foreground 212 'amp threads continue')   Continue a previous thread
+
+Environment Management:
+    $(gum style --foreground 212 'amp-mode')               Switch between smart/rush/free modes
+    $(gum style --foreground 212 'amp-config')             Reconfigure Amp settings
+    $(gum style --foreground 212 'amp-info')               Show current configuration
+    $(gum style --foreground 212 'amp-mcp-add')            Add MCP server interactively
+    $(gum style --foreground 212 'amp-test')               Test Amp authentication
+
+Documentation:
+    $(gum style --foreground 212 'amp-help')               Show this help message
+    $(gum style --foreground 212 'amp-docs')               Open Amp documentation
+    $(gum style --foreground 212 'readme')                 View README.md
+
+Flox Environment Details:
+    Mode:           $(gum style --foreground 212 "${AMP_MODE:-Not configured}")
+    Editor:         $(gum style --foreground 212 "${AMP_EDITOR:-Not configured}")
+    API Key:        ${auth_status}
+    Threads:        $(gum style --foreground 212 "$AMP_THREADS_DIR")
+    Config:         $(gum style --foreground 212 "$AMP_CONFIG_FILE")
+EOF
+)
+
+    gum style \
+        --border rounded \
+        --border-foreground 240 \
+        --padding "1 2" \
+        --margin "1 0" \
+        --width 96 \
+        "$header_content"
+
+    echo ""
+}
+show_amp_help
+AMP_HELP_SCRIPT
+    } > "$bin_dir/.amp-help.$$"
+    install_amp_script "$bin_dir/.amp-help.$$" "$bin_dir/amp-help"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'README_SCRIPT'
+# Show the environment's README; without one, a built-in summary. Unlike before,
+# nothing is written to $FLOX_ENV_PROJECT (for flox activate -r, that is your project).
+readme() {
+    if [ -s "$FLOX_ENV_PROJECT/README.md" ]; then
+        bat --language markdown "$FLOX_ENV_PROJECT/README.md" 2>/dev/null
+        return
+    fi
+    cat << 'EOFREADME' | bat --language markdown --style=plain 2>/dev/null
+# Amp Flox Environment
+
+This is a Flox environment for Amp, the frontier coding agent.
+
+## Quick Start
+
+1. Start Amp interactively:
+   ```bash
+   amp
+   ```
+
+2. Execute a task:
+   ```bash
+   amp -x "explain this codebase"
+   ```
+
+3. Configure your environment:
+   ```bash
+   amp-config
+   ```
+
+## Learn More
+
+- Documentation: https://docs.ampcode.com/
+- Install Guide: https://ampcode.com/install
+- Website: https://ampcode.com
+
+## Helper Commands
+
+- `amp-mode` - Switch between smart/rush/free modes
+- `amp-info` - Show current configuration
+- `amp-help` - Display help message
+- `amp-mcp-add` - Add MCP servers
+EOFREADME
+    echo ""
+    echo "Full README: https://github.com/flox/agentic-development-with-flox/tree/main/amp"
+}
+readme "$@"
+README_SCRIPT
+    } > "$bin_dir/.readme.$$"
+    install_amp_script "$bin_dir/.readme.$$" "$bin_dir/readme"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_amp_helpers
+
 # Create required directories
 mkdir -p "$AMP_CONFIG_DIR"
 mkdir -p "$AMP_TOOLS_DIR"
@@ -242,97 +507,8 @@ AMP_SETUP_EOF
 }
 
 # Display help information
-show_amp_help() {
-    local auth_status
-    if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 'Configured')"
-    else
-        auth_status="$(gum style --foreground 240 'Not set')"
-    fi
-
-    local header_content=$(cat << EOF
-$(gum style --foreground 141 --bold 'This is a  F l o x  Amp Environment')
-
-Core Amp Commands:
-    $(gum style --foreground 212 'amp')                    Start Amp CLI interactively
-    $(gum style --foreground 212 'amp -x "task"')          Execute a task and exit
-    $(gum style --foreground 212 'amp threads list')       List your conversation threads
-    $(gum style --foreground 212 'amp threads continue')   Continue a previous thread
-
-Environment Management:
-    $(gum style --foreground 212 'amp-mode')               Switch between smart/rush/free modes
-    $(gum style --foreground 212 'amp-config')             Reconfigure Amp settings
-    $(gum style --foreground 212 'amp-info')               Show current configuration
-    $(gum style --foreground 212 'amp-mcp-add')            Add MCP server interactively
-    $(gum style --foreground 212 'amp-test')               Test Amp authentication
-
-Documentation:
-    $(gum style --foreground 212 'amp-help')               Show this help message
-    $(gum style --foreground 212 'amp-docs')               Open Amp documentation
-    $(gum style --foreground 212 'readme')                 View README.md
-
-Flox Environment Details:
-    Mode:           $(gum style --foreground 212 "${AMP_MODE:-Not configured}")
-    Editor:         $(gum style --foreground 212 "${AMP_EDITOR:-Not configured}")
-    API Key:        ${auth_status}
-    Threads:        $(gum style --foreground 212 "$AMP_THREADS_DIR")
-    Config:         $(gum style --foreground 212 "$AMP_CONFIG_FILE")
-EOF
-)
-
-    gum style \
-        --border rounded \
-        --border-foreground 240 \
-        --padding "1 2" \
-        --margin "1 0" \
-        --width 96 \
-        "$header_content"
-
-    echo ""
-}
 
 # Download README if not exists
-download_readme() {
-    local readme_path="$FLOX_ENV_PROJECT/README.md"
-
-    if [ ! -f "$readme_path" ] || [ ! -s "$readme_path" ]; then
-        cat > "$readme_path" << 'EOFREADME'
-# Amp Flox Environment
-
-This is a Flox environment for Amp, the frontier coding agent.
-
-## Quick Start
-
-1. Start Amp interactively:
-   ```bash
-   amp
-   ```
-
-2. Execute a task:
-   ```bash
-   amp -x "explain this codebase"
-   ```
-
-3. Configure your environment:
-   ```bash
-   amp-config
-   ```
-
-## Learn More
-
-- Documentation: https://docs.ampcode.com/
-- Install Guide: https://ampcode.com/install
-- Website: https://ampcode.com
-
-## Helper Commands
-
-- `amp-mode` - Switch between smart/rush/free modes
-- `amp-info` - Show current configuration
-- `amp-help` - Display help message
-- `amp-mcp-add` - Add MCP servers
-EOFREADME
-    fi
-}
 
 # Main initialization
 main() {
@@ -347,8 +523,7 @@ main() {
         echo "Run amp-config in a terminal to configure Amp."
     fi
 
-    show_amp_help
-    download_readme
+    "$FLOX_ENV_CACHE/bin/amp-help"
 }
 
 # Run main
@@ -437,114 +612,6 @@ amp-config() {
     amp_load_config_file
 }
 
-# Show Amp info
-amp-info() {
-    local auth_status
-    if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 'Configured')"
-    else
-        auth_status="$(gum style --foreground 196 ' Not set')"
-    fi
-
-    gum style \
-        --border rounded \
-        --border-foreground 240 \
-        --padding "1 2" \
-        --margin "1 0" \
-        --width 70 \
-        "$(gum style --foreground 141 --bold 'Amp Environment Information')
-
-$(gum style --foreground 69 'Mode:')          $AMP_MODE
-$(gum style --foreground 69 'Editor:')        $AMP_EDITOR
-$(gum style --foreground 69 'API Key:')       $auth_status
-$(gum style --foreground 69 'Threads:')       $AMP_THREADS_DIR
-$(gum style --foreground 69 'Config:')        $AMP_CONFIG_FILE
-$(gum style --foreground 69 'Cache:')         $FLOX_ENV_CACHE
-
-$(gum style --foreground 240 --italic 'Run amp-config to reconfigure')"
-}
-
-# Add MCP server interactively
-amp-mcp-add() {
-    gum style --foreground 141 --bold "Add MCP Server"
-    echo ""
-
-    local server_type
-    server_type=$(gum choose --header "Select server type:" \
-        "Local (command)" \
-        "Remote (HTTP/SSE)" \
-        "Cancel")
-
-    [[ "$server_type" == "Cancel" ]] && return 0
-
-    local server_name
-    server_name=$(gum input --prompt "Server name: " --placeholder "playwright")
-
-    [[ -z "$server_name" ]] && { echo "Server name required"; return 1; }
-
-    if [[ "$server_type" == "Local (command)" ]]; then
-        local command
-        command=$(gum input --prompt "Command: " --placeholder "npx")
-
-        local args
-        args=$(gum input --prompt "Arguments: " --placeholder "-y @playwright/mcp@latest")
-
-        echo ""
-        gum style --foreground 240 "Add this to your VS Code settings.json:"
-        echo ""
-        cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "command": "$command",
-      "args": $(echo "$args" | jq -R 'split(" ")')
-    }
-  }
-}
-EOF
-    else
-        local url
-        url=$(gum input --prompt "Server URL: " --placeholder "https://mcp.semgrep.ai/mcp")
-
-        if gum confirm "Does this server require authentication?" --default=false; then
-            local auth_header
-            auth_header=$(gum input --prompt "Auth header value: " --placeholder "Bearer token" --password)
-
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "url": "$url",
-      "headers": {
-        "Authorization": "$auth_header"
-      }
-    }
-  }
-}
-EOF
-        else
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "url": "$url"
-    }
-  }
-}
-EOF
-        fi
-    fi
-
-    echo ""
-    gum style --foreground 82 "MCP server configuration generated"
-}
-
 # Test Amp authentication
 amp-test() {
     echo "Testing Amp authentication..."
@@ -569,34 +636,8 @@ amp-test() {
     fi
 }
 
-# Show help
-amp-help() {
-    show_amp_help
-}
-
-# Open Amp documentation
-amp-docs() {
-    local url="https://docs.ampcode.com/"
-
-    if command -v xdg-open &> /dev/null; then
-        xdg-open "$url"
-    elif command -v open &> /dev/null; then
-        open "$url"
-    else
-        echo "Open in browser: $url"
-    fi
-}
-
-# View README
-readme() {
-    if [[ "$1" == "--refresh" ]] || [ ! -s "$FLOX_ENV_PROJECT/README.md" ]; then
-        download_readme
-    fi
-    bat --language markdown "$FLOX_ENV_PROJECT/README.md" 2>/dev/null
-}
-
 # Export functions
-export -f amp-mode amp-config amp-info amp-mcp-add amp-test amp-help amp-docs readme
+export -f amp-mode amp-config amp-test
 '''
 
 zsh = '''
@@ -678,114 +719,6 @@ amp-config() {
     amp_load_config_file
 }
 
-# Show Amp info
-amp-info() {
-    local auth_status
-    if [[ -n "$AMP_API_KEY" ]]; then
-        auth_status="$(gum style --foreground 82 'Configured')"
-    else
-        auth_status="$(gum style --foreground 196 ' Not set')"
-    fi
-
-    gum style \
-        --border rounded \
-        --border-foreground 240 \
-        --padding "1 2" \
-        --margin "1 0" \
-        --width 70 \
-        "$(gum style --foreground 141 --bold 'Amp Environment Information')
-
-$(gum style --foreground 69 'Mode:')          $AMP_MODE
-$(gum style --foreground 69 'Editor:')        $AMP_EDITOR
-$(gum style --foreground 69 'API Key:')       $auth_status
-$(gum style --foreground 69 'Threads:')       $AMP_THREADS_DIR
-$(gum style --foreground 69 'Config:')        $AMP_CONFIG_FILE
-$(gum style --foreground 69 'Cache:')         $FLOX_ENV_CACHE
-
-$(gum style --foreground 240 --italic 'Run amp-config to reconfigure')"
-}
-
-# Add MCP server interactively
-amp-mcp-add() {
-    gum style --foreground 141 --bold "Add MCP Server"
-    echo ""
-
-    local server_type
-    server_type=$(gum choose --header "Select server type:" \
-        "Local (command)" \
-        "Remote (HTTP/SSE)" \
-        "Cancel")
-
-    [[ "$server_type" == "Cancel" ]] && return 0
-
-    local server_name
-    server_name=$(gum input --prompt "Server name: " --placeholder "playwright")
-
-    [[ -z "$server_name" ]] && { echo "Server name required"; return 1; }
-
-    if [[ "$server_type" == "Local (command)" ]]; then
-        local command
-        command=$(gum input --prompt "Command: " --placeholder "npx")
-
-        local args
-        args=$(gum input --prompt "Arguments: " --placeholder "-y @playwright/mcp@latest")
-
-        echo ""
-        gum style --foreground 240 "Add this to your VS Code settings.json:"
-        echo ""
-        cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "command": "$command",
-      "args": $(echo "$args" | jq -R 'split(" ")')
-    }
-  }
-}
-EOF
-    else
-        local url
-        url=$(gum input --prompt "Server URL: " --placeholder "https://mcp.semgrep.ai/mcp")
-
-        if gum confirm "Does this server require authentication?" --default=false; then
-            local auth_header
-            auth_header=$(gum input --prompt "Auth header value: " --placeholder "Bearer token" --password)
-
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "url": "$url",
-      "headers": {
-        "Authorization": "$auth_header"
-      }
-    }
-  }
-}
-EOF
-        else
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            cat << EOF | bat --language json --plain
-{
-  "amp.mcpServers": {
-    "$server_name": {
-      "url": "$url"
-    }
-  }
-}
-EOF
-        fi
-    fi
-
-    echo ""
-    gum style --foreground 82 "MCP server configuration generated"
-}
-
 # Test Amp authentication
 amp-test() {
     echo "Testing Amp authentication..."
@@ -808,32 +741,6 @@ amp-test() {
         echo "  Check your API key or network connection"
         return 1
     fi
-}
-
-# Show help
-amp-help() {
-    show_amp_help
-}
-
-# Open Amp documentation
-amp-docs() {
-    local url="https://docs.ampcode.com/"
-
-    if command -v xdg-open &> /dev/null; then
-        xdg-open "$url"
-    elif command -v open &> /dev/null; then
-        open "$url"
-    else
-        echo "Open in browser: $url"
-    fi
-}
-
-# View README
-readme() {
-    if [[ "$1" == "--refresh" ]] || [ ! -s "$FLOX_ENV_PROJECT/README.md" ]; then
-        download_readme
-    fi
-    bat --language markdown "$FLOX_ENV_PROJECT/README.md" 2>/dev/null
 }
 '''
 
@@ -905,81 +812,6 @@ function amp-config
     amp_load_config_file
 end
 
-# Show Amp info
-function amp-info
-    set auth_status
-    if test -n "$AMP_API_KEY"
-        set auth_status (gum style --foreground 82 'Configured')
-    else
-        set auth_status (gum style --foreground 196 ' Not set')
-    end
-
-    gum style \
-        --border rounded \
-        --border-foreground 240 \
-        --padding "1 2" \
-        --margin "1 0" \
-        --width 70 \
-        (printf '%s\n\n%s\n%s\n%s\n%s\n%s\n%s\n\n%s' \
-            (gum style --foreground 141 --bold 'Amp Environment Information') \
-            (printf '%s          %s' (gum style --foreground 69 'Mode:') "$AMP_MODE") \
-            (printf '%s        %s' (gum style --foreground 69 'Editor:') "$AMP_EDITOR") \
-            (printf '%s       %s' (gum style --foreground 69 'API Key:') "$auth_status") \
-            (printf '%s       %s' (gum style --foreground 69 'Threads:') "$AMP_THREADS_DIR") \
-            (printf '%s        %s' (gum style --foreground 69 'Config:') "$AMP_CONFIG_FILE") \
-            (printf '%s         %s' (gum style --foreground 69 'Cache:') "$FLOX_ENV_CACHE") \
-            (gum style --foreground 240 --italic 'Run amp-config to reconfigure'))
-end
-
-# Add MCP server interactively
-function amp-mcp-add
-    gum style --foreground 141 --bold "Add MCP Server"
-    echo ""
-
-    set server_type (gum choose --header "Select server type:" \
-        "Local (command)" \
-        "Remote (HTTP/SSE)" \
-        "Cancel")
-
-    test "$server_type" = "Cancel"; and return 0
-
-    set server_name (gum input --prompt "Server name: " --placeholder "playwright")
-
-    test -z "$server_name"; and echo "Server name required"; and return 1
-
-    if test "$server_type" = "Local (command)"
-        set command (gum input --prompt "Command: " --placeholder "npx")
-        set args (gum input --prompt "Arguments: " --placeholder "-y @playwright/mcp@latest")
-
-        echo ""
-        gum style --foreground 240 "Add this to your VS Code settings.json:"
-        echo ""
-        printf '{\n  "amp.mcpServers": {\n    "%s": {\n      "command": "%s",\n      "args": %s\n    }\n  }\n}\n' \
-            "$server_name" "$command" (echo "$args" | jq -R 'split(" ")') | bat --language json --plain
-    else
-        set url (gum input --prompt "Server URL: " --placeholder "https://mcp.semgrep.ai/mcp")
-
-        if gum confirm "Does this server require authentication?" --default=false
-            set auth_header (gum input --prompt "Auth header value: " --placeholder "Bearer token" --password)
-
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            printf '{\n  "amp.mcpServers": {\n    "%s": {\n      "url": "%s",\n      "headers": {\n        "Authorization": "%s"\n      }\n    }\n  }\n}\n' \
-                "$server_name" "$url" "$auth_header" | bat --language json --plain
-        else
-            echo ""
-            gum style --foreground 240 "Add this to your VS Code settings.json:"
-            echo ""
-            printf '{\n  "amp.mcpServers": {\n    "%s": {\n      "url": "%s"\n    }\n  }\n}\n' \
-                "$server_name" "$url" | bat --language json --plain
-        end
-    end
-
-    echo ""
-    gum style --foreground 82 "MCP server configuration generated"
-end
-
 # Test Amp authentication
 function amp-test
     echo "Testing Amp authentication..."
@@ -1002,32 +834,6 @@ function amp-test
         echo "  Check your API key or network connection"
         return 1
     end
-end
-
-# Show help
-function amp-help
-    show_amp_help
-end
-
-# Open Amp documentation
-function amp-docs
-    set url "https://docs.ampcode.com/"
-
-    if command -v xdg-open &> /dev/null
-        xdg-open "$url"
-    else if command -v open &> /dev/null
-        open "$url"
-    else
-        echo "Open in browser: $url"
-    end
-end
-
-# View README
-function readme
-    if test "$argv[1]" = "--refresh"; or test ! -s "$FLOX_ENV_PROJECT/README.md"
-        download_readme
-    end
-    bat --language markdown "$FLOX_ENV_PROJECT/README.md" 2>/dev/null
 end
 '''
 

@@ -34,6 +34,77 @@ fi
 # Activate the venv
 export VIRTUAL_ENV="$TOAD_VENV"
 export PATH="$TOAD_VENV/bin:$PATH"
+# [profile] keeps these ahead of layered environments
+export FLOXENV_TOAD_VENV="$TOAD_VENV"
+export FLOXENV_TOAD_SHIM_DIR="$FLOX_ENV_CACHE/bin"
+
+# toad, toad-info, toad-update are scripts rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_toad_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_toad_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'TOAD_SCRIPT'
+# Run toad without PYTHONPATH, which would mix other Python packages into
+# the venv's
+unset PYTHONPATH
+exec "$FLOX_ENV_CACHE/venv/bin/toad" "$@"
+TOAD_SCRIPT
+    } > "$bin_dir/.toad.$$"
+    install_toad_script "$bin_dir/.toad.$$" "$bin_dir/toad"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'TOAD_INFO_SCRIPT'
+toad-info() {
+    echo "Toad Environment Configuration"
+    echo ""
+    echo "Commands:"
+    echo "  toad                         Launch the TUI"
+    echo "  toad ~/projects/my-app       Open a specific project"
+    echo "  toad -a <agent>              Launch with a specific agent"
+    echo "  toad serve                   Run as a web application"
+    echo "  toad --help                  Show all subcommands"
+    echo ""
+    echo "Supported agents:"
+    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
+    echo "  Open Hands, and more via Agent Client Protocol"
+    echo ""
+    echo "Venv: $FLOX_ENV_CACHE/venv"
+    echo "Update: toad-update"
+}
+toad-info "$@"
+TOAD_INFO_SCRIPT
+    } > "$bin_dir/.toad-info.$$"
+    install_toad_script "$bin_dir/.toad-info.$$" "$bin_dir/toad-info"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'TOAD_UPDATE_SCRIPT'
+toad-update() {
+    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
+    rm -f "$FLOX_ENV_CACHE/.deps_installed"
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+}
+toad-update "$@"
+TOAD_UPDATE_SCRIPT
+    } > "$bin_dir/.toad-update.$$"
+    install_toad_script "$bin_dir/.toad-update.$$" "$bin_dir/toad-update"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_toad_helpers
 
 # === DISPLAY CONFIGURATION ===
 echo ""
@@ -51,113 +122,87 @@ echo ""
 
 [profile]
 bash = '''
-export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
-export PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Wrapper to unset PYTHONPATH before running toad
-toad() {
-    (unset PYTHONPATH; command toad "$@")
-}
-export -f toad
-
-toad-info() {
-    echo "Toad Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  toad                         Launch the TUI"
-    echo "  toad ~/projects/my-app       Open a specific project"
-    echo "  toad -a <agent>              Launch with a specific agent"
-    echo "  toad serve                   Run as a web application"
-    echo "  toad --help                  Show all subcommands"
-    echo ""
-    echo "Supported agents:"
-    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
-    echo "  Open Hands, and more via Agent Client Protocol"
-    echo ""
-    echo "Venv: $FLOX_ENV_CACHE/venv"
-    echo "Update: toad-update"
-}
-export -f toad-info
-
-toad-update() {
-    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
-    rm -f "$FLOX_ENV_CACHE/.deps_installed"
-    touch "$FLOX_ENV_CACHE/.deps_installed"
-}
-export -f toad-update
+if [ -n "$FLOXENV_TOAD_VENV" ] && [ -n "$FLOXENV_TOAD_SHIM_DIR" ]; then
+    export VIRTUAL_ENV="$FLOXENV_TOAD_VENV"
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    floxenv_toad_venv_front_dir="$FLOXENV_TOAD_VENV/bin"
+    case ":$PATH:" in
+        ":$floxenv_toad_venv_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_toad_venv_front_path=":$PATH:"
+            while [ "${floxenv_toad_venv_front_path#*:"$floxenv_toad_venv_front_dir":}" != "$floxenv_toad_venv_front_path" ]; do
+                floxenv_toad_venv_front_path="${floxenv_toad_venv_front_path%%:"$floxenv_toad_venv_front_dir":*}:${floxenv_toad_venv_front_path#*:"$floxenv_toad_venv_front_dir":}"
+            done
+            floxenv_toad_venv_front_path="${floxenv_toad_venv_front_path#:}"
+            PATH="$floxenv_toad_venv_front_dir${floxenv_toad_venv_front_path:+:${floxenv_toad_venv_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_toad_venv_front_dir floxenv_toad_venv_front_path
+    # The toad wrapper (unsets PYTHONPATH) goes ahead of the venv's toad
+    floxenv_toad_shim_front_dir="$FLOXENV_TOAD_SHIM_DIR"
+    case ":$PATH:" in
+        ":$floxenv_toad_shim_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_toad_shim_front_path=":$PATH:"
+            while [ "${floxenv_toad_shim_front_path#*:"$floxenv_toad_shim_front_dir":}" != "$floxenv_toad_shim_front_path" ]; do
+                floxenv_toad_shim_front_path="${floxenv_toad_shim_front_path%%:"$floxenv_toad_shim_front_dir":*}:${floxenv_toad_shim_front_path#*:"$floxenv_toad_shim_front_dir":}"
+            done
+            floxenv_toad_shim_front_path="${floxenv_toad_shim_front_path#:}"
+            PATH="$floxenv_toad_shim_front_dir${floxenv_toad_shim_front_path:+:${floxenv_toad_shim_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_toad_shim_front_dir floxenv_toad_shim_front_path
+fi
 '''
 
 zsh = '''
-export VIRTUAL_ENV="$FLOX_ENV_CACHE/venv"
-export PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Wrapper to unset PYTHONPATH before running toad
-toad() {
-    (unset PYTHONPATH; command toad "$@")
-}
-
-toad-info() {
-    echo "Toad Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  toad                         Launch the TUI"
-    echo "  toad ~/projects/my-app       Open a specific project"
-    echo "  toad -a <agent>              Launch with a specific agent"
-    echo "  toad serve                   Run as a web application"
-    echo "  toad --help                  Show all subcommands"
-    echo ""
-    echo "Supported agents:"
-    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
-    echo "  Open Hands, and more via Agent Client Protocol"
-    echo ""
-    echo "Venv: $FLOX_ENV_CACHE/venv"
-    echo "Update: toad-update"
-}
-
-toad-update() {
-    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
-    rm -f "$FLOX_ENV_CACHE/.deps_installed"
-    touch "$FLOX_ENV_CACHE/.deps_installed"
-}
+if [ -n "$FLOXENV_TOAD_VENV" ] && [ -n "$FLOXENV_TOAD_SHIM_DIR" ]; then
+    export VIRTUAL_ENV="$FLOXENV_TOAD_VENV"
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    floxenv_toad_venv_front_dir="$FLOXENV_TOAD_VENV/bin"
+    case ":$PATH:" in
+        ":$floxenv_toad_venv_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_toad_venv_front_path=":$PATH:"
+            while [ "${floxenv_toad_venv_front_path#*:"$floxenv_toad_venv_front_dir":}" != "$floxenv_toad_venv_front_path" ]; do
+                floxenv_toad_venv_front_path="${floxenv_toad_venv_front_path%%:"$floxenv_toad_venv_front_dir":*}:${floxenv_toad_venv_front_path#*:"$floxenv_toad_venv_front_dir":}"
+            done
+            floxenv_toad_venv_front_path="${floxenv_toad_venv_front_path#:}"
+            PATH="$floxenv_toad_venv_front_dir${floxenv_toad_venv_front_path:+:${floxenv_toad_venv_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_toad_venv_front_dir floxenv_toad_venv_front_path
+    # The toad wrapper (unsets PYTHONPATH) goes ahead of the venv's toad
+    floxenv_toad_shim_front_dir="$FLOXENV_TOAD_SHIM_DIR"
+    case ":$PATH:" in
+        ":$floxenv_toad_shim_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_toad_shim_front_path=":$PATH:"
+            while [ "${floxenv_toad_shim_front_path#*:"$floxenv_toad_shim_front_dir":}" != "$floxenv_toad_shim_front_path" ]; do
+                floxenv_toad_shim_front_path="${floxenv_toad_shim_front_path%%:"$floxenv_toad_shim_front_dir":*}:${floxenv_toad_shim_front_path#*:"$floxenv_toad_shim_front_dir":}"
+            done
+            floxenv_toad_shim_front_path="${floxenv_toad_shim_front_path#:}"
+            PATH="$floxenv_toad_shim_front_dir${floxenv_toad_shim_front_path:+:${floxenv_toad_shim_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_toad_shim_front_dir floxenv_toad_shim_front_path
+fi
 '''
 
 fish = '''
-set -gx VIRTUAL_ENV "$FLOX_ENV_CACHE/venv"
-set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
-
-# Wrapper to unset PYTHONPATH before running toad
-function toad
-    set -l _had_pp (set -q PYTHONPATH; and echo 1; or echo 0)
-    set -l _saved_pp $PYTHONPATH
-    set -e PYTHONPATH
-    command toad $argv
-    if test "$_had_pp" = "1"
-        set -gx PYTHONPATH $_saved_pp
-    end
-end
-
-function toad-info
-    echo "Toad Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  toad                         Launch the TUI"
-    echo "  toad ~/projects/my-app       Open a specific project"
-    echo "  toad -a <agent>              Launch with a specific agent"
-    echo "  toad serve                   Run as a web application"
-    echo "  toad --help                  Show all subcommands"
-    echo ""
-    echo "Supported agents:"
-    echo "  Claude (Anthropic), Gemini (Google), Codex (OpenAI),"
-    echo "  Open Hands, and more via Agent Client Protocol"
-    echo ""
-    echo "Venv: $FLOX_ENV_CACHE/venv"
-    echo "Update: toad-update"
-end
-
-function toad-update
-    uv pip install --python "$FLOX_ENV_CACHE/venv/bin/python" -U batrachian-toad
-    rm -f "$FLOX_ENV_CACHE/.deps_installed"
-    touch "$FLOX_ENV_CACHE/.deps_installed"
+if set -q FLOXENV_TOAD_VENV; and set -q FLOXENV_TOAD_SHIM_DIR
+    set -gx VIRTUAL_ENV $FLOXENV_TOAD_VENV
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv and the wrapper; move them back to the front
+    set -gx PATH $FLOXENV_TOAD_VENV/bin (string match -v -- $FLOXENV_TOAD_VENV/bin $PATH)
+    # The toad wrapper (unsets PYTHONPATH) goes ahead of the venv's toad
+    set -gx PATH $FLOXENV_TOAD_SHIM_DIR (string match -v -- $FLOXENV_TOAD_SHIM_DIR $PATH)
 end
 '''
 

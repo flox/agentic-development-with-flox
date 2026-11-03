@@ -46,6 +46,71 @@ install_sfw_script() {
     fi
 }
 
+# sfw-info is a script rather than [profile] functions, so
+# each is written once for every shell and also works in scripts, agents, and
+# `flox activate -- <name>`. They read the environment when they run.
+# A script is moved into place only when it changed
+install_sfw_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_sfw_helpers() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'SFW_INFO_SCRIPT'
+sfw-info() {
+    local m p s real
+    echo "Socket Firewall (sfw) Environment Configuration"
+    echo ""
+    echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
+    if [ "$SFW_WRAP" = "true" ]; then
+        echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"
+    else
+        echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
+    fi
+    echo "Verbose: ${SFW_VERBOSE:-false}"
+    echo ""
+    echo "Package managers:"
+    for m in npm npx yarn pnpm pip pip3 uv uvx cargo; do
+        # First match outside the shim directory is the real command
+        real=""
+        for p in $(type -ap "$m" 2>/dev/null); do
+            case "$p" in "$SFW_SHIM_DIR/"*) ;; *) real="$p"; break ;; esac
+        done
+        p=$(command -v "$m" 2>/dev/null)
+        if [ -z "$real" ]; then
+            s="not installed"
+        elif [ "${p#"$SFW_SHIM_DIR/"}" != "$p" ]; then
+            s="through sfw ($real)"
+        else
+            s="direct ($real)"
+        fi
+        printf '  %-6s %s\n' "$m" "$s"
+    done
+    echo ""
+    echo "Commands:"
+    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
+    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
+    echo ""
+    echo "Source: https://github.com/SocketDev/sfw-free"
+}
+sfw-info "$@"
+SFW_INFO_SCRIPT
+    } > "$bin_dir/.sfw-info.$$"
+    install_sfw_script "$bin_dir/.sfw-info.$$" "$bin_dir/sfw-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_sfw_helpers
+
 setup_sfw_shims() {
     local pkg_dir="$FLOX_ENV/libexec/sfw-shims" name
     [ -n "$FLOX_ENV_CACHE" ] && [ -x "$pkg_dir/sfw-shim" ] || return 0
@@ -117,44 +182,6 @@ bash = '''
 if [ "$SFW_WRAP" = "true" ] && [ -f "$SFW_SHIM_DIR/activate.bash" ]; then
     source "$SFW_SHIM_DIR/activate.bash"
 fi
-
-sfw-info() {
-    local m p s real
-    echo "Socket Firewall (sfw) Environment Configuration"
-    echo ""
-    echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
-    if [ "$SFW_WRAP" = "true" ]; then
-        echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"
-    else
-        echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
-    fi
-    echo "Verbose: ${SFW_VERBOSE:-false}"
-    echo ""
-    echo "Package managers:"
-    for m in npm npx yarn pnpm pip pip3 uv uvx cargo; do
-        # First match outside the shim directory is the real command
-        real=""
-        for p in $(type -ap "$m" 2>/dev/null); do
-            case "$p" in "$SFW_SHIM_DIR/"*) ;; *) real="$p"; break ;; esac
-        done
-        p=$(command -v "$m" 2>/dev/null)
-        if [ -z "$real" ]; then
-            s="not installed"
-        elif [ "${p#"$SFW_SHIM_DIR/"}" != "$p" ]; then
-            s="through sfw ($real)"
-        else
-            s="direct ($real)"
-        fi
-        printf '  %-6s %s\n' "$m" "$s"
-    done
-    echo ""
-    echo "Commands:"
-    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
-    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
-    echo ""
-    echo "Source: https://github.com/SocketDev/sfw-free"
-}
-export -f sfw-info
 '''
 
 zsh = '''
@@ -163,79 +190,12 @@ zsh = '''
 if [ "$SFW_WRAP" = "true" ] && [ -f "$SFW_SHIM_DIR/activate.zsh" ]; then
     source "$SFW_SHIM_DIR/activate.zsh"
 fi
-
-sfw-info() {
-    local m p s real
-    echo "Socket Firewall (sfw) Environment Configuration"
-    echo ""
-    echo "Version: $(sfw --version 2>/dev/null | sed 's/.*version //')"
-    if [ "$SFW_WRAP" = "true" ]; then
-        echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"
-    else
-        echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"
-    fi
-    echo "Verbose: ${SFW_VERBOSE:-false}"
-    echo ""
-    echo "Package managers:"
-    for m in npm npx yarn pnpm pip pip3 uv uvx cargo; do
-        # First match outside the shim directory is the real command
-        real=""
-        for p in $(whence -ap "$m" 2>/dev/null); do
-            case "$p" in "$SFW_SHIM_DIR/"*) ;; *) real="$p"; break ;; esac
-        done
-        p=$(command -v "$m" 2>/dev/null)
-        if [ -z "$real" ]; then
-            s="not installed"
-        elif [ "${p#"$SFW_SHIM_DIR/"}" != "$p" ]; then
-            s="through sfw ($real)"
-        else
-            s="direct ($real)"
-        fi
-        printf '  %-6s %s\n' "$m" "$s"
-    done
-    echo ""
-    echo "Commands:"
-    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
-    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
-    echo ""
-    echo "Source: https://github.com/SocketDev/sfw-free"
-}
 '''
 
 fish = '''
 # Keep the shim directory first on PATH (sfw ships no fish helper)
 if test "$SFW_WRAP" = "true"; and test -e "$SFW_SHIM_DIR/npm"
     set -gx PATH $SFW_SHIM_DIR (string match -v -- $SFW_SHIM_DIR $PATH)
-end
-
-function sfw-info
-    echo "Socket Firewall (sfw) Environment Configuration"
-    echo ""
-    echo "Version: "(sfw --version 2>/dev/null | sed 's/.*version //')
-    if test "$SFW_WRAP" = "true"; echo "Wrapping: on (SFW_WRAP=false flox activate to turn off)"; else; echo "Wrapping: off (SFW_WRAP=true flox activate to turn on)"; end
-    if set -q SFW_VERBOSE; echo "Verbose: $SFW_VERBOSE"; else; echo "Verbose: false"; end
-    echo ""
-    echo "Package managers:"
-    for m in npm npx yarn pnpm pip pip3 uv uvx cargo
-        # First match outside the shim directory is the real command
-        set -l real (string match -v -- "$SFW_SHIM_DIR/*" (command -a -s $m 2>/dev/null))[1]
-        set -l p (command -v $m 2>/dev/null)
-        set -l s
-        if test -z "$real"
-            set s "not installed"
-        else if string match -q -- "$SFW_SHIM_DIR/*" $p
-            set s "through sfw ($real)"
-        else
-            set s "direct ($real)"
-        end
-        printf '  %-6s %s\n' $m $s
-    end
-    echo ""
-    echo "Commands:"
-    echo "  sfw npm install <pkg>        Check, then install (also: yarn, pnpm, pip, uv, cargo)"
-    echo "  sfw --verbose <command>      Show the sfw banner and scan details"
-    echo ""
-    echo "Source: https://github.com/SocketDev/sfw-free"
 end
 '''
 

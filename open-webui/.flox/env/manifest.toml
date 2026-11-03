@@ -81,18 +81,9 @@ on-activate = '''
   _owui_root="$(dirname "$(dirname "$(readlink -f "$_owui_bin")")")"
   source "$_owui_root/share/open-webui/setup.sh"
   unset _owui_bin _owui_root
-'''
 
-[services.open-webui]
-command = """until curl -sf "http://${BACKEND_HOST}:${BACKEND_PORT}${BACKEND_HEALTH}" >/dev/null 2>&1; do \
-  echo "Waiting for backend on ${BACKEND_HOST}:${BACKEND_PORT}..."; sleep 3; \
-done; \
-echo "Backend ready — starting Open WebUI on port ${PORT}"; \
-exec open-webui-frontend"""
-is-daemon = false
-
-[profile]
-common = '''
+  # Shown once per activation; in [profile] it printed again each time another
+  # environment was layered on top
   echo "Open WebUI frontend"
   if [ -n "${BACKEND:-}" ]; then
     echo "  preset:  ${BACKEND}"
@@ -103,6 +94,14 @@ common = '''
   echo "  flox activate -s  to start"
   echo "  presets: vllm | sglang | triton | ollama | llamacpp"
 '''
+
+[services.open-webui]
+command = """until curl -sf "http://${BACKEND_HOST}:${BACKEND_PORT}${BACKEND_HEALTH}" >/dev/null 2>&1; do \
+  echo "Waiting for backend on ${BACKEND_HOST}:${BACKEND_PORT}..."; sleep 3; \
+done; \
+echo "Backend ready — starting Open WebUI on port ${PORT}"; \
+exec open-webui-frontend"""
+is-daemon = false
 
 [options]
 systems = [

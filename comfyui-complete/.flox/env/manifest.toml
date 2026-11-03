@@ -158,6 +158,9 @@ PYTHONWARNINGS = "ignore::requests.exceptions.RequestsDependencyWarning"
 
 [hook]
 on-activate = '''
+# [profile] keeps the venv ahead of layered environments
+export FLOXENV_COMFYUI_VENV_BIN="$FLOX_ENV_CACHE/venv/bin"
+
 # Increase file descriptor limit (macOS defaults to 256, too low for ComfyUI)
 ulimit -n 10240
 
@@ -187,18 +190,52 @@ fi
 
 [profile]
 bash = '''
-if [ -d "$FLOX_ENV_CACHE/venv/bin" ]; then
-  export PATH="$FLOX_ENV_CACHE/venv/bin:$PATH"
+if [ -n "$FLOXENV_COMFYUI_VENV_BIN" ] && [ -d "$FLOXENV_COMFYUI_VENV_BIN" ]; then
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv; move it back to the front
+    floxenv_comfyui_front_dir="$FLOXENV_COMFYUI_VENV_BIN"
+    case ":$PATH:" in
+        ":$floxenv_comfyui_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_comfyui_front_path=":$PATH:"
+            while [ "${floxenv_comfyui_front_path#*:"$floxenv_comfyui_front_dir":}" != "$floxenv_comfyui_front_path" ]; do
+                floxenv_comfyui_front_path="${floxenv_comfyui_front_path%%:"$floxenv_comfyui_front_dir":*}:${floxenv_comfyui_front_path#*:"$floxenv_comfyui_front_dir":}"
+            done
+            floxenv_comfyui_front_path="${floxenv_comfyui_front_path#:}"
+            PATH="$floxenv_comfyui_front_dir${floxenv_comfyui_front_path:+:${floxenv_comfyui_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_comfyui_front_dir floxenv_comfyui_front_path
 fi
 '''
+
 zsh = '''
-if [ -d "$FLOX_ENV_CACHE/venv/bin" ]; then
-  export PATH="$FLOX_ENV_CACHE/venv/bin:$PATH"
+if [ -n "$FLOXENV_COMFYUI_VENV_BIN" ] && [ -d "$FLOXENV_COMFYUI_VENV_BIN" ]; then
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv; move it back to the front
+    floxenv_comfyui_front_dir="$FLOXENV_COMFYUI_VENV_BIN"
+    case ":$PATH:" in
+        ":$floxenv_comfyui_front_dir:"*) ;;
+        *)
+            # Drop the copy further down, so PATH doesn't grow each time
+            floxenv_comfyui_front_path=":$PATH:"
+            while [ "${floxenv_comfyui_front_path#*:"$floxenv_comfyui_front_dir":}" != "$floxenv_comfyui_front_path" ]; do
+                floxenv_comfyui_front_path="${floxenv_comfyui_front_path%%:"$floxenv_comfyui_front_dir":*}:${floxenv_comfyui_front_path#*:"$floxenv_comfyui_front_dir":}"
+            done
+            floxenv_comfyui_front_path="${floxenv_comfyui_front_path#:}"
+            PATH="$floxenv_comfyui_front_dir${floxenv_comfyui_front_path:+:${floxenv_comfyui_front_path%:}}"
+            ;;
+    esac
+    unset floxenv_comfyui_front_dir floxenv_comfyui_front_path
 fi
 '''
+
 fish = '''
-if test -d "$FLOX_ENV_CACHE/venv/bin"
-    set -gx PATH "$FLOX_ENV_CACHE/venv/bin" $PATH
+if set -q FLOXENV_COMFYUI_VENV_BIN; and test -d "$FLOXENV_COMFYUI_VENV_BIN"
+    # Layering another environment on top puts its bin directories ahead of
+    # the venv; move it back to the front
+    set -gx PATH $FLOXENV_COMFYUI_VENV_BIN (string match -v -- $FLOXENV_COMFYUI_VENV_BIN $PATH)
 end
 '''
 

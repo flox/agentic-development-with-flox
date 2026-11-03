@@ -36,6 +36,13 @@ alias bw="backlog browser"
 alias bl="backlog task list"
 '''
 
+fish = '''
+alias bb "backlog board"
+alias bt "backlog task"
+alias bw "backlog browser"
+alias bl "backlog task list"
+'''
+
 [services]
 [services.backlog-mcp]
 command = '''
