@@ -15,7 +15,7 @@ bat.pkg-group = "tools"
 # LMS_PORT         - API server port (default: 1234)
 # LMS_HOST         - API server bind address (default: 127.0.0.1)
 # LMS_GUI          - Launch GUI on activation: true/false (default: false)
-# LMS_CORS_ORIGIN  - CORS allowed origins (default: *)
+# LMS_CORS         - Set to anything but 0 to allow cross-origin requests (default: off)
 
 [hook]
 on-activate = '''
@@ -27,7 +27,6 @@ export LMSTUDIO_PROFILE_PENDING=1
 export LMS_PORT="${LMS_PORT:-1234}"
 export LMS_HOST="${LMS_HOST:-127.0.0.1}"
 export LMS_GUI="${LMS_GUI:-false}"
-export LMS_CORS_ORIGIN="${LMS_CORS_ORIGIN:-*}"
 
 # === DATA DIRECTORIES ===
 export LMS_LOG_DIR="$FLOX_ENV_CACHE/logs"
@@ -58,7 +57,7 @@ echo "Quick Start:"
 echo "  flox activate -s                          Start headless server"
 echo "  lms get zai-org/glm-4.7-flash"
 echo "  lms load <model> --context-length 65536   Load model with context window"
-echo "  lms-models                                List loaded models"
+echo "  lms ps                                    List loaded models"
 echo "  lmstudio-health                           Test API endpoint"
 echo ""
 echo "Using with AI coding tools:"

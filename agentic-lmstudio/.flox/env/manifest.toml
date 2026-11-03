@@ -38,7 +38,7 @@ agent-plugin-flox.pkg-group = "flox-skills"
 # LMS_PORT           - API server port (default: 1234)
 # LMS_HOST           - API server bind address (default: 127.0.0.1)
 # LMS_GUI            - Launch GUI on activation: true/false (default: false)
-# LMS_CORS_ORIGIN    - CORS allowed origins (default: *)
+# LMS_CORS           - Set to anything but 0 to allow cross-origin requests (default: off)
 # LMS_CONTEXT_LENGTH - Default context window for lms-launch auto-load (default: 131072)
 
 [hook]
@@ -111,7 +111,6 @@ setup_agentic_lmstudio_helpers
 export LMS_PORT="${LMS_PORT:-1234}"
 export LMS_HOST="${LMS_HOST:-127.0.0.1}"
 export LMS_GUI="${LMS_GUI:-false}"
-export LMS_CORS_ORIGIN="${LMS_CORS_ORIGIN:-*}"
 export LMS_CONTEXT_LENGTH="${LMS_CONTEXT_LENGTH:-131072}"
 
 # Constructed base URL for helper functions
@@ -224,7 +223,7 @@ fi
 echo ""
 echo "Commands:"
 echo "  lms-launch <tool> --model <m> [args]      Download, load, and launch tool"
-echo "  lms ls                                    List loaded models"
+echo "  lms ps                                    List loaded models"
 echo "  lmstudio-info                             Show configuration"
 echo "  lmstudio-health                           Test API endpoint"
 echo "  helpf                                     View full README documentation"

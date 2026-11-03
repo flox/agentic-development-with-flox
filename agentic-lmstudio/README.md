@@ -56,7 +56,7 @@ lms-launch claude --model zai-org/glm-4.7-flash --gpu max
 lms-launch claude --model zai-org/glm-4.7-flash --verbose
 ```
 
-Use `lms ls` or `lms-models` to see which models are currently loaded.
+Use `lms ps` to see which models are currently loaded (`lms ls` lists the ones downloaded).
 
 ## GPU Support
 
@@ -171,7 +171,7 @@ All configuration via environment variables with sensible defaults. Override at 
 | `LMS_PORT` | `1234` | API server port |
 | `LMS_HOST` | `127.0.0.1` | API server bind address |
 | `LMS_GUI` | `false` | Launch GUI on activation (`true`/`false`) |
-| `LMS_CORS_ORIGIN` | `*` | CORS allowed origins |
+| `LMS_CORS` | (off) | Set to anything but `0` to allow cross-origin requests (`lms server start --cors`) |
 | `LMS_CONTEXT_LENGTH` | `131072` | Default context window for `lms-launch` auto-load |
 
 ## Usage Examples
@@ -227,7 +227,6 @@ lms-launch                              # Show usage and supported tools
 ```bash
 lmstudio-info              # Show current configuration and available commands
 lmstudio-health            # Test API endpoint and list loaded models
-lms-models                 # List currently loaded models
 helpf                      # View full README documentation
 ```
 
@@ -330,7 +329,7 @@ flox services restart
 
 ```bash
 # Check what's loaded
-lms-models
+lms ps
 
 # lms-launch auto-downloads and loads, so just run:
 lms-launch claude --model zai-org/glm-4.7-flash

@@ -135,7 +135,7 @@ All configuration via environment variables with sensible defaults. Override at 
 | `LMS_PORT` | `1234` | API server port |
 | `LMS_HOST` | `127.0.0.1` | API server bind address |
 | `LMS_GUI` | `false` | Launch GUI on activation (`true`/`false`) |
-| `LMS_CORS_ORIGIN` | `*` | CORS allowed origins |
+| `LMS_CORS` | (off) | Set to anything but `0` to allow cross-origin requests (`lms server start --cors`) |
 
 ## Usage Examples
 
@@ -173,7 +173,6 @@ LMS_GUI=true flox activate
 ```bash
 lmstudio-info              # Show current configuration and available commands
 lmstudio-health            # Test API endpoint and list loaded models
-lms-models                 # List currently loaded models
 ```
 
 ### Model Management
@@ -256,7 +255,7 @@ flox services restart
 ### No Models Loaded
 
 ```bash
-lms-models
+lms ps
 lms load zai-org/glm-4.7-flash --context-length 65536
 ```
 
