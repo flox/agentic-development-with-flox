@@ -4,7 +4,7 @@ schema-version = "1.11.0"
 # On Linux the package wraps agent-browser with a Nix Chromium
 # (AGENT_BROWSER_EXECUTABLE_PATH), so no browser download is needed.
 # On macOS it uses Chrome; see the README.
-agent-browser.pkg-path = "flox/agent-browser"
+agent-browser.pkg-path = "agent-stacks/agent-browser"
 agent-browser.pkg-group = "agent-browser"
 
 git.pkg-path = "gitFull"

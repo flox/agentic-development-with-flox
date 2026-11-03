@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-ccusage.pkg-path = "flox/ccusage"
+ccusage.pkg-path = "agent-stacks/ccusage"
 ccusage.pkg-group = "ccusage"
 
 git.pkg-path = "gitFull"

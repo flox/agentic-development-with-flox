@@ -3,7 +3,7 @@ schema-version = "1.11.0"
 [install]
 # The Flox build points Herdr's background version check at 127.0.0.1, and
 # Herdr turns off `herdr update` for Nix installs; upgrade with `flox upgrade`.
-herdr.pkg-path = "flox/herdr"
+herdr.pkg-path = "agent-stacks/herdr"
 herdr.pkg-group = "herdr"
 # The agent integrations (`herdr integration install claude`, ...) are hook
 # scripts that need python3; without it they exit silently and do nothing

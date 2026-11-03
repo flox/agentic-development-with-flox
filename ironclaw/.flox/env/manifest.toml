@@ -1,6 +1,8 @@
 schema-version = "1.11.0"
 
 [install]
+# flox/, not agent-stacks/: the agent-stacks package doesn't ship the
+# ironclaw-pg-* helpers this environment uses (ironclaw-pg-detect, ...)
 ironclaw.pkg-path = "flox/ironclaw"
 ironclaw.pkg-group = "ironclaw"
 # PostgreSQL for pgvector persistent memory and direct psql access

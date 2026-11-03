@@ -51,7 +51,7 @@ The `[hook] on-activate` runs every time you enter the environment:
    - Copies bundled workflows to `~/comfyui-work/user/default/workflows/`
    - Creates `extra_model_paths.yaml` with model directory mappings
 
-The `[profile]` section (bash/zsh/fish) prepends `$FLOX_ENV_CACHE/venv/bin` to PATH so pip-installed packages are available.
+The `[profile]` section (bash/zsh/fish) keeps `$FLOX_ENV_CACHE/venv/bin` first on PATH, also when another environment is layered on top, so pip-installed packages are available.
 
 To force a full reset: `COMFYUI_RESET=1 flox activate`
 

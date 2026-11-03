@@ -15,7 +15,7 @@ version = 1
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-cursor-agent.pkg-path = "flox/cursor-agent"
+cursor-agent.pkg-path = "agent-stacks/cursor-agent"
 cursor-agent.systems = ["x86_64-linux"]
 cursor-agent.pkg-group = "cursor-agent"
 # gum.pkg-path = "gum"

@@ -15,7 +15,7 @@ version = 1
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-claudebox.pkg-path = "flox/claudebox"
+claudebox.pkg-path = "agent-stacks/claudebox"
 claudebox.systems = ["x86_64-linux"]
 claudebox.pkg-group = "claudebox"
 claude-code.pkg-path = "claude-code"

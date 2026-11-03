@@ -3,7 +3,7 @@ schema-version = "1.11.0"
 [install]
 # Each checker in its own group: they share no dependencies, and one
 # group would hold some of them back to older versions
-skillspector.pkg-path = "flox/skillspector"
+skillspector.pkg-path = "agent-stacks/skillspector"
 skillspector.pkg-group = "skillspector"
 skillcheck.pkg-path = "flox/skillcheck"
 skillcheck.pkg-group = "skillcheck"
@@ -104,8 +104,8 @@ setup_agent_lint_info
 #   skillspector-register  registers skillspector-mcp with an agent's MCP
 #                          config, replacing an existing "skillspector" entry
 # Hook output goes to stderr under `flox activate --`, so stdout stays
-# clean for the MCP stdio protocol. The server needs the optional Python
-# `mcp` module, which the flox/skillspector package doesn't include yet, so
+# clean for the MCP stdio protocol. The server needs SkillSpector's optional
+# Python `mcp` module; builds without it can't run the server, so
 # skillspector-register checks that the server starts before registering it.
 setup_skillspector_launchers() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
@@ -134,7 +134,7 @@ replace() {
 check_server() {
     if "\$mcp" < /dev/null 2>&1 | grep -q "optional 'mcp' dependency"; then
         echo "skillspector-register: this SkillSpector build can't run its MCP server:" >&2
-        echo "the flox/skillspector package doesn't include the Python 'mcp' module." >&2
+        echo "it doesn't include the Python 'mcp' module." >&2
         echo "Not registering it. skillspector scan works as usual." >&2
         exit 1
     fi
@@ -151,8 +151,8 @@ case "\${1:-}" in
         exec codex mcp add skillspector -- "\$mcp" ;;
     print)
         if "\$mcp" < /dev/null 2>&1 | grep -q "optional 'mcp' dependency"; then
-            echo "Note: this SkillSpector build can't run its MCP server yet (no Python" >&2
-            echo "'mcp' module in the flox/skillspector package)." >&2
+            echo "Note: this SkillSpector build can't run its MCP server (it doesn't" >&2
+            echo "include the Python 'mcp' module)." >&2
         fi
         echo "Command for any MCP client (stdio):"
         echo "  \$mcp"

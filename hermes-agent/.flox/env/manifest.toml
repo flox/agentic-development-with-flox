@@ -1,6 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
+# flox/, not agent-stacks/: agent-stacks/hermes-agent is older (0.22.5 vs 0.22.6)
 hermes-agent.pkg-path = "flox/hermes-agent"
 hermes-agent.pkg-group = "hermes-agent"
 

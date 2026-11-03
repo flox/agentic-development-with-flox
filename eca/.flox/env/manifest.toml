@@ -15,7 +15,7 @@ version = 1
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-eca.pkg-path = "flox/eca"
+eca.pkg-path = "agent-stacks/eca"
 eca.systems = ["aarch64-darwin", "x86_64-linux"]
 eca.pkg-group = "eca"
 # gum.pkg-path = "gum"

@@ -14,7 +14,7 @@ schema-version = "1.11.0"
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-copilot-cli.pkg-path = "flox/copilot-cli"
+copilot-cli.pkg-path = "agent-stacks/copilot-cli"
 copilot-cli.pkg-group = "main"
 
 # Flox skills (flox, floxify, flox-debug) - teach Copilot CLI to manage Flox environments

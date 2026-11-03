@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-sandbox-runtime.pkg-path = "flox/sandbox-runtime"
+sandbox-runtime.pkg-path = "agent-stacks/sandbox-runtime"
 sandbox-runtime.pkg-group = "sandbox-runtime"
 # On Linux the package brings its own bubblewrap, socat, and ripgrep;
 # on macOS srt uses sandbox-exec but still needs ripgrep on PATH

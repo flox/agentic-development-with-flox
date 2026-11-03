@@ -5,7 +5,7 @@ schema-version = "1.11.0"
 symphony.pkg-path = "flox/symphony"
 symphony.pkg-group = "symphony"
 # Symphony runs every issue in `codex app-server`
-codex.pkg-path = "flox/codex"
+codex.pkg-path = "agent-stacks/codex"
 codex.pkg-group = "codex"
 
 git.pkg-path = "gitFull"

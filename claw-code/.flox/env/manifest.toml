@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-claw-code.pkg-path = "flox/claw-code"
+claw-code.pkg-path = "agent-stacks/claw-code"
 claw-code.pkg-group = "claw-code"
 git.pkg-path = "gitFull"
 git.outputs = "all"

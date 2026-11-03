@@ -24,7 +24,7 @@ claude-code.pkg-path = "claude-code"
 claude-code.pkg-group = "agentic"
 claude-code.outputs = "all"
 # Flox build of Codex (loads Flox skills from CODEX_FLOX_SKILL_ROOTS)
-codex.pkg-path = "flox/codex"
+codex.pkg-path = "agent-stacks/codex"
 codex.pkg-group = "codex"
 opencode.pkg-path = "opencode"
 opencode.pkg-group = "agentic"

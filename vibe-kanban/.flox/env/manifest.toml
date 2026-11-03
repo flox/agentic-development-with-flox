@@ -3,7 +3,7 @@ schema-version = "1.11.0"
 [install]
 # Vibe Kanban bundles Node.js and git; by default it runs coding agents
 # with `npx -y <agent>@<version>` (override per agent in profiles.json)
-vibe-kanban.pkg-path = "flox/vibe-kanban"
+vibe-kanban.pkg-path = "agent-stacks/vibe-kanban"
 vibe-kanban.pkg-group = "vibe-kanban"
 
 git.pkg-path = "gitFull"

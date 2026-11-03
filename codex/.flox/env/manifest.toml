@@ -15,7 +15,7 @@ schema-version = "1.11.0"
 ## -------------------------------------------------------------------
 [install]
 # Flox build of Codex: loads skills from CODEX_FLOX_SKILL_ROOTS
-codex.pkg-path = "flox/codex"
+codex.pkg-path = "agent-stacks/codex"
 codex.pkg-group = "codex"
 
 # Flox skills (flox, floxify, flox-debug) - teach Codex to manage Flox environments

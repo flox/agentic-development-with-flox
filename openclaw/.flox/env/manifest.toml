@@ -4,6 +4,8 @@ schema-version = "1.11.0"
 ## Install Packages --------------------------------------------------
 [install]
 # OpenClaw via separate flake (nixpkgs marks it insecure; the flake overrides that).
+# flox/, not agent-stacks/: agent-stacks/openclaw is older (2026.9.5 vs
+# 2026.10.5) and drops the clawdbot and moltbot commands
 openclaw.pkg-path = "flox/openclaw"
 
 

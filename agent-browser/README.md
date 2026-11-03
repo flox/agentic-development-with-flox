@@ -76,7 +76,7 @@ flox activate -d <this environment> -- agent-browser mcp
 
 ## The Browser
 
-**Linux** - The `flox/agent-browser` package always launches its own Nix Chromium in headless mode. `agent-browser install` is not needed. `agent-browser doctor` may list a Chrome installed on your system, but that is not the browser it starts; `--executable-path` and `AGENT_BROWSER_EXECUTABLE_PATH` are overridden by the package.
+**Linux** - The `agent-stacks/agent-browser` package always launches its own Nix Chromium in headless mode. `agent-browser install` is not needed. `agent-browser doctor` may list a Chrome installed on your system, but that is not the browser it starts; `--executable-path` and `AGENT_BROWSER_EXECUTABLE_PATH` are overridden by the package.
 
 **macOS** - agent-browser uses Chrome. If it can't find one, run `agent-browser install` once to download it.
 

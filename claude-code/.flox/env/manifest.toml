@@ -14,7 +14,7 @@ schema-version = "1.11.0"
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-claude-code.pkg-path = "flox/claude-code"
+claude-code.pkg-path = "agent-stacks/claude-code"
 openssl.pkg-path = "openssl"
 openssl.pkg-group = "openssl"
 openssl.outputs = "all"
@@ -26,17 +26,13 @@ agent-plugin-flox.pkg-group = "flox-skills"
 
 # ccusage - token usage and cost reports from Claude Code's local logs,
 # plus a status line (see setup_claude_ccusage_statusline below)
-ccusage.pkg-path = "flox/ccusage"
+ccusage.pkg-path = "agent-stacks/ccusage"
 ccusage.pkg-group = "ccusage"
 
 # ccstatusline - configurable, widget-based status line (model, context,
 # git, usage limits, custom commands); see setup_claude_ccstatusline below
-ccstatusline.pkg-path = "flox/ccstatusline"
+ccstatusline.pkg-path = "agent-stacks/ccstatusline"
 ccstatusline.pkg-group = "ccstatusline"
-# 2.2.31 and 2.2.32 fail to start (ERR_MODULE_NOT_FOUND): the package copies
-# only dist/ccstatusline.js, and those releases split it into chunk files.
-# Remove the pin once a newer version runs.
-ccstatusline.version = "2.2.30"
 
 ## Environment Variables ---------------------------------------------
 ##  ... available for use in the activated environment

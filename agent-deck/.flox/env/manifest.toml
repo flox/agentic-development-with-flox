@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-agent-deck.pkg-path = "flox/agent-deck"
+agent-deck.pkg-path = "agent-stacks/agent-deck"
 agent-deck.pkg-group = "agent-deck"
 # Agent Deck runs every session in tmux, which the package doesn't bundle
 tmux.pkg-path = "tmux"

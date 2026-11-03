@@ -2,7 +2,7 @@ version = 1
 
 [install]
 # ForgeCode (formerly antinomyhq/forge); the binary is still `forge`
-forge.pkg-path = "flox/forgecode"
+forge.pkg-path = "agent-stacks/forgecode"
 ollama-cuda.pkg-path = "flox/ollama-cuda"
 ollama-cuda.pkg-group = "cuda"
 ollama-cuda.systems = ["x86_64-linux", "aarch64-linux"]

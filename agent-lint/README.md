@@ -79,7 +79,7 @@ SKILLSPECTOR_PROVIDER=claude_cli flox activate -d /path/to/agent-lint  # your Cl
 
 `skillspector scan --help` lists every provider and its variables. Only `--no-llm` was tested here.
 
-**MCP server.** `skillspector mcp` exposes one tool, `scan_skill`, so an agent can scan a skill before installing it. It needs SkillSpector's optional Python `mcp` dependency, which the `flox/skillspector` package (2.12.0) doesn't include, so in this environment it stops with "The MCP server requires the optional 'mcp' dependency". The environment still writes a launcher and a registration helper into `$FLOX_ENV_CACHE/bin`, ready for a package that includes it:
+**MCP server.** `skillspector mcp` exposes one tool, `scan_skill`, so an agent can scan a skill before installing it. It needs SkillSpector's optional Python `mcp` dependency, which the `agent-stacks/skillspector` package (2.12.0) doesn't include, so in this environment it stops with "The MCP server requires the optional 'mcp' dependency". The environment still writes a launcher and a registration helper into `$FLOX_ENV_CACHE/bin`, ready for a package that includes it:
 
 ```bash
 skillspector-register claude-code    # also: codex, print

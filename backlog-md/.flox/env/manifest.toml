@@ -1,7 +1,7 @@
 version = 1
 
 [install]
-backlog-md.pkg-path = "flox/backlog-md"
+backlog-md.pkg-path = "agent-stacks/backlog-md"
 
 [vars]
 BACKLOG_PORT = "6420"

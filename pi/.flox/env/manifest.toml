@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-pi.pkg-path = "flox/pi"
+pi.pkg-path = "agent-stacks/pi"
 pi.pkg-group = "pi"
 
 # Flox skills (flox, floxify, flox-debug) - teach pi to manage Flox environments

@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-mistral-vibe.pkg-path = "flox/mistral-vibe"
+mistral-vibe.pkg-path = "agent-stacks/mistral-vibe"
 mistral-vibe.pkg-group = "mistral-vibe"
 
 # Flox skills (flox, floxify, flox-debug) - teach Vibe to manage Flox environments

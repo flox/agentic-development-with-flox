@@ -1,7 +1,7 @@
 schema-version = "1.11.0"
 
 [install]
-mcporter.pkg-path = "flox/mcporter"
+mcporter.pkg-path = "agent-stacks/mcporter"
 mcporter.pkg-group = "mcporter"
 # Runs the standalone CLIs `mcporter generate-cli --bundle` writes
 # (#!/usr/bin/env node; Node 24 or later)
