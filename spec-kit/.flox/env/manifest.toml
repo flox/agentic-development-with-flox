@@ -36,7 +36,7 @@ echo "  flox activate -r flox/antigravity-cli    # or kilocode-cli, copilot-cli,
 echo "  flox activate -r flox/spec-kit"
 echo ""
 echo "Then initialize a project:"
-echo "  specify init <project> --ai agy"
+echo "  specify init <project> --integration agy"
 echo ""
 echo "Available commands:"
 echo "  specify init       # Initialize project with spec-driven workflow"

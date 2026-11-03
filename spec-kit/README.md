@@ -7,12 +7,11 @@ A Flox environment for [GitHub Spec Kit](https://github.com/github/spec-kit), a 
 ## Features
 
 - **Spec-Driven Development**: Structured workflow from specification to implementation
-- **Multi-agent support**: Works with 14+ AI coding agents
-- **Project initialization**: Bootstrap projects with agent-specific slash commands
+- **Multi-agent support**: Integrations for 40+ AI coding agents
+- **Project initialization**: Bootstrap projects with agent-specific skills or slash commands
 - **Five-phase workflow**: Constitution → Specify → Plan → Tasks → Implement
-- **Quality validation**: Built-in analysis and checklist generation
+- **Quality validation**: Built-in clarification, analysis, and checklist generation
 - **Technology-agnostic**: Works across diverse stacks and languages
-- **Slash command integration**: Creates commands in `.claude/`, `.github/prompts/`, etc.
 - **Free and open source**: From GitHub
 
 ## Included Tools
@@ -27,38 +26,39 @@ Spec-Driven Development is a methodology where **specifications become executabl
 
 ### The Five-Phase Workflow
 
-1. **Constitution** (`/constitution`) - Establish project governing principles
-2. **Specify** (`/specify`) - Define requirements and user stories
-3. **Plan** (`/plan`) - Create technical implementation strategies
-4. **Tasks** (`/tasks`) - Generate actionable task lists
-5. **Implement** (`/implement`) - Execute all tasks to build features
+1. **Constitution** (`/speckit-constitution`) - Establish project governing principles
+2. **Specify** (`/speckit-specify`) - Define requirements and user stories
+3. **Plan** (`/speckit-plan`) - Create technical implementation strategies
+4. **Tasks** (`/speckit-tasks`) - Generate actionable task lists
+5. **Implement** (`/speckit-implement`) - Execute all tasks to build features
+
+Agents that use skills (Antigravity, Claude Code, Codex, Copilot, Cursor) run these as `/speckit-<name>`. Agents that use command files (Kilo Code, OpenCode, Qwen Code, and others) run them as `/speckit.<name>`.
 
 ## Integration with AI Agents
 
-Spec-Kit is designed to **layer with AI agent environments**. It creates agent-specific slash commands in your projects that implement the spec-driven workflow.
+Spec-Kit is designed to **layer with AI agent environments**. It writes agent-specific skills or commands into your project that implement the spec-driven workflow.
 
 ### Supported Agents from Our Collection
 
-These AI agent environments work with Spec-Kit:
-
-| Agent Environment | Spec-Kit Flag | Integration |
-|-------------------|---------------|-------------|
-| **antigravity-cli** | `--ai agy` | Creates skills in `.agents/skills/` (run them as `/speckit-constitution`, `/speckit-specify`, etc.) |
-| **kilocode-cli** | `--ai kilocode` | Creates commands for Kilocode |
-| **copilot-cli** | `--ai copilot` | Creates commands in `.github/prompts/` |
-| **cursor-agent** | `--ai cursor-agent` | Creates commands for Cursor |
+| Agent Environment | `--integration` | Creates | Run as |
+|-------------------|-----------------|---------|--------|
+| **antigravity-cli** | `agy` | `.agents/skills/` | `/speckit-constitution` |
+| **claude-code** | `claude` | `.claude/skills/` | `/speckit-constitution` |
+| **codex** | `codex` | `.agents/skills/` | `/speckit-constitution` |
+| **copilot-cli** | `copilot` | `.github/skills/` | `/speckit-constitution` |
+| **cursor-agent** | `cursor-agent` | `.cursor/skills/` | `/speckit-constitution` |
+| **kilocode-cli** | `kilocode` | `.kilo/commands/` | `/speckit.constitution` |
 
 ### Other Supported Agents
 
-Spec-Kit also supports: `qwen`, `opencode`, `codex`, `windsurf`, `auggie`, `codebuddy`, `amp`, `shai`, `q`
+Spec-Kit also has integrations for, among others: `amp`, `cline`, `droid`, `forge`, `goose`, `hermes`, `kiro-cli`, `opencode`, `pi`, `qwen`, and `vibe` (Mistral Vibe). Run `specify integration list` for the full list.
 
 ## Getting Started
 
 ### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
-- One or more AI coding agent environments (antigravity-cli, kilocode-cli, copilot-cli, cursor-agent)
-- Git (for project initialization)
+- One or more AI coding agent environments (antigravity-cli, claude-code, codex, copilot-cli, cursor-agent, kilocode-cli)
 
 ### Installation & Activation
 
@@ -89,24 +89,24 @@ flox activate -r flox/spec-kit
 Once layered with an AI agent, initialize a new project:
 
 ```bash
-# Create new project with Antigravity CLI
-specify init my-project --ai agy
+# Create new project for Antigravity CLI
+specify init my-project --integration agy
 
-# Or with Kilocode
-specify init my-project --ai kilocode
+# Or for Kilocode
+specify init my-project --integration kilocode
 
-# Or with Copilot
-specify init my-project --ai copilot
+# Or for Copilot
+specify init my-project --integration copilot
 
-# Or initialize in current directory
-specify init . --ai agy
+# Or initialize in the current directory
+specify init --here --integration agy
 ```
 
 This creates:
-- Project structure with spec-driven workflow templates
-- Agent-specific slash command files
-- Git repository (optional with `--no-git`)
-- Ready-to-use development environment
+- `.specify/` with the workflow templates, scripts, and project memory (including the constitution)
+- The agent's skills or command files (see the table above)
+
+`specify init` doesn't create a Git repository; run `git init` yourself if you want one.
 
 ## Usage
 
@@ -119,7 +119,7 @@ flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Initialize project
-specify init blog-platform --ai agy
+specify init blog-platform --integration agy
 cd blog-platform
 ```
 
@@ -134,31 +134,27 @@ agy
 # In Antigravity CLI session:
 
 # Step 1: Establish project principles
-/constitution
-
-You: This is a personal blog platform focused on simplicity and speed
+/speckit-constitution This is a personal blog platform focused on simplicity and speed
 
 Antigravity: [Creates constitution with principles, guidelines, constraints]
 
 # Step 2: Define requirements
-/specify
-
-You: Users should be able to create, edit, and delete blog posts with markdown support
+/speckit-specify Users should be able to create, edit, and delete blog posts with markdown support
 
 Antigravity: [Generates detailed specification with user stories, acceptance criteria]
 
 # Step 3: Create technical plan
-/plan
+/speckit-plan
 
 Antigravity: [Develops technical implementation strategy, architecture decisions]
 
 # Step 4: Generate tasks
-/tasks
+/speckit-tasks
 
 Antigravity: [Breaks down plan into actionable tasks with dependencies]
 
 # Step 5: Implement
-/implement
+/speckit-implement
 
 Antigravity: [Executes tasks, builds features, creates code]
 ```
@@ -169,67 +165,60 @@ Antigravity: [Executes tasks, builds features, creates code]
 ```bash
 flox activate -r flox/kilocode-cli
 flox activate -r flox/spec-kit
-specify init ecommerce-api --ai kilocode
+specify init ecommerce-api --integration kilocode
 cd ecommerce-api
 
 kilocode
-# Use /constitution, /specify, /plan, /tasks, /implement
+# Use /speckit.constitution, /speckit.specify, /speckit.plan, /speckit.tasks, /speckit.implement
 ```
 
 **With Copilot:**
 ```bash
 flox activate -r flox/copilot-cli
 flox activate -r flox/spec-kit
-specify init mobile-app --ai copilot
+specify init mobile-app --integration copilot
 cd mobile-app
 
-github-copilot-cli
-# Use /constitution, /specify, /plan, /tasks, /implement
+copilot
+# Use /speckit-constitution, /speckit-specify, /speckit-plan, /speckit-tasks, /speckit-implement
 ```
 
 ### Available Commands
 
 ```bash
 # Initialize new project
-specify init <project-name> --ai <agent>
+specify init <project-name> --integration <agent>
 
 # Initialize in current directory
-specify init . --ai <agent>
+specify init --here --integration <agent>
+
+# Merge into a non-empty directory without asking
+specify init --here --integration <agent> --force
 
 # Check installed AI agents
 specify check
 
+# List integrations and which are installed in this project
+specify integration list
+
 # Display version info
 specify version
-
-# Skip git initialization
-specify init <project> --ai <agent> --no-git
-
-# Force overwrite in existing directory
-specify init . --ai <agent> --force
 ```
 
 ### Initialization Options
 
 ```bash
 # Basic initialization
-specify init my-project --ai agy
+specify init my-project --integration agy
 
-# Shell script type (sh or ps)
-specify init my-project --ai copilot --script ps
+# Script type (sh, ps, or py)
+specify init my-project --integration copilot --script ps
 
 # Skip AI agent tool checks
-specify init my-project --ai kilocode --ignore-agent-tools
+specify init my-project --integration kilocode --ignore-agent-tools
 
-# With GitHub token for API requests
-specify init my-project --ai agy --github-token ghp_...
-
-# Or use environment variable
-export GITHUB_TOKEN=ghp_...
-specify init my-project --ai agy
-
-# Debug mode for troubleshooting
-specify init my-project --ai copilot --debug
+# Never prompt (for scripts and agent harnesses)
+specify init my-project --integration agy --non-interactive
 ```
 
 ## Common Workflows
@@ -242,26 +231,26 @@ flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Create project
-specify init user-auth-service --ai agy
+specify init user-auth-service --integration agy
 cd user-auth-service
 
 # Start Antigravity CLI
 agy
 
 # Follow the workflow
-/constitution
+/speckit-constitution
 # Define project principles
 
-/specify
+/speckit-specify
 # Create feature specification
 
-/plan
+/speckit-plan
 # Develop technical approach
 
-/tasks
+/speckit-tasks
 # Break into implementable tasks
 
-/implement
+/speckit-implement
 # Build the feature
 ```
 
@@ -276,45 +265,44 @@ flox activate -r flox/kilocode-cli
 flox activate -r flox/spec-kit
 
 # Initialize spec-kit in current directory
-specify init . --ai kilocode
+specify init --here --integration kilocode
 
 # Now use spec-driven workflow
 kilocode
-/constitution
+/speckit.constitution
 ```
 
 ### Multi-Agent Workflow
 
-Use different agents for different phases:
+Use different agents for different phases. Install a second integration into the project first (see Pattern 3 below), then:
 
 ```bash
 # Use Antigravity CLI for specification
 flox activate -r flox/antigravity-cli
-flox activate -r flox/spec-kit
-specify init --here --ai agy
 agy
-/constitution
-/specify
+/speckit-constitution
+/speckit-specify
 
 # Switch to Kilocode for implementation
 flox activate -r flox/kilocode-cli
-flox activate -r flox/spec-kit
 kilocode
-/plan
-/tasks
-/implement
+/speckit.plan
+/speckit.tasks
+/speckit.implement
 ```
 
 ### Quality Validation
 
 ```bash
-# After implementation, validate
 agy
-/analyze
-# Reviews implementation against spec
+/speckit-clarify
+# Asks structured questions about ambiguous areas (before /speckit-plan)
 
-/checklist
-# Generates quality checklist
+/speckit-checklist
+# Generates quality checklists for the requirements (after /speckit-plan)
+
+/speckit-analyze
+# Cross-artifact consistency report (after /speckit-tasks, before /speckit-implement)
 ```
 
 ## Integration Patterns
@@ -327,13 +315,13 @@ Layer spec-kit only when needed:
 # When starting a new project
 flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
-specify init my-project --ai agy
+specify init my-project --integration agy
 
 # Later, use just the agent
 flox activate -r flox/antigravity-cli
 cd my-project
 agy
-# Slash commands are already in the project
+# The spec-kit skills are already in the project
 ```
 
 ### Pattern 2: Persistent Layering
@@ -344,8 +332,7 @@ Keep spec-kit available throughout development:
 # Create a wrapper script or alias
 cat > ~/bin/agy-spec << 'EOF'
 #!/bin/bash
-flox activate -r flox/antigravity-cli
-flox activate -r flox/spec-kit
+flox activate -r flox/antigravity-cli -- flox activate -r flox/spec-kit
 EOF
 chmod +x ~/bin/agy-spec
 
@@ -357,66 +344,62 @@ agy
 
 ### Pattern 3: Cross-Agent Projects
 
-Initialize with multiple agent configurations:
+Install more than one integration into the same project:
 
 ```bash
 # Initialize for Antigravity CLI
 flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
-specify init my-project --ai agy
+specify init my-project --integration agy
 
 cd my-project
 
-# Add Kilocode commands
-flox activate -r flox/kilocode-cli
-flox activate -r flox/spec-kit
-specify init . --ai kilocode --force
+# Add Kilocode commands alongside it
+specify integration install kilocode --force
 
-# Now both agents have slash commands
+# Now both agents have the workflow
+specify integration list
 ```
 
-## Slash Commands Reference
+`--force` is needed when the integrations aren't declared safe to install together. To replace the integration instead, use `specify integration switch <agent>`.
 
-After initialization, these commands are available in your AI agent:
+## Workflow Commands Reference
 
-### Core Workflow Commands
+After initialization, these are available in your AI agent (shown in skills form; command-file agents use `/speckit.<name>`):
 
-- `/constitution` - Establish project governing principles
+### Core Workflow
+
+- `/speckit-constitution` - Establish project governing principles
   - Define project vision and values
   - Set technical constraints
   - Establish quality standards
 
-- `/specify` - Create detailed specifications
+- `/speckit-specify` - Create detailed specifications
   - Define user stories
   - Establish acceptance criteria
   - Document requirements
 
-- `/plan` - Develop technical implementation plan
+- `/speckit-plan` - Develop technical implementation plan
   - Architecture decisions
   - Technology choices
   - Implementation strategy
 
-- `/tasks` - Break down into actionable tasks
+- `/speckit-tasks` - Break down into actionable tasks
   - Task list with dependencies
   - Priority ordering
-  - Effort estimates
 
-- `/implement` - Execute implementation
+- `/speckit-implement` - Execute implementation
   - Follow task list
   - Build features
   - Create code
 
-### Quality Assurance Commands
+- `/speckit-converge` - Assess the codebase and append remaining work as tasks
 
-- `/analyze` - Validate implementation against spec
-  - Check completeness
-  - Verify requirements met
-  - Identify gaps
+### Quality Assurance
 
-- `/checklist` - Generate quality checklist
-  - Testing requirements
-  - Code review points
-  - Deployment readiness
+- `/speckit-clarify` - Ask structured questions to de-risk ambiguous areas before planning
+- `/speckit-analyze` - Cross-artifact consistency and alignment report
+- `/speckit-checklist` - Generate quality checklists for requirements completeness, clarity, and consistency
 
 ## Benefits of Spec-Driven Development
 
@@ -476,86 +459,55 @@ flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Try initialization
-specify init test-project --ai agy
+specify init test-project --integration agy
+
+# Or skip the check
+specify init test-project --integration agy --ignore-agent-tools
 ```
 
-### Slash Commands Not Working in Agent
+### Workflow Commands Not Working in Agent
 
-**Issue:** Agent doesn't recognize `/constitution`, `/specify`, etc.
+**Issue:** Agent doesn't recognize `/speckit-constitution`, `/speckit-specify`, etc.
 
 **Solutions:**
 1. Verify project was initialized with spec-kit:
    ```bash
-   ls .claude/commands/  # For Claude
-   ls .agents/skills/    # For Antigravity
-   ls .github/prompts/   # For Copilot
+   specify integration status
+   ls .agents/skills/    # Antigravity, Codex
+   ls .claude/skills/    # Claude Code
+   ls .github/skills/    # Copilot
+   ls .kilo/commands/    # Kilocode
    ```
 
 2. Re-initialize if needed:
    ```bash
    flox activate -r flox/antigravity-cli
    flox activate -r flox/spec-kit
-   specify init . --ai agy --force
+   specify init --here --integration agy --force
    ```
 
 3. Restart your AI agent after initialization
 
-### Git Repository Issues
-
-**Issue:** Git initialization fails
-
-**Solutions:**
-```bash
-# Skip git initialization
-specify init my-project --ai agy --no-git
-
-# Or initialize manually after
-cd my-project
-git init
-git add .
-git commit -m "Initial commit from spec-kit"
-```
-
-### Template Download Failures
-
-**Issue:** Cannot download template from GitHub
-
-**Solutions:**
-```bash
-# Use GitHub token
-export GITHUB_TOKEN=ghp_...
-specify init my-project --ai agy
-
-# Skip TLS verification (not recommended)
-specify init my-project --ai agy --skip-tls
-
-# Enable debug mode
-specify init my-project --ai agy --debug
-```
-
 ### Wrong Agent Initialized
 
-**Issue:** Initialized for wrong agent
+**Issue:** Initialized for the wrong agent
 
 **Solution:**
 ```bash
-# Re-initialize with correct agent
+# Switch the project to the correct agent
 cd my-project
-flox activate -r flox/kilocode-cli
-flox activate -r flox/spec-kit
-specify init . --ai kilocode --force
+specify integration switch kilocode
 ```
 
 ## System Compatibility
 
 This environment works on:
-- Linux x86_64
+- Linux x86_64 and ARM64
 - macOS ARM64 (Apple Silicon)
 
 ## Security Considerations
 
-- **Project templates**: Downloaded from GitHub's official spec-kit repository
-- **Git initialization**: Optional, user-controlled
+- **Bundled templates**: Spec-kit ships its templates; `specify init` works offline
 - **No credential storage**: Spec-kit doesn't store API keys or credentials
 - **Local execution**: All initialization happens locally
 - **Agent permissions**: Follow security practices of your chosen AI agent
@@ -578,6 +530,8 @@ This environment works on:
 
 From this collection:
 - [antigravity-cli](../antigravity-cli/) - Google Antigravity CLI
+- [claude-code](../claude-code/) - Anthropic Claude Code
+- [codex](../codex/) - OpenAI Codex CLI
 - [kilocode-cli](../kilocode-cli/) - Kilo Code multi-modal agent
 - [copilot-cli](../copilot-cli/) - GitHub Copilot CLI
 - [cursor-agent](../cursor-agent/) - Cursor Agent CLI

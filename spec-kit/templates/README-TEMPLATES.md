@@ -15,13 +15,13 @@ Each template:
 ### Universal Standard
 
 **`AGENTS.md`** - Emerging universal standard
-- Supported by: ECA, GitHub Copilot, others
+- Supported by: Antigravity CLI, ECA, GitHub Copilot, others
 - Location: Project root
 - Use: Copy to any project root
 
 ### Agent-Specific Templates
 
-**`GEMINI.md`** (Gemini CLI)
+**`GEMINI.md`** (Antigravity CLI, formerly Gemini CLI)
 - Location: Project root or `~/.gemini/GEMINI.md`
 - Hierarchical loading supported
 
@@ -118,7 +118,7 @@ Each agent environment can include these templates and document their usage in t
 ## Implementation Status
 
 - ✅ Universal `AGENTS.md`
-- ✅ Gemini CLI `GEMINI.md`
+- ✅ Antigravity CLI `GEMINI.md`
 - ✅ GitHub Copilot `.github/copilot-instructions.md`
 - ⏳ Nanocoder commands (TODO)
 - ⏳ Kilocode rules (TODO)

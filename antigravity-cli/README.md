@@ -91,7 +91,7 @@ Antigravity CLI has no environment-scoped skills path, so the links go in your g
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AGY_CLI_DISABLE_AUTO_UPDATE` | `1` | Turns off the built-in updater, which can't replace the read-only Flox package. Update with `flox upgrade` instead |
+| `AGY_CLI_DISABLE_AUTO_UPDATE` | `1` | Turns off background auto-updates. agy can't replace the read-only Flox package (`agy update` fails with a not-writable error), so update with `flox upgrade` instead |
 | `GEMINI_API_KEY` | (unset) | Use a Gemini API key instead of Google sign-in |
 | `AGY_ADC_AUTH` | (unset) | Sign in with Google Cloud Application Default Credentials |
 
