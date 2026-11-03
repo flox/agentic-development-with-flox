@@ -11,7 +11,7 @@ version = 1
 
 ## Install Packages --------------------------------------------------
 [install]
-coderabbit-cli.pkg-path = "flox/coderabbit-cli"
+coderabbit-cli.pkg-path = "agent-stacks/coderabbit-cli"
 coderabbit-cli.systems = ["x86_64-linux"]
 coderabbit-cli.pkg-group = "coderabbit-cli"
 
