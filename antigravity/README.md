@@ -107,12 +107,12 @@ Note: macOS Intel (x86_64-darwin) is not currently supported.
 antigravity-info    # Show configuration, shortcuts, and model info
 ```
 
-## Antigravity vs Gemini CLI
+## Antigravity IDE vs Antigravity CLI
 
-Both are Google AI development tools with different use cases:
+Google ships the Antigravity agent in two forms:
 
-- **Antigravity** - Visual IDE with multi-agent orchestration, Manager dashboard, browser automation. Best for complex projects requiring parallel agent workflows.
-- **Gemini CLI** - Terminal-based AI coding agent. Best for quick tasks, scripting, and developers who prefer CLI workflows.
+- **Antigravity IDE** (this environment) - Visual IDE with multi-agent orchestration, Manager dashboard, browser automation. Best for complex projects requiring parallel agent workflows.
+- **Antigravity CLI** (`agy`) - Terminal coding agent and the successor to Gemini CLI. Best for quick tasks, scripting, and developers who prefer CLI workflows. See [antigravity-cli](../antigravity-cli/).
 
 Both are available as Flox environments in this repository.
 
@@ -121,7 +121,6 @@ Both are available as Flox environments in this repository.
 - [Google Antigravity](https://antigravity.google/)
 - [Documentation](https://antigravity.google/docs)
 - [Getting Started Codelab](https://codelabs.developers.google.com/getting-started-google-antigravity)
-- [Choosing Antigravity or Gemini CLI](https://cloud.google.com/blog/topics/developers-practitioners/choosing-antigravity-or-gemini-cli)
 
 ## Support
 

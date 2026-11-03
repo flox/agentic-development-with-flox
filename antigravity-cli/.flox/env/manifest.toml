@@ -7,13 +7,10 @@ schema-version = "1.11.0"
 ##  $ flox show gum     <- show all versions of a package
 ## -------------------------------------------------------------------
 [install]
-gemini-cli.pkg-path = "flox/gemini-cli"
-gemini-cli.pkg-group = "gemini-cli"
-gemini-cli-vscode-ide-companion.pkg-path = "vscode-extensions.Google.gemini-cli-vscode-ide-companion"
-jq.pkg-path = "jq"
-jq.outputs = "all"
+antigravity-cli.pkg-path = "agent-stacks/antigravity-cli"
+antigravity-cli.pkg-group = "antigravity-cli"
 
-# Flox skills (flox, floxify, flox-debug) - teach Gemini CLI to manage Flox environments
+# Flox skills (flox, floxify, flox-debug) - teach Antigravity CLI to manage Flox environments
 agent-plugin-flox.pkg-path = "agent-stacks/agent-plugin-flox"
 agent-plugin-flox.pkg-group = "flox-skills"
 
@@ -28,13 +25,17 @@ agent-plugin-flox.pkg-group = "flox-skills"
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-# Link the Flox skills into ~/.gemini/skills (Gemini CLI has no
+# agy is installed read-only by Flox, so its self-updater can't replace it;
+# update by upgrading the environment instead (flox upgrade)
+export AGY_CLI_DISABLE_AUTO_UPDATE="${AGY_CLI_DISABLE_AUTO_UPDATE:-1}"
+
+# Link the Flox skills into ~/.gemini/config/skills (Antigravity CLI has no
 # environment-scoped skill path). Links that point at a Flox skills package are
 # refreshed on each activation; skills you added yourself (directories, or
 # symlinks pointing anywhere else) are never replaced.
-link_gemini_flox_skills() {
+link_antigravity_flox_skills() {
     local skills_src="$FLOX_ENV/share/agent-plugins/flox/skills"
-    local skills_dst="$HOME/.gemini/skills"
+    local skills_dst="$HOME/.gemini/config/skills"
     local skill name target
     [ -d "$skills_src" ] || return 0
     mkdir -p "$skills_dst"
@@ -43,7 +44,7 @@ link_gemini_flox_skills() {
         target="$skills_dst/$name"
         if [ -L "$target" ]; then
             case "$(readlink "$target")" in
-                */share/flox/codex/flox/"$name"|*/share/agent-plugins/flox/skills/"$name") ;;
+                */share/agent-plugins/flox/skills/"$name") ;;
                 *) continue ;;
             esac
         elif [ -e "$target" ]; then
@@ -53,48 +54,29 @@ link_gemini_flox_skills() {
     done
 }
 
-# Remove the deprecated "flox" MCP server added to ~/.gemini/settings.json
-# by earlier versions of this environment
-remove_gemini_flox_mcp() {
-    local settings_file="$HOME/.gemini/settings.json"
-    local tmp
-    jq -e '.mcpServers.flox.command == "flox-mcp"' "$settings_file" >/dev/null 2>&1 || return 0
-    tmp=$(mktemp)
-    if jq 'del(.mcpServers.flox)' "$settings_file" > "$tmp"; then
-        cat "$tmp" > "$settings_file"
-        echo "Removed deprecated Flox MCP server from ~/.gemini/settings.json (replaced by Flox skills)"
-    fi
-    rm -f "$tmp"
-}
-
-link_gemini_flox_skills
-remove_gemini_flox_mcp
+link_antigravity_flox_skills
 
 echo ""
-echo "Gemini CLI - AI Agent in Your Terminal"
+echo "Antigravity CLI - Google's Terminal Coding Agent"
 echo ""
-echo "An open-source AI agent from Google bringing Gemini to your terminal."
+echo "The successor to Gemini CLI: Gemini and Claude models in your terminal."
 echo ""
 echo "First-time setup:"
-echo "  gemini                      # Launch interactive session"
-echo "                              # Authenticate on first run (OAuth, API key, or Vertex AI)"
+echo "  agy                         # Launch and sign in with your Google account"
+echo "  GEMINI_API_KEY=... agy      # Or use a Gemini API key"
 echo ""
 echo "Usage:"
-echo "  gemini                      # Interactive mode"
-echo "  gemini -p \"prompt\"          # Non-interactive mode"
-echo "  gemini --output-format json # JSON output for scripting"
-echo "  gemini -m gemini-2.5-flash  # Specify model"
+echo "  agy                         # Interactive mode"
+echo "  agy -p \"prompt\"             # Non-interactive mode"
+echo "  agy -p \"...\" --output-format json   # JSON output for scripting"
+echo "  agy --mode plan             # Plan before editing (also: accept-edits, auto)"
+echo "  agy -c                      # Continue the most recent conversation"
+echo "  agy models                  # List available models"
 echo ""
 echo "Flox skills:"
-echo "  flox, floxify, and flox-debug linked into ~/.gemini/skills"
-echo "  /skills list                # Verify inside a Gemini session"
+echo "  flox, floxify, and flox-debug linked into ~/.gemini/config/skills"
 echo ""
-echo "Optional enhancements:"
-echo "  GEMINI.md                   # Project context file (see README)"
-echo ""
-echo "VS Code extension installed and ready to use!"
-echo ""
-echo "Open Source • Apache-2.0 License"
+echo "Coming from Gemini CLI? 'agy plugin import gemini' imports your extensions"
 echo ""
 '''
 

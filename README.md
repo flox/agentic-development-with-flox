@@ -62,6 +62,7 @@ aider --model ollama_chat/gemma4
 - [**amazon-q-cli**](./amazon-q-cli) - Amazon Q Developer CLI (Claude Sonnet 4)
 - [**amp**](./amp) - Amp frontier coding agent for the terminal
 - [**antigravity**](./antigravity) - Google Antigravity agent-first IDE with multi-agent orchestration and Gemini integration
+- [**antigravity-cli**](./antigravity-cli) - Google Antigravity CLI (`agy`) terminal coding agent, the successor to Gemini CLI
 - [**claude-code**](./claude-code) - Anthropic Claude Code CLI coding agent, with [ccusage](./ccusage) usage and cost reports and a choice of status lines (ccusage or the configurable ccstatusline)
 - [**claurst**](./claurst) - Claurst multi-provider terminal coding agent built in Rust
 - [**claw-code**](./claw-code) - Claw Code Rust-based CLI for Claude AI with tool execution and session persistence
@@ -75,7 +76,6 @@ aider --model ollama_chat/gemma4
 - [**droid**](./droid) - Factory Droid AI software development agent
 - [**eca**](./eca) - Emerge Cognitive Architecture AI pair programming assistant
 - [**forge**](./forge) - ForgeCode AI pair programmer (formerly Forge by Antinomy), 300+ models
-- [**gemini-cli**](./gemini-cli) - Google Gemini CLI coding agent
 - [**goose-cli**](./goose-cli) - Goose AI coding agent
 - [**hermes-agent**](./hermes-agent) - Hermes self-improving AI agent with persistent learning, 200+ models, and messaging gateway support
 - [**ironclaw**](./ironclaw) - IronClaw secure personal AI assistant in Rust with WASM sandboxing and pgvector memory
@@ -209,7 +209,7 @@ Additional composable environments are available from the [floxrox catalog](http
 
 This repository includes [FLOX.md](./FLOX.md) -- a reference guide for AI agents working with Flox environments. Covers manifest authoring, service configuration, package resolution, and language-specific patterns.
 
-Several environments (claude-code, codewhale, codex, copilot-cli, crush, gemini-cli, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `agent-stacks/agent-plugin-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
+Several environments (antigravity-cli, claude-code, codewhale, codex, copilot-cli, crush, mistral-vibe, pi, agentic-ollama, agentic-lmstudio) also ship the [Flox skills](https://github.com/flox/flox-skills) -- `flox`, `floxify`, and `flox-debug` -- via the `agent-stacks/agent-plugin-flox` package, so the agent can create, onboard, and debug Flox environments on its own. These replace the deprecated Flox MCP server.
 
 ## Prerequisites
 

@@ -43,7 +43,7 @@ These AI agent environments work with Spec-Kit:
 
 | Agent Environment | Spec-Kit Flag | Integration |
 |-------------------|---------------|-------------|
-| **gemini-cli** | `--ai gemini` | Creates commands in `.gemini/` |
+| **antigravity-cli** | `--ai agy` | Creates skills in `.agents/skills/` (run them as `/speckit-constitution`, `/speckit-specify`, etc.) |
 | **kilocode-cli** | `--ai kilocode` | Creates commands for Kilocode |
 | **copilot-cli** | `--ai copilot` | Creates commands in `.github/prompts/` |
 | **cursor-agent** | `--ai cursor-agent` | Creates commands for Cursor |
@@ -57,7 +57,7 @@ Spec-Kit also supports: `qwen`, `opencode`, `codex`, `windsurf`, `auggie`, `code
 ### Prerequisites
 
 - [Flox](https://flox.dev/get) installed on your system
-- One or more AI coding agent environments (gemini-cli, kilocode-cli, copilot-cli, cursor-agent)
+- One or more AI coding agent environments (antigravity-cli, kilocode-cli, copilot-cli, cursor-agent)
 - Git (for project initialization)
 
 ### Installation & Activation
@@ -67,8 +67,8 @@ Spec-Kit also supports: `qwen`, `opencode`, `codex`, `windsurf`, `auggie`, `code
 ```sh
 # Activate AI agent first, then add spec-kit on top
 
-# With Gemini CLI
-flox activate -r flox/gemini-cli
+# With Antigravity CLI
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # With Kilocode CLI
@@ -89,8 +89,8 @@ flox activate -r flox/spec-kit
 Once layered with an AI agent, initialize a new project:
 
 ```bash
-# Create new project with Gemini CLI
-specify init my-project --ai gemini
+# Create new project with Antigravity CLI
+specify init my-project --ai agy
 
 # Or with Kilocode
 specify init my-project --ai kilocode
@@ -99,7 +99,7 @@ specify init my-project --ai kilocode
 specify init my-project --ai copilot
 
 # Or initialize in current directory
-specify init . --ai gemini
+specify init . --ai agy
 ```
 
 This creates:
@@ -114,53 +114,53 @@ This creates:
 
 **1. Layer environments and initialize:**
 ```bash
-# Activate Gemini CLI, then add spec-kit on top
-flox activate -r flox/gemini-cli
+# Activate Antigravity CLI, then add spec-kit on top
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Initialize project
-specify init blog-platform --ai gemini
+specify init blog-platform --ai agy
 cd blog-platform
 ```
 
 **2. Launch your AI agent:**
 ```bash
-# Start Gemini CLI in the project
-gemini
+# Start Antigravity CLI in the project
+agy
 ```
 
 **3. Use spec-driven workflow:**
 ```
-# In Gemini CLI session:
+# In Antigravity CLI session:
 
 # Step 1: Establish project principles
 /constitution
 
 You: This is a personal blog platform focused on simplicity and speed
 
-Gemini: [Creates constitution with principles, guidelines, constraints]
+Antigravity: [Creates constitution with principles, guidelines, constraints]
 
 # Step 2: Define requirements
 /specify
 
 You: Users should be able to create, edit, and delete blog posts with markdown support
 
-Gemini: [Generates detailed specification with user stories, acceptance criteria]
+Antigravity: [Generates detailed specification with user stories, acceptance criteria]
 
 # Step 3: Create technical plan
 /plan
 
-Gemini: [Develops technical implementation strategy, architecture decisions]
+Antigravity: [Develops technical implementation strategy, architecture decisions]
 
 # Step 4: Generate tasks
 /tasks
 
-Gemini: [Breaks down plan into actionable tasks with dependencies]
+Antigravity: [Breaks down plan into actionable tasks with dependencies]
 
 # Step 5: Implement
 /implement
 
-Gemini: [Executes tasks, builds features, creates code]
+Antigravity: [Executes tasks, builds features, creates code]
 ```
 
 ### Using with Different Agents
@@ -213,7 +213,7 @@ specify init . --ai <agent> --force
 
 ```bash
 # Basic initialization
-specify init my-project --ai gemini
+specify init my-project --ai agy
 
 # Shell script type (sh or ps)
 specify init my-project --ai copilot --script ps
@@ -222,11 +222,11 @@ specify init my-project --ai copilot --script ps
 specify init my-project --ai kilocode --ignore-agent-tools
 
 # With GitHub token for API requests
-specify init my-project --ai gemini --github-token ghp_...
+specify init my-project --ai agy --github-token ghp_...
 
 # Or use environment variable
 export GITHUB_TOKEN=ghp_...
-specify init my-project --ai gemini
+specify init my-project --ai agy
 
 # Debug mode for troubleshooting
 specify init my-project --ai copilot --debug
@@ -237,16 +237,16 @@ specify init my-project --ai copilot --debug
 ### Starting a New Feature with Spec-Driven Workflow
 
 ```bash
-# Activate Gemini CLI, then add spec-kit
-flox activate -r flox/gemini-cli
+# Activate Antigravity CLI, then add spec-kit
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Create project
-specify init user-auth-service --ai gemini
+specify init user-auth-service --ai agy
 cd user-auth-service
 
-# Start Gemini
-gemini
+# Start Antigravity CLI
+agy
 
 # Follow the workflow
 /constitution
@@ -288,11 +288,11 @@ kilocode
 Use different agents for different phases:
 
 ```bash
-# Use Gemini for specification
-flox activate -r flox/gemini-cli
+# Use Antigravity CLI for specification
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
-specify init --here --ai gemini
-gemini
+specify init --here --ai agy
+agy
 /constitution
 /specify
 
@@ -309,7 +309,7 @@ kilocode
 
 ```bash
 # After implementation, validate
-gemini
+agy
 /analyze
 # Reviews implementation against spec
 
@@ -325,14 +325,14 @@ Layer spec-kit only when needed:
 
 ```bash
 # When starting a new project
-flox activate -r flox/gemini-cli
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
-specify init my-project --ai gemini
+specify init my-project --ai agy
 
 # Later, use just the agent
-flox activate -r flox/gemini-cli
+flox activate -r flox/antigravity-cli
 cd my-project
-gemini
+agy
 # Slash commands are already in the project
 ```
 
@@ -342,17 +342,17 @@ Keep spec-kit available throughout development:
 
 ```bash
 # Create a wrapper script or alias
-cat > ~/bin/gemini-spec << 'EOF'
+cat > ~/bin/agy-spec << 'EOF'
 #!/bin/bash
-flox activate -r flox/gemini-cli
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 EOF
-chmod +x ~/bin/gemini-spec
+chmod +x ~/bin/agy-spec
 
 # Use combined environment
-gemini-spec
+agy-spec
 cd my-project
-gemini
+agy
 ```
 
 ### Pattern 3: Cross-Agent Projects
@@ -360,10 +360,10 @@ gemini
 Initialize with multiple agent configurations:
 
 ```bash
-# Initialize for Gemini
-flox activate -r flox/gemini-cli
+# Initialize for Antigravity CLI
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
-specify init my-project --ai gemini
+specify init my-project --ai agy
 
 cd my-project
 
@@ -472,11 +472,11 @@ flox list | grep spec-kit
 specify check
 
 # Activate the agent, then add spec-kit
-flox activate -r flox/gemini-cli
+flox activate -r flox/antigravity-cli
 flox activate -r flox/spec-kit
 
 # Try initialization
-specify init test-project --ai gemini
+specify init test-project --ai agy
 ```
 
 ### Slash Commands Not Working in Agent
@@ -486,15 +486,16 @@ specify init test-project --ai gemini
 **Solutions:**
 1. Verify project was initialized with spec-kit:
    ```bash
-   ls .claude/commands/  # For Claude/Gemini
+   ls .claude/commands/  # For Claude
+   ls .agents/skills/    # For Antigravity
    ls .github/prompts/   # For Copilot
    ```
 
 2. Re-initialize if needed:
    ```bash
-   flox activate -r flox/gemini-cli
+   flox activate -r flox/antigravity-cli
    flox activate -r flox/spec-kit
-   specify init . --ai gemini --force
+   specify init . --ai agy --force
    ```
 
 3. Restart your AI agent after initialization
@@ -506,7 +507,7 @@ specify init test-project --ai gemini
 **Solutions:**
 ```bash
 # Skip git initialization
-specify init my-project --ai gemini --no-git
+specify init my-project --ai agy --no-git
 
 # Or initialize manually after
 cd my-project
@@ -523,13 +524,13 @@ git commit -m "Initial commit from spec-kit"
 ```bash
 # Use GitHub token
 export GITHUB_TOKEN=ghp_...
-specify init my-project --ai gemini
+specify init my-project --ai agy
 
 # Skip TLS verification (not recommended)
-specify init my-project --ai gemini --skip-tls
+specify init my-project --ai agy --skip-tls
 
 # Enable debug mode
-specify init my-project --ai gemini --debug
+specify init my-project --ai agy --debug
 ```
 
 ### Wrong Agent Initialized
@@ -576,7 +577,7 @@ This environment works on:
 ### Compatible AI Agent Environments
 
 From this collection:
-- [gemini-cli](../gemini-cli/) - Google Gemini CLI
+- [antigravity-cli](../antigravity-cli/) - Google Antigravity CLI
 - [kilocode-cli](../kilocode-cli/) - Kilo Code multi-modal agent
 - [copilot-cli](../copilot-cli/) - GitHub Copilot CLI
 - [cursor-agent](../cursor-agent/) - Cursor Agent CLI
