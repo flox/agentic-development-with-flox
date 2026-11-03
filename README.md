@@ -132,6 +132,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**codex-monitor**](./codex-monitor) - Desktop app for orchestrating multiple Codex AI agents across workspaces
 - [**herdr**](./herdr) - Agent-aware terminal multiplexer: persistent panes, a sidebar showing which agents are working, blocked, or done, and a CLI/socket API
 - [**iloom-cli**](./iloom-cli) - iloom control plane for Claude Code: one git worktree per issue, with the agent's analysis and plans posted to GitHub, Linear, or Jira
+- [**nono**](./nono) - Kernel-enforced agent sandbox (Landlock on Linux) with network and credential proxying, signed agent profiles, audit trail, and rollback
 - [**openspec**](./openspec) - Lightweight spec framework for spec-driven development with AI assistants
 - [**sandbox-runtime**](./sandbox-runtime) - Anthropic's lightweight filesystem and network sandbox (srt) for agents, MCP servers, and commands
 - [**sfw**](./sfw) - Socket Firewall Free: blocks known-malicious npm, PyPI, and crates packages, transparently wrapping package managers for agents

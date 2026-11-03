@@ -1,0 +1,208 @@
+schema-version = "1.11.0"
+
+[install]
+nono.pkg-path = "agent-stacks/nono"
+nono.pkg-group = "nono"
+jq.pkg-path = "jq"
+
+git.pkg-path = "gitFull"
+git.outputs = "all"
+curl.pkg-path = "curl"
+
+[hook]
+on-activate = '''
+# Flox decides which nono you run, so skip nono's release check
+export NONO_NO_UPDATE_CHECK="${NONO_NO_UPDATE_CHECK:-1}"
+
+# nono's default profile can't read /nix/store, so nothing Flox installs
+# would run inside it, and the wrapper scripts Flox environments keep in
+# their .flox/cache folders (such as claude-code's claude shim) aren't
+# readable either. nono-flox-profile writes a profile that extends a base
+# profile (nono's default, or a pack such as nolabs-ai/claude) with nono's
+# nix_runtime group and read access to every active Flox environment, and
+# prints its path. Files are named by their content, so a profile is never
+# rewritten in place.
+install_nono_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_nono_flox_profile() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    export NONO_FLOX_PROFILE_DIR="$FLOX_ENV_CACHE/nono"
+    mkdir -p "$bin_dir" "$NONO_FLOX_PROFILE_DIR"
+    cat > "$bin_dir/.nono-flox-profile.$$" << 'EOF'
+#!/usr/bin/env bash
+# Usage: nono-flox-profile [base-profile]
+# Writes a nono profile that extends base-profile (default: default) and can
+# run what the active Flox environments install, then prints its path:
+#   nono run --allow-cwd --profile "$(nono-flox-profile nolabs-ai/claude)" -- claude
+set -euo pipefail
+base="${1:-default}"
+dir="${NONO_FLOX_PROFILE_DIR:?run nono-flox-profile inside the nono Flox environment}"
+reads=()
+add_read() {
+    [ -d "$1" ] || return 0
+    reads+=("$1" "$(cd "$1" && pwd -P)")
+}
+# Every active environment, and the .flox folder (run and cache) of every
+# local environment on PATH
+IFS=: read -r -a env_dirs <<< "${FLOX_ENV_DIRS:-${FLOX_ENV:-}}"
+for d in "${env_dirs[@]}"; do
+    [ -n "$d" ] && add_read "$d"
+done
+IFS=: read -r -a path_dirs <<< "${PATH:-}"
+for d in "${path_dirs[@]}"; do
+    case "$d" in
+        */.flox/*) add_read "${d%%/.flox/*}/.flox" ;;
+    esac
+done
+json=$(jq -n --arg base "$base" '{
+  meta: { name: ("flox-" + ($base | gsub("[^A-Za-z0-9_-]"; "-"))),
+          description: ($base + " plus the Nix store and the active Flox environments") },
+  extends: $base,
+  groups: { include: ["nix_runtime"] },
+  filesystem: { read: ($ARGS.positional | unique) }
+} + (if $base == "default" then { workdir: { access: "readwrite" } } else {} end)' --args "${reads[@]}")
+sum=$(printf '%s\n' "$json" | cksum | cut -d' ' -f1)
+out="$dir/${base//\//_}-$sum.json"
+if [ ! -f "$out" ]; then
+    printf '%s\n' "$json" > "$out.$$"
+    mv -f "$out.$$" "$out"
+fi
+printf '%s\n' "$out"
+EOF
+    install_nono_script "$bin_dir/.nono-flox-profile.$$" "$bin_dir/nono-flox-profile"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+
+    # The default profile for nono run and nono shell; --profile overrides it
+    NONO_FLOX_PROFILE=$("$bin_dir/nono-flox-profile" default) || return 1
+    export NONO_FLOX_PROFILE
+    export NONO_PROFILE="${NONO_PROFILE:-$NONO_FLOX_PROFILE}"
+}
+
+setup_nono_flox_profile
+
+# === DISPLAY CONFIGURATION ===
+echo ""
+echo "nono - kernel-enforced sandbox for AI agents"
+echo ""
+if [ "$NONO_PROFILE" = "$NONO_FLOX_PROFILE" ]; then
+  echo "  Default profile: flox (nono's default profile plus the Nix store)"
+else
+  echo "  Default profile: $NONO_PROFILE (from NONO_PROFILE)"
+fi
+echo ""
+echo "Commands:"
+echo "  nono run --allow-cwd -- <command>      Run a command; it can write only the current directory"
+echo "  nono shell --allow-cwd                 Start a sandboxed shell"
+echo "  nono run --allow-cwd --block-net -- <command>"
+echo "  nono run --allow-cwd --allow-domain api.anthropic.com -- <command>"
+echo "  nono why --path ~/.ssh                 Explain whether a path is allowed"
+echo "  nono search <agent>                    Find a profile pack (claude, codex, pi, ...)"
+echo "  nono run --allow-cwd --profile \"\$(nono-flox-profile <pack>)\" -- <agent>"
+echo "                                         Run an agent under a pack, with Flox paths added"
+echo "  nono-info                              Show configuration and examples"
+echo ""
+'''
+
+[profile]
+bash = '''
+nono-info() {
+    echo "nono Environment Configuration"
+    echo ""
+    echo "Default profile: $NONO_PROFILE"
+    echo "Flox profile:    $NONO_FLOX_PROFILE"
+    echo "                 (activate nono last, or run: export NONO_PROFILE=\$(nono-flox-profile))"
+    echo "User profiles:   ~/.config/nono/profiles/"
+    echo "Packs:           ~/.config/nono/packages/"
+    echo "Audit and sessions: ~/.local/state/nono/"
+    echo ""
+    echo "Commands:"
+    echo "  nono run --allow-cwd -- <command>      Run a command in the sandbox"
+    echo "  nono run --dry-run --allow-cwd -- <command>   Show what the sandbox would allow"
+    echo "  nono shell --allow-cwd                 Start a sandboxed shell"
+    echo "  nono why --path <path>                 Explain an allow or deny decision"
+    echo "  nono profile list                      List profiles"
+    echo "  nono audit list                        Audit trail of sandboxed sessions"
+    echo "  nono rollback list                     Sessions you can roll back"
+    echo ""
+    echo "Agent packs (signed profiles from registry.nono.sh):"
+    echo "  nono search claude"
+    echo "  nono pull nolabs-ai/claude             Also installs a Claude Code plugin in ~/.claude"
+    echo "  nono run --allow-cwd --profile \"\$(nono-flox-profile nolabs-ai/claude)\" -- claude"
+    echo ""
+    echo "Source: https://github.com/nolabs-ai/nono"
+}
+export -f nono-info
+'''
+
+zsh = '''
+nono-info() {
+    echo "nono Environment Configuration"
+    echo ""
+    echo "Default profile: $NONO_PROFILE"
+    echo "Flox profile:    $NONO_FLOX_PROFILE"
+    echo "                 (activate nono last, or run: export NONO_PROFILE=\$(nono-flox-profile))"
+    echo "User profiles:   ~/.config/nono/profiles/"
+    echo "Packs:           ~/.config/nono/packages/"
+    echo "Audit and sessions: ~/.local/state/nono/"
+    echo ""
+    echo "Commands:"
+    echo "  nono run --allow-cwd -- <command>      Run a command in the sandbox"
+    echo "  nono run --dry-run --allow-cwd -- <command>   Show what the sandbox would allow"
+    echo "  nono shell --allow-cwd                 Start a sandboxed shell"
+    echo "  nono why --path <path>                 Explain an allow or deny decision"
+    echo "  nono profile list                      List profiles"
+    echo "  nono audit list                        Audit trail of sandboxed sessions"
+    echo "  nono rollback list                     Sessions you can roll back"
+    echo ""
+    echo "Agent packs (signed profiles from registry.nono.sh):"
+    echo "  nono search claude"
+    echo "  nono pull nolabs-ai/claude             Also installs a Claude Code plugin in ~/.claude"
+    echo "  nono run --allow-cwd --profile \"\$(nono-flox-profile nolabs-ai/claude)\" -- claude"
+    echo ""
+    echo "Source: https://github.com/nolabs-ai/nono"
+}
+'''
+
+fish = '''
+function nono-info
+    echo "nono Environment Configuration"
+    echo ""
+    echo "Default profile: $NONO_PROFILE"
+    echo "Flox profile:    $NONO_FLOX_PROFILE"
+    echo "                 (activate nono last, or run: export NONO_PROFILE=\$(nono-flox-profile))"
+    echo "User profiles:   ~/.config/nono/profiles/"
+    echo "Packs:           ~/.config/nono/packages/"
+    echo "Audit and sessions: ~/.local/state/nono/"
+    echo ""
+    echo "Commands:"
+    echo "  nono run --allow-cwd -- <command>      Run a command in the sandbox"
+    echo "  nono run --dry-run --allow-cwd -- <command>   Show what the sandbox would allow"
+    echo "  nono shell --allow-cwd                 Start a sandboxed shell"
+    echo "  nono why --path <path>                 Explain an allow or deny decision"
+    echo "  nono profile list                      List profiles"
+    echo "  nono audit list                        Audit trail of sandboxed sessions"
+    echo "  nono rollback list                     Sessions you can roll back"
+    echo ""
+    echo "Agent packs (signed profiles from registry.nono.sh):"
+    echo "  nono search claude"
+    echo "  nono pull nolabs-ai/claude             Also installs a Claude Code plugin in ~/.claude"
+    echo "  nono run --allow-cwd --profile \"\$(nono-flox-profile nolabs-ai/claude)\" -- claude"
+    echo ""
+    echo "Source: https://github.com/nolabs-ai/nono"
+end
+'''
+
+[options]
+systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
+  "x86_64-linux",
+]
