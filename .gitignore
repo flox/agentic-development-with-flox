@@ -11,3 +11,6 @@
 **/.amazonq/agents/*.json
 **/.aichat/config.yaml
 **/.aichat/roles.yaml
+
+# Lockfiles: each environment resolves packages when it is activated
+**/.flox/env/manifest.lock

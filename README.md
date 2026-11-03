@@ -160,17 +160,16 @@ Each environment is a directory with a `.flox/env/manifest.toml` that declares e
 ```
 tool-name/
 ├── .flox/env/
-│   ├── manifest.toml    # Packages, services, hooks, config
-│   └── manifest.lock    # Pinned versions for reproducibility
+│   └── manifest.toml    # Packages, services, hooks, config
 └── README.md            # Tool-specific docs
 ```
 
 When you run `flox activate`:
 
 1. **Packages** are made available on your PATH (from the Nix store -- nothing installed globally)
-2. **Hooks** run setup logic (create venvs, check API keys, initialize databases)
-3. **Profile functions** are loaded (helper commands like `tool-info`, `tool-update`)
-4. **Services** start if you used `flox activate -s` (inference servers, databases, gateways)
+2. **Hooks** run setup logic (create venvs, check API keys, initialize databases) and write helper commands like `tool-info` and `tool-update` to `$FLOX_ENV_CACHE/bin`, so they work in every shell, in scripts, and with `flox activate -- tool-info`
+3. **Services** start if you used `flox activate -s` (inference servers, databases, gateways)
+4. **Profile scripts** run in your shell for what has to act on it: aliases, completions, and keeping an environment's wrappers first on `PATH`
 
 When you `exit`, everything stops. The Nix store retains cached packages for fast re-activation, but nothing runs in the background and nothing pollutes your system. Some things do keep running: [agent-deck](./agent-deck) keeps agent sessions running in tmux after you leave, [iloom-cli](./iloom-cli)'s tmux windows (on Linux without a display) stay open until you close them, [herdr](./herdr)'s server keeps its panes running until `herdr server stop`, [mcporter](./mcporter)'s optional daemon runs until `mcporter daemon stop`, and [agent-browser](./agent-browser)'s browser daemon exits after an hour idle (or on `agent-browser close`).
 
