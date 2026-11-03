@@ -92,6 +92,35 @@ EOF
 
 setup_serena_launchers
 
+# serena-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- serena-info`. It reads the environment when it runs.
+setup_serena_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.serena-info.$$" << 'SERENA_INFO'
+#!/usr/bin/env bash
+echo "Serena Environment Configuration"
+echo ""
+echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
+echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
+echo ""
+echo "Commands:"
+echo "  serena-register claude-code  Register with Claude Code (also: codex)"
+echo "  serena-register print        Show the command for any other MCP client"
+echo "  serena project create        Configure the current project"
+echo "  serena project index         Pre-index the current project"
+echo "  serena project health-check  Check language servers for the current project"
+echo ""
+echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
+echo "Source: https://github.com/oraios/serena"
+SERENA_INFO
+    install_serena_launcher "$bin_dir/.serena-info.$$" "$bin_dir/serena-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_serena_info
+
 # === DISPLAY CONFIGURATION ===
 echo ""
 echo "Serena environment ready"
@@ -107,65 +136,6 @@ echo "  serena project create        Configure the current project"
 echo "  serena project index         Pre-index the current project"
 echo "  serena-info                  Show configuration"
 echo ""
-'''
-
-[profile]
-bash = '''
-serena-info() {
-    echo "Serena Environment Configuration"
-    echo ""
-    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
-    echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
-    echo ""
-    echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
-    echo "  serena-register print        Show the command for any other MCP client"
-    echo "  serena project create        Configure the current project"
-    echo "  serena project index         Pre-index the current project"
-    echo "  serena project health-check  Check language servers for the current project"
-    echo ""
-    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
-    echo "Source: https://github.com/oraios/serena"
-}
-export -f serena-info
-'''
-
-zsh = '''
-serena-info() {
-    echo "Serena Environment Configuration"
-    echo ""
-    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
-    echo "Usage reporting: ${SERENA_USAGE_REPORTING:-on (set SERENA_USAGE_REPORTING=false to disable)}"
-    echo ""
-    echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
-    echo "  serena-register print        Show the command for any other MCP client"
-    echo "  serena project create        Configure the current project"
-    echo "  serena project index         Pre-index the current project"
-    echo "  serena project health-check  Check language servers for the current project"
-    echo ""
-    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
-    echo "Source: https://github.com/oraios/serena"
-}
-'''
-
-fish = '''
-function serena-info
-    echo "Serena Environment Configuration"
-    echo ""
-    echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
-    if test -n "$SERENA_USAGE_REPORTING"; echo "Usage reporting: $SERENA_USAGE_REPORTING"; else; echo "Usage reporting: on (set SERENA_USAGE_REPORTING=false to disable)"; end
-    echo ""
-    echo "Commands:"
-    echo "  serena-register claude-code  Register with Claude Code (also: codex)"
-    echo "  serena-register print        Show the command for any other MCP client"
-    echo "  serena project create        Configure the current project"
-    echo "  serena project index         Pre-index the current project"
-    echo "  serena project health-check  Check language servers for the current project"
-    echo ""
-    echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
-    echo "Source: https://github.com/oraios/serena"
-end
 '''
 
 [options]

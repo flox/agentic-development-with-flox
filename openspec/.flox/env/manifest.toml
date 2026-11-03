@@ -17,6 +17,51 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# openspec-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- openspec-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_openspec_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_openspec_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.openspec-info.$$" << 'OPENSPEC_INFO'
+#!/usr/bin/env bash
+echo "OpenSpec Environment Configuration"
+echo ""
+echo "Commands:"
+echo "  openspec init                Initialize in current project"
+echo "  openspec update              Refresh AI agent instructions/slash commands"
+echo "  openspec config profile      Switch workflow profile"
+echo ""
+echo "Slash commands (in supported AI assistants):"
+echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
+echo "  /opsx:apply                  Implement the tasks"
+echo "  /opsx:archive                Archive completed change"
+echo ""
+echo "Expanded profile adds:"
+echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
+echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
+echo ""
+echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
+echo ""
+echo "Source: https://github.com/Fission-AI/OpenSpec"
+OPENSPEC_INFO
+    install_openspec_script "$bin_dir/.openspec-info.$$" "$bin_dir/openspec-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_openspec_info
+
 echo ""
 echo "OpenSpec environment ready"
 echo ""
@@ -31,80 +76,6 @@ echo "  /opsx:propose \"<idea>\"       AI creates change folder with proposal/sp
 echo "  /opsx:apply                  AI implements the tasks"
 echo "  /opsx:archive                AI archives completed change"
 echo ""
-'''
-
-[profile]
-bash = '''
-openspec-info() {
-    echo "OpenSpec Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  openspec init                Initialize in current project"
-    echo "  openspec update              Refresh AI agent instructions/slash commands"
-    echo "  openspec config profile      Switch workflow profile"
-    echo ""
-    echo "Slash commands (in supported AI assistants):"
-    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
-    echo "  /opsx:apply                  Implement the tasks"
-    echo "  /opsx:archive                Archive completed change"
-    echo ""
-    echo "Expanded profile adds:"
-    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
-    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
-    echo ""
-    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
-    echo ""
-    echo "Source: https://github.com/Fission-AI/OpenSpec"
-}
-export -f openspec-info
-'''
-
-zsh = '''
-openspec-info() {
-    echo "OpenSpec Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  openspec init                Initialize in current project"
-    echo "  openspec update              Refresh AI agent instructions/slash commands"
-    echo "  openspec config profile      Switch workflow profile"
-    echo ""
-    echo "Slash commands (in supported AI assistants):"
-    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
-    echo "  /opsx:apply                  Implement the tasks"
-    echo "  /opsx:archive                Archive completed change"
-    echo ""
-    echo "Expanded profile adds:"
-    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
-    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
-    echo ""
-    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
-    echo ""
-    echo "Source: https://github.com/Fission-AI/OpenSpec"
-}
-'''
-
-fish = '''
-function openspec-info
-    echo "OpenSpec Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  openspec init                Initialize in current project"
-    echo "  openspec update              Refresh AI agent instructions/slash commands"
-    echo "  openspec config profile      Switch workflow profile"
-    echo ""
-    echo "Slash commands (in supported AI assistants):"
-    echo "  /opsx:propose \"<idea>\"       Create change with proposal/specs/design/tasks"
-    echo "  /opsx:apply                  Implement the tasks"
-    echo "  /opsx:archive                Archive completed change"
-    echo ""
-    echo "Expanded profile adds:"
-    echo "  /opsx:new, /opsx:continue, /opsx:ff, /opsx:verify,"
-    echo "  /opsx:sync, /opsx:bulk-archive, /opsx:onboard"
-    echo ""
-    echo "Telemetry: OPENSPEC_TELEMETRY=0 or DO_NOT_TRACK=1 to opt out"
-    echo ""
-    echo "Source: https://github.com/Fission-AI/OpenSpec"
-end
 '''
 
 [options]

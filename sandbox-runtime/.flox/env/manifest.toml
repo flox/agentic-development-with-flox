@@ -79,6 +79,37 @@ check_srt_userns() {
 
 setup_srt_init
 
+# srt-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- srt-info`. It reads the environment when it runs.
+setup_srt_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.srt-info.$$" << 'SRT_INFO'
+#!/usr/bin/env bash
+echo "Sandbox Runtime (srt) Environment Configuration"
+echo ""
+if [ -f "$HOME/.srt-settings.json" ]; then
+    echo "Settings: $HOME/.srt-settings.json"
+else
+    echo "Settings: none (run srt-init for a starter file)"
+fi
+echo ""
+echo "Commands:"
+echo "  srt -- <command> [args]      Run a command in the sandbox"
+echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
+echo "  srt -s <file> -- <command>   Use another settings file"
+echo "  srt -d -- <command>          Debug logging"
+echo "  srt-init                     Write a starter ~/.srt-settings.json"
+echo ""
+echo "Source: https://github.com/anthropics/sandbox-runtime"
+SRT_INFO
+    install_srt_script "$bin_dir/.srt-info.$$" "$bin_dir/srt-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_srt_info
+
 # === DISPLAY CONFIGURATION ===
 echo ""
 echo "Sandbox Runtime (srt) environment ready"
@@ -99,71 +130,6 @@ echo "  srt -s <file> -- <command>   Use another settings file"
 echo "  srt-init                     Write a starter ~/.srt-settings.json"
 echo "  srt-info                     Show configuration"
 echo ""
-'''
-
-[profile]
-bash = '''
-srt-info() {
-    echo "Sandbox Runtime (srt) Environment Configuration"
-    echo ""
-    if [ -f "$HOME/.srt-settings.json" ]; then
-        echo "Settings: $HOME/.srt-settings.json"
-    else
-        echo "Settings: none (run srt-init for a starter file)"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  srt -- <command> [args]      Run a command in the sandbox"
-    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
-    echo "  srt -s <file> -- <command>   Use another settings file"
-    echo "  srt -d -- <command>          Debug logging"
-    echo "  srt-init                     Write a starter ~/.srt-settings.json"
-    echo ""
-    echo "Source: https://github.com/anthropics/sandbox-runtime"
-}
-export -f srt-info
-'''
-
-zsh = '''
-srt-info() {
-    echo "Sandbox Runtime (srt) Environment Configuration"
-    echo ""
-    if [ -f "$HOME/.srt-settings.json" ]; then
-        echo "Settings: $HOME/.srt-settings.json"
-    else
-        echo "Settings: none (run srt-init for a starter file)"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  srt -- <command> [args]      Run a command in the sandbox"
-    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
-    echo "  srt -s <file> -- <command>   Use another settings file"
-    echo "  srt -d -- <command>          Debug logging"
-    echo "  srt-init                     Write a starter ~/.srt-settings.json"
-    echo ""
-    echo "Source: https://github.com/anthropics/sandbox-runtime"
-}
-'''
-
-fish = '''
-function srt-info
-    echo "Sandbox Runtime (srt) Environment Configuration"
-    echo ""
-    if test -f "$HOME/.srt-settings.json"
-        echo "Settings: $HOME/.srt-settings.json"
-    else
-        echo "Settings: none (run srt-init for a starter file)"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  srt -- <command> [args]      Run a command in the sandbox"
-    echo "  srt -c \"<command string>\"    Run a shell command string in the sandbox"
-    echo "  srt -s <file> -- <command>   Use another settings file"
-    echo "  srt -d -- <command>          Debug logging"
-    echo "  srt-init                     Write a starter ~/.srt-settings.json"
-    echo ""
-    echo "Source: https://github.com/anthropics/sandbox-runtime"
-end
 '''
 
 [options]
