@@ -14,6 +14,43 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# claw-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- claw-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_claw_code_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_claw_code_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.claw-info.$$" << 'CLAW_INFO'
+#!/usr/bin/env bash
+echo "Claw Code Environment Configuration"
+echo ""
+echo "API Key:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: NOT SET (required)"
+echo ""
+echo "Commands:"
+echo "  claw                         Start interactive agent"
+echo "  claw prompt \"<prompt>\"       Run a single prompt"
+echo "  claw doctor                  Health check"
+echo ""
+echo "Source: https://github.com/ultraworkers/claw-code"
+CLAW_INFO
+    install_claw_code_script "$bin_dir/.claw-info.$$" "$bin_dir/claw-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_claw_code_info
+
 echo ""
 echo "Claw Code environment ready"
 echo ""
@@ -35,60 +72,6 @@ echo "  claw prompt \"<prompt>\"       Run a single prompt"
 echo "  claw doctor                  Health check"
 echo "  claw-info                    Show configuration"
 echo ""
-'''
-
-[profile]
-bash = '''
-claw-info() {
-    echo "Claw Code Environment Configuration"
-    echo ""
-    echo "API Key:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: NOT SET (required)"
-    echo ""
-    echo "Commands:"
-    echo "  claw                         Start interactive agent"
-    echo "  claw prompt \"<prompt>\"       Run a single prompt"
-    echo "  claw doctor                  Health check"
-    echo ""
-    echo "Source: https://github.com/ultraworkers/claw-code"
-}
-export -f claw-info
-'''
-
-zsh = '''
-claw-info() {
-    echo "Claw Code Environment Configuration"
-    echo ""
-    echo "API Key:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: NOT SET (required)"
-    echo ""
-    echo "Commands:"
-    echo "  claw                         Start interactive agent"
-    echo "  claw prompt \"<prompt>\"       Run a single prompt"
-    echo "  claw doctor                  Health check"
-    echo ""
-    echo "Source: https://github.com/ultraworkers/claw-code"
-}
-'''
-
-fish = '''
-function claw-info
-    echo "Claw Code Environment Configuration"
-    echo ""
-    echo "API Key:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: NOT SET (required)"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  claw                         Start interactive agent"
-    echo "  claw prompt \"<prompt>\"       Run a single prompt"
-    echo "  claw doctor                  Health check"
-    echo ""
-    echo "Source: https://github.com/ultraworkers/claw-code"
-end
 '''
 
 [options]

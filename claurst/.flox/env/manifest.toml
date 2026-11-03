@@ -17,6 +17,53 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# claurst-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- claurst-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_claurst_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_claurst_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.claurst-info.$$" << 'CLAURST_INFO'
+#!/usr/bin/env bash
+echo "Claurst Environment Configuration"
+echo ""
+echo "API Keys:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+[ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+echo ""
+echo "Commands:"
+echo "  claurst                      Start interactive TUI"
+echo "  claurst -p \"<prompt>\"        Headless single query"
+echo ""
+echo "In-app commands:"
+echo "  /connect       Configure an LLM provider"
+echo "  /compact       Compact conversation context"
+echo "  /diff          Show changes"
+echo "  /plan          Plan mode"
+echo "  /mcp           MCP server management"
+echo ""
+echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
+echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
+echo ""
+echo "Docs: https://claurst.kuber.studio/docs"
+CLAURST_INFO
+    install_claurst_script "$bin_dir/.claurst-info.$$" "$bin_dir/claurst-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_claurst_info
+
 # === DISPLAY CONFIGURATION ===
 echo ""
 echo "Claurst environment ready"
@@ -58,94 +105,6 @@ echo "  /diff                        Show changes"
 echo ""
 
 unset _has_key
-'''
-
-[profile]
-bash = '''
-claurst-info() {
-    echo "Claurst Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  claurst                      Start interactive TUI"
-    echo "  claurst -p \"<prompt>\"        Headless single query"
-    echo ""
-    echo "In-app commands:"
-    echo "  /connect       Configure an LLM provider"
-    echo "  /compact       Compact conversation context"
-    echo "  /diff          Show changes"
-    echo "  /plan          Plan mode"
-    echo "  /mcp           MCP server management"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
-    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
-    echo ""
-    echo "Docs: https://claurst.kuber.studio/docs"
-}
-export -f claurst-info
-'''
-
-zsh = '''
-claurst-info() {
-    echo "Claurst Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  claurst                      Start interactive TUI"
-    echo "  claurst -p \"<prompt>\"        Headless single query"
-    echo ""
-    echo "In-app commands:"
-    echo "  /connect       Configure an LLM provider"
-    echo "  /compact       Compact conversation context"
-    echo "  /diff          Show changes"
-    echo "  /plan          Plan mode"
-    echo "  /mcp           MCP server management"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
-    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
-    echo ""
-    echo "Docs: https://claurst.kuber.studio/docs"
-}
-'''
-
-fish = '''
-function claurst-info
-    echo "Claurst Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  claurst                      Start interactive TUI"
-    echo "  claurst -p \"<prompt>\"        Headless single query"
-    echo ""
-    echo "In-app commands:"
-    echo "  /connect       Configure an LLM provider"
-    echo "  /compact       Compact conversation context"
-    echo "  /diff          Show changes"
-    echo "  /plan          Plan mode"
-    echo "  /mcp           MCP server management"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google, GitHub Copilot,"
-    echo "  Ollama, DeepSeek, Groq, Mistral, 30+ more"
-    echo ""
-    echo "Docs: https://claurst.kuber.studio/docs"
-end
 '''
 
 [options]

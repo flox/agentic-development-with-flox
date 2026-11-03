@@ -19,6 +19,57 @@ OPENHANDS_SUPPRESS_BANNER = "1"
 
 [hook]
 on-activate = '''
+# openhands-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- openhands-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_openhands_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_openhands_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.openhands-info.$$" << 'OPENHANDS_INFO'
+#!/usr/bin/env bash
+echo "OpenHands Environment Configuration"
+echo ""
+echo "OPENHANDS_HOME: ${OPENHANDS_HOME}"
+echo ""
+echo "Docker:"
+if docker info >/dev/null 2>&1; then
+    echo "  Status: running"
+else
+    echo "  Status: NOT RUNNING"
+    echo "  OpenHands requires Docker for sandboxed execution"
+fi
+echo ""
+echo "API Keys:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+[ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+echo ""
+echo "Commands:"
+echo "  openhands                    Start interactive agent"
+echo ""
+echo "Providers: Anthropic, OpenAI, Google Gemini, Ollama,"
+echo "  AWS Bedrock, Mistral, and any litellm-supported provider"
+echo ""
+echo "Agents: CodeActAgent (default), RepoExplorerAgent, custom"
+echo ""
+echo "Config: ~/.openhands/config.toml"
+OPENHANDS_INFO
+    install_openhands_script "$bin_dir/.openhands-info.$$" "$bin_dir/openhands-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_openhands_info
+
 # === OPENHANDS HOME ===
 export OPENHANDS_HOME="${OPENHANDS_HOME:-$FLOX_ENV_CACHE/openhands}"
 export OPENHANDS_SUPPRESS_BANNER="${OPENHANDS_SUPPRESS_BANNER:-1}"
@@ -71,106 +122,6 @@ echo "  openhands-info               Show configuration"
 echo ""
 
 unset _has_key
-'''
-
-[profile]
-bash = '''
-openhands-info() {
-    echo "OpenHands Environment Configuration"
-    echo ""
-    echo "OPENHANDS_HOME: ${OPENHANDS_HOME}"
-    echo ""
-    echo "Docker:"
-    if docker info >/dev/null 2>&1; then
-        echo "  Status: running"
-    else
-        echo "  Status: NOT RUNNING"
-        echo "  OpenHands requires Docker for sandboxed execution"
-    fi
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  openhands                    Start interactive agent"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google Gemini, Ollama,"
-    echo "  AWS Bedrock, Mistral, and any litellm-supported provider"
-    echo ""
-    echo "Agents: CodeActAgent (default), RepoExplorerAgent, custom"
-    echo ""
-    echo "Config: ~/.openhands/config.toml"
-}
-export -f openhands-info
-'''
-
-zsh = '''
-openhands-info() {
-    echo "OpenHands Environment Configuration"
-    echo ""
-    echo "OPENHANDS_HOME: ${OPENHANDS_HOME}"
-    echo ""
-    echo "Docker:"
-    if docker info >/dev/null 2>&1; then
-        echo "  Status: running"
-    else
-        echo "  Status: NOT RUNNING"
-        echo "  OpenHands requires Docker for sandboxed execution"
-    fi
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Commands:"
-    echo "  openhands                    Start interactive agent"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google Gemini, Ollama,"
-    echo "  AWS Bedrock, Mistral, and any litellm-supported provider"
-    echo ""
-    echo "Agents: CodeActAgent (default), RepoExplorerAgent, custom"
-    echo ""
-    echo "Config: ~/.openhands/config.toml"
-}
-'''
-
-fish = '''
-function openhands-info
-    echo "OpenHands Environment Configuration"
-    echo ""
-    echo "OPENHANDS_HOME: $OPENHANDS_HOME"
-    echo ""
-    echo "Docker:"
-    if docker info >/dev/null 2>&1
-        echo "  Status: running"
-    else
-        echo "  Status: NOT RUNNING"
-        echo "  OpenHands requires Docker for sandboxed execution"
-    end
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  openhands                    Start interactive agent"
-    echo ""
-    echo "Providers: Anthropic, OpenAI, Google Gemini, Ollama,"
-    echo "  AWS Bedrock, Mistral, and any litellm-supported provider"
-    echo ""
-    echo "Agents: CodeActAgent (default), RepoExplorerAgent, custom"
-    echo ""
-    echo "Config: ~/.openhands/config.toml"
-end
 '''
 
 [options]

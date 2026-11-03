@@ -19,6 +19,67 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# honcho-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- honcho-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_honcho_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_honcho_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.honcho-info.$$" << 'HONCHO_INFO'
+#!/usr/bin/env bash
+honcho_info() {
+    local cfg="$HONCHO_CONFIG_DIR/config.toml" health
+    echo "Honcho Environment Configuration"
+    echo ""
+    health=$(curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null) || health="not running (flox services start)"
+    echo "API: $HONCHO_URL ($health)"
+    if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
+        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
+        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
+    else
+        echo "Database: DB_CONNECTION_URI (external)"
+    fi
+    if [ -e "$HONCHO_CONFIG_DIR" ] && ! { [ -d "$HONCHO_CONFIG_DIR" ] && [ -x "$HONCHO_CONFIG_DIR" ]; }; then
+        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
+    else
+        echo "Config: $cfg ($([ -f "$cfg" ] && echo found || echo "not created"))"
+    fi
+    echo "Embed messages: $(cat "$HONCHO_DATA_DIR/embed-messages" 2>/dev/null || echo "decided when honcho-api starts")"
+    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
+    echo ""
+    echo "LLM keys (environment, or config.toml / .env in the config directory):"
+    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
+    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
+    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
+    echo ""
+    echo "Commands:"
+    echo "  flox services status          PostgreSQL, API, and deriver"
+    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
+    echo "  curl \$HONCHO_URL/health"
+    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
+    echo "  honcho-migrate current        Show the schema revision"
+    echo ""
+    echo "Source: https://github.com/plastic-labs/honcho"
+}
+honcho_info "$@"
+HONCHO_INFO
+    install_honcho_script "$bin_dir/.honcho-info.$$" "$bin_dir/honcho-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_honcho_info
+
 # API listen address; override at activation, e.g.
 #   HONCHO_PORT=18001 flox activate -s
 # A non-loopback address also needs Honcho's auth turned on (see README).
@@ -373,126 +434,6 @@ until curl -fsS -o /dev/null "$HONCHO_URL/health" 2>/dev/null; do
   sleep 0.5
 done
 exec honcho-deriver >> "$log" 2>&1
-'''
-
-[profile]
-bash = '''
-honcho-info() {
-    local cfg="$HONCHO_CONFIG_DIR/config.toml" health
-    echo "Honcho Environment Configuration"
-    echo ""
-    health=$(curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null) || health="not running (flox services start)"
-    echo "API: $HONCHO_URL ($health)"
-    if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
-        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
-        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
-    else
-        echo "Database: DB_CONNECTION_URI (external)"
-    fi
-    if [ -e "$HONCHO_CONFIG_DIR" ] && ! { [ -d "$HONCHO_CONFIG_DIR" ] && [ -x "$HONCHO_CONFIG_DIR" ]; }; then
-        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
-    else
-        echo "Config: $cfg ($([ -f "$cfg" ] && echo found || echo "not created"))"
-    fi
-    echo "Embed messages: $(cat "$HONCHO_DATA_DIR/embed-messages" 2>/dev/null || echo "decided when honcho-api starts")"
-    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
-    echo ""
-    echo "LLM keys (environment, or config.toml / .env in the config directory):"
-    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
-    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
-    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
-    echo ""
-    echo "Commands:"
-    echo "  flox services status          PostgreSQL, API, and deriver"
-    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
-    echo "  curl \$HONCHO_URL/health"
-    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
-    echo "  honcho-migrate current        Show the schema revision"
-    echo ""
-    echo "Source: https://github.com/plastic-labs/honcho"
-}
-export -f honcho-info
-'''
-
-zsh = '''
-honcho-info() {
-    local cfg="$HONCHO_CONFIG_DIR/config.toml" health
-    echo "Honcho Environment Configuration"
-    echo ""
-    health=$(curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null) || health="not running (flox services start)"
-    echo "API: $HONCHO_URL ($health)"
-    if [ "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI" ]; then
-        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
-        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
-    else
-        echo "Database: DB_CONNECTION_URI (external)"
-    fi
-    if [ -e "$HONCHO_CONFIG_DIR" ] && ! { [ -d "$HONCHO_CONFIG_DIR" ] && [ -x "$HONCHO_CONFIG_DIR" ]; }; then
-        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
-    else
-        echo "Config: $cfg ($([ -f "$cfg" ] && echo found || echo "not created"))"
-    fi
-    echo "Embed messages: $(cat "$HONCHO_DATA_DIR/embed-messages" 2>/dev/null || echo "decided when honcho-api starts")"
-    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
-    echo ""
-    echo "LLM keys (environment, or config.toml / .env in the config directory):"
-    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
-    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
-    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
-    echo ""
-    echo "Commands:"
-    echo "  flox services status          PostgreSQL, API, and deriver"
-    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
-    echo "  curl \$HONCHO_URL/health"
-    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
-    echo "  honcho-migrate current        Show the schema revision"
-    echo ""
-    echo "Source: https://github.com/plastic-labs/honcho"
-}
-'''
-
-fish = '''
-function honcho-info
-    set -l cfg "$HONCHO_CONFIG_DIR/config.toml"
-    echo "Honcho Environment Configuration"
-    echo ""
-    set -l health (curl -fsS -m 2 "$HONCHO_URL/health" 2>/dev/null)
-    or set health "not running (flox services start)"
-    echo "API: $HONCHO_URL ($health)"
-    if test "$DB_CONNECTION_URI" = "$HONCHO_LOCAL_DB_URI"
-        echo "Database: bundled PostgreSQL, data in $HONCHO_PGDATA"
-        echo "  psql -h \"\$HONCHO_PG_SOCKET_DIR\" -U honcho honcho"
-    else
-        echo "Database: DB_CONNECTION_URI (external)"
-    end
-    if test -e "$HONCHO_CONFIG_DIR"; and not test -d "$HONCHO_CONFIG_DIR" -a -x "$HONCHO_CONFIG_DIR"
-        echo "Config: $HONCHO_CONFIG_DIR isn't a directory you can enter; settings come only from the environment"
-    else if test -f "$cfg"
-        echo "Config: $cfg (found)"
-    else
-        echo "Config: $cfg (not created)"
-    end
-    if test -f "$HONCHO_DATA_DIR/embed-messages"
-        echo "Embed messages: "(cat "$HONCHO_DATA_DIR/embed-messages")
-    else
-        echo "Embed messages: decided when honcho-api starts"
-    end
-    echo "Logs: $FLOX_ENV_CACHE/logs/honcho-*.log"
-    echo ""
-    echo "LLM keys (environment, or config.toml / .env in the config directory):"
-    echo "  LLM_OPENAI_API_KEY      also used for embeddings by default"
-    echo "  LLM_ANTHROPIC_API_KEY   LLM_GEMINI_API_KEY"
-    echo "  LLM_OPENAI_BASE_URL     an OpenAI-compatible server (Ollama, vLLM, ...)"
-    echo ""
-    echo "Commands:"
-    echo "  flox services status          PostgreSQL, API, and deriver"
-    echo "  tail -f \"\$FLOX_ENV_CACHE/logs/honcho-api.log\""
-    echo "  curl \$HONCHO_URL/health"
-    echo "  python                        Python with the honcho-ai SDK (from honcho import Honcho)"
-    echo "  honcho-migrate current        Show the schema revision"
-    echo ""
-    echo "Source: https://github.com/plastic-labs/honcho"
-end
 '''
 
 [options]

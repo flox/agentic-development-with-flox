@@ -18,6 +18,51 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# kiro-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- kiro-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_kiro_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_kiro_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.kiro-info.$$" << 'KIRO_INFO'
+#!/usr/bin/env bash
+echo "Kiro Environment Configuration"
+echo ""
+echo "Commands:"
+echo "  kiro                           Open Kiro IDE"
+echo "  kiro <dir>                     Open a project directory"
+echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
+echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
+echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
+echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
+echo "  kiro serve-web                 Run Kiro in the browser"
+echo "  kiro tunnel                    Create a secure tunnel"
+echo "  kiro --add-mcp <json>          Add an MCP server"
+echo ""
+echo "Chat modes:"
+echo "  ask       Ask questions without making edits"
+echo "  edit      Make targeted edits"
+echo "  agent     Autonomous agent (default)"
+echo ""
+echo "Docs: https://kiro.dev/docs"
+KIRO_INFO
+    install_kiro_script "$bin_dir/.kiro-info.$$" "$bin_dir/kiro-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_kiro_info
+
 echo ""
 echo "Kiro environment ready"
 echo ""
@@ -33,80 +78,6 @@ echo "  kiro-info                      Show configuration"
 echo ""
 echo "Docs: https://kiro.dev/docs"
 echo ""
-'''
-
-[profile]
-bash = '''
-kiro-info() {
-    echo "Kiro Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  kiro                           Open Kiro IDE"
-    echo "  kiro <dir>                     Open a project directory"
-    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
-    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
-    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
-    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
-    echo "  kiro serve-web                 Run Kiro in the browser"
-    echo "  kiro tunnel                    Create a secure tunnel"
-    echo "  kiro --add-mcp <json>          Add an MCP server"
-    echo ""
-    echo "Chat modes:"
-    echo "  ask       Ask questions without making edits"
-    echo "  edit      Make targeted edits"
-    echo "  agent     Autonomous agent (default)"
-    echo ""
-    echo "Docs: https://kiro.dev/docs"
-}
-export -f kiro-info
-'''
-
-zsh = '''
-kiro-info() {
-    echo "Kiro Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  kiro                           Open Kiro IDE"
-    echo "  kiro <dir>                     Open a project directory"
-    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
-    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
-    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
-    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
-    echo "  kiro serve-web                 Run Kiro in the browser"
-    echo "  kiro tunnel                    Create a secure tunnel"
-    echo "  kiro --add-mcp <json>          Add an MCP server"
-    echo ""
-    echo "Chat modes:"
-    echo "  ask       Ask questions without making edits"
-    echo "  edit      Make targeted edits"
-    echo "  agent     Autonomous agent (default)"
-    echo ""
-    echo "Docs: https://kiro.dev/docs"
-}
-'''
-
-fish = '''
-function kiro-info
-    echo "Kiro Environment Configuration"
-    echo ""
-    echo "Commands:"
-    echo "  kiro                           Open Kiro IDE"
-    echo "  kiro <dir>                     Open a project directory"
-    echo "  kiro chat \"<prompt>\"           AI chat (agent mode, default)"
-    echo "  kiro chat -m ask \"<prompt>\"    Ask without editing"
-    echo "  kiro chat -m edit \"<prompt>\"   Edit mode"
-    echo "  kiro chat -a <file> \"<prompt>\" Add file as context"
-    echo "  kiro serve-web                 Run Kiro in the browser"
-    echo "  kiro tunnel                    Create a secure tunnel"
-    echo "  kiro --add-mcp <json>          Add an MCP server"
-    echo ""
-    echo "Chat modes:"
-    echo "  ask       Ask questions without making edits"
-    echo "  edit      Make targeted edits"
-    echo "  agent     Autonomous agent (default)"
-    echo ""
-    echo "Docs: https://kiro.dev/docs"
-end
 '''
 
 [options]

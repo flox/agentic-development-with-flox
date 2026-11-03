@@ -22,6 +22,48 @@ jq.pkg-path = "jq"
 
 [hook]
 on-activate = '''
+# vibe-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- vibe-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_mistral_vibe_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_mistral_vibe_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.vibe-info.$$" << 'VIBE_INFO'
+#!/usr/bin/env bash
+echo "Mistral Vibe Environment Configuration"
+echo ""
+echo "API Key:"
+[ -n "$MISTRAL_API_KEY" ] && echo "  Mistral: set" || echo "  Mistral: not set (or use 'vibe --setup')"
+echo ""
+echo "Skill paths: $VIBE_SKILL_PATHS"
+echo ""
+echo "Commands:"
+echo "  vibe                         Start interactive session"
+echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
+echo "  vibe -c                      Continue the most recent session"
+echo "  vibe --setup                 Configure a provider"
+echo "  vibe-acp                     Agent Client Protocol server (for editors)"
+echo ""
+echo "Config: ${VIBE_HOME:-$HOME/.vibe}/config.toml"
+echo "Source: https://github.com/mistralai/mistral-vibe"
+VIBE_INFO
+    install_mistral_vibe_script "$bin_dir/.vibe-info.$$" "$bin_dir/vibe-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_mistral_vibe_info
+
 # Point Vibe at the Flox skills. VIBE_SKILL_PATHS is a JSON list that Vibe
 # merges with skill_paths from ~/.vibe/config.toml; any paths you set in
 # VIBE_SKILL_PATHS yourself are kept.
@@ -65,73 +107,6 @@ echo "  vibe-info                    Show configuration"
 echo ""
 echo "Flox skills: flox, floxify, and flox-debug are loaded automatically"
 echo ""
-'''
-
-[profile]
-bash = '''
-vibe-info() {
-    echo "Mistral Vibe Environment Configuration"
-    echo ""
-    echo "API Key:"
-    [ -n "$MISTRAL_API_KEY" ] && echo "  Mistral: set" || echo "  Mistral: not set (or use 'vibe --setup')"
-    echo ""
-    echo "Skill paths: $VIBE_SKILL_PATHS"
-    echo ""
-    echo "Commands:"
-    echo "  vibe                         Start interactive session"
-    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
-    echo "  vibe -c                      Continue the most recent session"
-    echo "  vibe --setup                 Configure a provider"
-    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
-    echo ""
-    echo "Config: ${VIBE_HOME:-$HOME/.vibe}/config.toml"
-    echo "Source: https://github.com/mistralai/mistral-vibe"
-}
-export -f vibe-info
-'''
-
-zsh = '''
-vibe-info() {
-    echo "Mistral Vibe Environment Configuration"
-    echo ""
-    echo "API Key:"
-    [ -n "$MISTRAL_API_KEY" ] && echo "  Mistral: set" || echo "  Mistral: not set (or use 'vibe --setup')"
-    echo ""
-    echo "Skill paths: $VIBE_SKILL_PATHS"
-    echo ""
-    echo "Commands:"
-    echo "  vibe                         Start interactive session"
-    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
-    echo "  vibe -c                      Continue the most recent session"
-    echo "  vibe --setup                 Configure a provider"
-    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
-    echo ""
-    echo "Config: ${VIBE_HOME:-$HOME/.vibe}/config.toml"
-    echo "Source: https://github.com/mistralai/mistral-vibe"
-}
-'''
-
-fish = '''
-function vibe-info
-    set -l vibe_home $HOME/.vibe
-    if set -q VIBE_HOME; set vibe_home $VIBE_HOME; end
-    echo "Mistral Vibe Environment Configuration"
-    echo ""
-    echo "API Key:"
-    if test -n "$MISTRAL_API_KEY"; echo "  Mistral: set"; else; echo "  Mistral: not set (or use 'vibe --setup')"; end
-    echo ""
-    echo "Skill paths: $VIBE_SKILL_PATHS"
-    echo ""
-    echo "Commands:"
-    echo "  vibe                         Start interactive session"
-    echo "  vibe -p \"<prompt>\"           Programmatic mode: run a prompt and exit"
-    echo "  vibe -c                      Continue the most recent session"
-    echo "  vibe --setup                 Configure a provider"
-    echo "  vibe-acp                     Agent Client Protocol server (for editors)"
-    echo ""
-    echo "Config: $vibe_home/config.toml"
-    echo "Source: https://github.com/mistralai/mistral-vibe"
-end
 '''
 
 [options]

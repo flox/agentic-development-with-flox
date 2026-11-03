@@ -27,6 +27,61 @@ xvfb-run.systems = ["x86_64-linux", "aarch64-linux"]
 
 [hook]
 on-activate = '''
+# mux-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- mux-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_mux_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_mux_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.mux-info.$$" << 'MUX_INFO'
+#!/usr/bin/env bash
+echo "Mux Environment Configuration"
+echo ""
+echo "Server:"
+echo "  Host: ${MUX_HOST}"
+echo "  Port: ${MUX_PORT}"
+echo "  URL:  http://${MUX_HOST}:${MUX_PORT}"
+echo "  Auth: ${MUX_AUTH}"
+echo ""
+echo "API Keys:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+[ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+echo ""
+echo "Provider config: ~/.mux/providers.jsonc"
+echo "Secrets config:  ~/.mux/secrets.json"
+echo ""
+echo "Commands:"
+echo "  mux run \"<prompt>\"         Run agent task (CLI)"
+echo "  mux server                  Start browser UI"
+echo "  mux desktop                 Launch desktop app"
+echo "  mux acp                     ACP bridge (editor integrations)"
+echo "  flox activate -s            Start browser UI as Flox service"
+echo ""
+echo "Run options:"
+echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
+echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
+echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
+echo "  -b <usd>         Budget limit in USD"
+echo "  --mode plan      Plan before executing"
+echo "  --json           NDJSON output for scripting"
+MUX_INFO
+    install_mux_script "$bin_dir/.mux-info.$$" "$bin_dir/mux-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_mux_info
+
 # === SERVER CONFIGURATION ===
 export MUX_PORT="${MUX_PORT:-3000}"
 export MUX_HOST="${MUX_HOST:-127.0.0.1}"
@@ -94,118 +149,6 @@ else
 fi
 """
 is-daemon = false
-
-[profile]
-bash = '''
-mux-info() {
-    echo "Mux Environment Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: ${MUX_HOST}"
-    echo "  Port: ${MUX_PORT}"
-    echo "  URL:  http://${MUX_HOST}:${MUX_PORT}"
-    echo "  Auth: ${MUX_AUTH}"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Provider config: ~/.mux/providers.jsonc"
-    echo "Secrets config:  ~/.mux/secrets.json"
-    echo ""
-    echo "Commands:"
-    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
-    echo "  mux server                  Start browser UI"
-    echo "  mux desktop                 Launch desktop app"
-    echo "  mux acp                     ACP bridge (editor integrations)"
-    echo "  flox activate -s            Start browser UI as Flox service"
-    echo ""
-    echo "Run options:"
-    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
-    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
-    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
-    echo "  -b <usd>         Budget limit in USD"
-    echo "  --mode plan      Plan before executing"
-    echo "  --json           NDJSON output for scripting"
-}
-export -f mux-info
-'''
-
-zsh = '''
-mux-info() {
-    echo "Mux Environment Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: ${MUX_HOST}"
-    echo "  Port: ${MUX_PORT}"
-    echo "  URL:  http://${MUX_HOST}:${MUX_PORT}"
-    echo "  Auth: ${MUX_AUTH}"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo ""
-    echo "Provider config: ~/.mux/providers.jsonc"
-    echo "Secrets config:  ~/.mux/secrets.json"
-    echo ""
-    echo "Commands:"
-    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
-    echo "  mux server                  Start browser UI"
-    echo "  mux desktop                 Launch desktop app"
-    echo "  mux acp                     ACP bridge (editor integrations)"
-    echo "  flox activate -s            Start browser UI as Flox service"
-    echo ""
-    echo "Run options:"
-    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
-    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
-    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
-    echo "  -b <usd>         Budget limit in USD"
-    echo "  --mode plan      Plan before executing"
-    echo "  --json           NDJSON output for scripting"
-}
-'''
-
-fish = '''
-function mux-info
-    echo "Mux Environment Configuration"
-    echo ""
-    echo "Server:"
-    echo "  Host: $MUX_HOST"
-    echo "  Port: $MUX_PORT"
-    echo "  URL:  http://$MUX_HOST:$MUX_PORT"
-    echo "  Auth: $MUX_AUTH"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    echo ""
-    echo "Provider config: ~/.mux/providers.jsonc"
-    echo "Secrets config:  ~/.mux/secrets.json"
-    echo ""
-    echo "Commands:"
-    echo "  mux run \"<prompt>\"         Run agent task (CLI)"
-    echo "  mux server                  Start browser UI"
-    echo "  mux desktop                 Launch desktop app"
-    echo "  mux acp                     ACP bridge (editor integrations)"
-    echo "  flox activate -s            Start browser UI as Flox service"
-    echo ""
-    echo "Run options:"
-    echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
-    echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
-    echo "  -t <level>       Thinking: OFF/LOW/MED/HIGH/MAX"
-    echo "  -b <usd>         Budget limit in USD"
-    echo "  --mode plan      Plan before executing"
-    echo "  --json           NDJSON output for scripting"
-end
-'''
 
 [options]
 systems = [

@@ -13,6 +13,46 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# vibe-kanban-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- vibe-kanban-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_vibe_kanban_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_vibe_kanban_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.vibe-kanban-info.$$" << 'VIBE_KANBAN_INFO'
+#!/usr/bin/env bash
+echo "Vibe Kanban Environment Configuration"
+echo ""
+echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
+echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
+echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
+echo ""
+echo "Commands:"
+echo "  flox activate -s             Start the Vibe Kanban service"
+echo "  flox services status         Check the service"
+echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
+echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
+echo ""
+echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
+echo "Source: https://github.com/BloopAI/vibe-kanban"
+VIBE_KANBAN_INFO
+    install_vibe_kanban_script "$bin_dir/.vibe-kanban-info.$$" "$bin_dir/vibe-kanban-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_vibe_kanban_info
+
 # Listen address for the service; override at activation, e.g.
 #   VIBE_KANBAN_PORT=4000 flox activate -s
 export VIBE_KANBAN_HOST="${VIBE_KANBAN_HOST:-127.0.0.1}"
@@ -51,65 +91,6 @@ if [ "$VIBE_KANBAN_OPEN_BROWSER" != "true" ]; then
   export BROWSER=true
 fi
 HOST="$VIBE_KANBAN_HOST" PORT="$VIBE_KANBAN_PORT" exec vibe-kanban >> "$FLOX_ENV_CACHE/logs/vibe-kanban.log" 2>&1
-'''
-
-[profile]
-bash = '''
-vibe-kanban-info() {
-    echo "Vibe Kanban Environment Configuration"
-    echo ""
-    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
-    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
-    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
-    echo ""
-    echo "Commands:"
-    echo "  flox activate -s             Start the Vibe Kanban service"
-    echo "  flox services status         Check the service"
-    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
-    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
-    echo ""
-    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
-    echo "Source: https://github.com/BloopAI/vibe-kanban"
-}
-export -f vibe-kanban-info
-'''
-
-zsh = '''
-vibe-kanban-info() {
-    echo "Vibe Kanban Environment Configuration"
-    echo ""
-    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
-    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
-    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
-    echo ""
-    echo "Commands:"
-    echo "  flox activate -s             Start the Vibe Kanban service"
-    echo "  flox services status         Check the service"
-    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
-    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
-    echo ""
-    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
-    echo "Source: https://github.com/BloopAI/vibe-kanban"
-}
-'''
-
-fish = '''
-function vibe-kanban-info
-    echo "Vibe Kanban Environment Configuration"
-    echo ""
-    echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
-    echo "Service log: $FLOX_ENV_CACHE/logs/vibe-kanban.log"
-    echo "Open browser on service start: $VIBE_KANBAN_OPEN_BROWSER (VIBE_KANBAN_OPEN_BROWSER)"
-    echo ""
-    echo "Commands:"
-    echo "  flox activate -s             Start the Vibe Kanban service"
-    echo "  flox services status         Check the service"
-    echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
-    echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
-    echo ""
-    echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
-    echo "Source: https://github.com/BloopAI/vibe-kanban"
-end
 '''
 
 [options]

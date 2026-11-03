@@ -14,6 +14,51 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# agent-deck-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- agent-deck-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_agent_deck_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_agent_deck_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.agent-deck-info.$$" << 'AGENT_DECK_INFO'
+#!/usr/bin/env bash
+echo "Agent Deck Environment Configuration"
+echo ""
+echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
+echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
+echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
+echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
+echo ""
+echo "Commands:"
+echo "  agent-deck                   Start the TUI"
+echo "  agent-deck add . -c claude   Add a session for this directory"
+echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
+echo "  agent-deck list | status     List sessions, or summarize their state"
+echo "  agent-deck session attach <id>  Attach to a session"
+echo "  agent-deck harness list      Show which agents are installed"
+echo "  agent-deck doctor            Check accounts and runtime health"
+echo ""
+echo "Config: ~/.config/agent-deck/config.toml"
+echo "Data: ~/.local/share/agent-deck"
+echo "Source: https://github.com/asheshgoplani/agent-deck"
+AGENT_DECK_INFO
+    install_agent_deck_script "$bin_dir/.agent-deck-info.$$" "$bin_dir/agent-deck-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_agent_deck_info
+
 # The binary lives in the read-only Nix store, so Agent Deck's self-update
 # can never install; this stops its background checks against GitHub.
 # Upgrade with `flox upgrade` instead. Set to 0 to see update notices again.
@@ -77,80 +122,6 @@ if [ -n "$AGENT_DECK_WEB_TOKEN_FILE" ]; then
   set -- "$@" --token-file "$AGENT_DECK_WEB_TOKEN_FILE"
 fi
 exec agent-deck "$@" >> "$FLOX_ENV_CACHE/logs/agent-deck-web.log" 2>&1
-'''
-
-[profile]
-bash = '''
-agent-deck-info() {
-    echo "Agent Deck Environment Configuration"
-    echo ""
-    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
-    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
-    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
-    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
-    echo ""
-    echo "Commands:"
-    echo "  agent-deck                   Start the TUI"
-    echo "  agent-deck add . -c claude   Add a session for this directory"
-    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
-    echo "  agent-deck list | status     List sessions, or summarize their state"
-    echo "  agent-deck session attach <id>  Attach to a session"
-    echo "  agent-deck harness list      Show which agents are installed"
-    echo "  agent-deck doctor            Check accounts and runtime health"
-    echo ""
-    echo "Config: ~/.config/agent-deck/config.toml"
-    echo "Data: ~/.local/share/agent-deck"
-    echo "Source: https://github.com/asheshgoplani/agent-deck"
-}
-export -f agent-deck-info
-'''
-
-zsh = '''
-agent-deck-info() {
-    echo "Agent Deck Environment Configuration"
-    echo ""
-    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
-    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
-    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
-    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
-    echo ""
-    echo "Commands:"
-    echo "  agent-deck                   Start the TUI"
-    echo "  agent-deck add . -c claude   Add a session for this directory"
-    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
-    echo "  agent-deck list | status     List sessions, or summarize their state"
-    echo "  agent-deck session attach <id>  Attach to a session"
-    echo "  agent-deck harness list      Show which agents are installed"
-    echo "  agent-deck doctor            Check accounts and runtime health"
-    echo ""
-    echo "Config: ~/.config/agent-deck/config.toml"
-    echo "Data: ~/.local/share/agent-deck"
-    echo "Source: https://github.com/asheshgoplani/agent-deck"
-}
-'''
-
-fish = '''
-function agent-deck-info
-    echo "Agent Deck Environment Configuration"
-    echo ""
-    echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
-    echo "Web UI log: $FLOX_ENV_CACHE/logs/agent-deck-web.log"
-    echo "Skip update checks: $AGENTDECK_SKIP_UPDATE_CHECK (AGENTDECK_SKIP_UPDATE_CHECK)"
-    echo "Telemetry: $AGENTDECK_TELEMETRY (AGENTDECK_TELEMETRY)"
-    echo ""
-    echo "Commands:"
-    echo "  agent-deck                   Start the TUI"
-    echo "  agent-deck add . -c claude   Add a session for this directory"
-    echo "  agent-deck launch . -c codex -m \"<prompt>\"  Add, start, and send a prompt"
-    echo "  agent-deck list | status     List sessions, or summarize their state"
-    echo "  agent-deck session attach <id>  Attach to a session"
-    echo "  agent-deck harness list      Show which agents are installed"
-    echo "  agent-deck doctor            Check accounts and runtime health"
-    echo ""
-    echo "Config: ~/.config/agent-deck/config.toml"
-    echo "Data: ~/.local/share/agent-deck"
-    echo "Source: https://github.com/asheshgoplani/agent-deck"
-end
 '''
 
 [options]

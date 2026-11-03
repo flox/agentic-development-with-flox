@@ -44,6 +44,60 @@ install_agent_lint_script() {
     fi
 }
 
+# agent-lint-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- agent-lint-info`. It reads the environment when it runs.
+setup_agent_lint_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.agent-lint-info.$$" << 'AGENT_LINT_INFO'
+#!/usr/bin/env bash
+echo "agent-lint Environment Configuration"
+echo ""
+echo "Tools:"
+echo "  skillspector     $(skillspector --version 2>/dev/null)"
+echo "  skillcheck       $(skillcheck --version 2>/dev/null | sed 's/.* //')"
+echo "  claudelint       $(claudelint --version 2>/dev/null | sed 's/.* //')"
+echo "  cclint           $(cclint --version 2>/dev/null)"
+echo "  skill-tools      (flox/skill-tools)"
+echo "  skill-validator  $(skill-validator --version 2>/dev/null | sed 's/.* //')"
+echo ""
+if [ -n "$SKILLSPECTOR_PROVIDER" ]; then
+    echo "SkillSpector LLM: SKILLSPECTOR_PROVIDER=$SKILLSPECTOR_PROVIDER"
+elif [ -n "$NVIDIA_INFERENCE_KEY" ]; then
+    echo "SkillSpector LLM: NVIDIA hosted API (NVIDIA_INFERENCE_KEY)"
+elif [ -n "$OPENAI_API_KEY" ]; then
+    echo "SkillSpector LLM: ${OPENAI_BASE_URL:-api.openai.com} (OPENAI_API_KEY)"
+else
+    echo "SkillSpector LLM: none set (use --no-llm)"
+fi
+echo "SkillSpector MCP launcher: $FLOX_ENV_CACHE/bin/skillspector-mcp"
+if [ -n "$NO_UPDATE_NOTIFIER" ]; then
+    echo "Update notices: off (NO_UPDATE_NOTIFIER)"
+else
+    echo "Update notices: on"
+fi
+echo ""
+echo "Commands:"
+echo "  skillspector scan --no-llm <skill-dir>   Static security scan"
+echo "  skillspector scan -r --no-llm <dir>      Each subdirectory with a SKILL.md"
+echo "  skillspector scan <git-url> --no-llm     Scan a skill before installing it"
+echo "  skillspector-register claude-code        Register the MCP server (also: codex, print)"
+echo "  skillcheck --fail-on HIGH .claude/skills  Secrets, injection, privilege escalation"
+echo "  claudelint [--fix]                       Lint the whole project (check-all)"
+echo "  claudelint explain <rule>                Explain a rule"
+echo "  cclint                                   Lint agents, commands, settings, CLAUDE.md"
+echo "  skill-tools check <dir>                  Validate + lint + score SKILL.md files"
+echo "  skill-tools route \"<query>\" -s <dir>     Which skill a query would trigger"
+echo "  skill-validator check <dir>              Structure, links, content, contamination"
+echo "  skill-validator check --skip links <dir> The same, without fetching links"
+AGENT_LINT_INFO
+    install_agent_lint_script "$bin_dir/.agent-lint-info.$$" "$bin_dir/agent-lint-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_agent_lint_info
+
 # Write two launchers into $FLOX_ENV_CACHE/bin:
 #   skillspector-mcp       runs `skillspector mcp` (an MCP stdio server with
 #                          one tool, scan_skill) inside this environment
@@ -159,142 +213,6 @@ echo "  skill-tools check <dir>      Validate, lint, and score SKILL.md files"
 echo "  skill-validator check <dir>  Structure, links, content, contamination"
 echo "  agent-lint-info              Show configuration"
 echo ""
-'''
-
-[profile]
-bash = '''
-agent-lint-info() {
-    echo "agent-lint Environment Configuration"
-    echo ""
-    echo "Tools:"
-    echo "  skillspector     $(skillspector --version 2>/dev/null)"
-    echo "  skillcheck       $(skillcheck --version 2>/dev/null | sed 's/.* //')"
-    echo "  claudelint       $(claudelint --version 2>/dev/null | sed 's/.* //')"
-    echo "  cclint           $(cclint --version 2>/dev/null)"
-    echo "  skill-tools      (flox/skill-tools)"
-    echo "  skill-validator  $(skill-validator --version 2>/dev/null | sed 's/.* //')"
-    echo ""
-    if [ -n "$SKILLSPECTOR_PROVIDER" ]; then
-        echo "SkillSpector LLM: SKILLSPECTOR_PROVIDER=$SKILLSPECTOR_PROVIDER"
-    elif [ -n "$NVIDIA_INFERENCE_KEY" ]; then
-        echo "SkillSpector LLM: NVIDIA hosted API (NVIDIA_INFERENCE_KEY)"
-    elif [ -n "$OPENAI_API_KEY" ]; then
-        echo "SkillSpector LLM: ${OPENAI_BASE_URL:-api.openai.com} (OPENAI_API_KEY)"
-    else
-        echo "SkillSpector LLM: none set (use --no-llm)"
-    fi
-    echo "SkillSpector MCP launcher: $FLOX_ENV_CACHE/bin/skillspector-mcp"
-    if [ -n "$NO_UPDATE_NOTIFIER" ]; then
-        echo "Update notices: off (NO_UPDATE_NOTIFIER)"
-    else
-        echo "Update notices: on"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  skillspector scan --no-llm <skill-dir>   Static security scan"
-    echo "  skillspector scan -r --no-llm <dir>      Each subdirectory with a SKILL.md"
-    echo "  skillspector scan <git-url> --no-llm     Scan a skill before installing it"
-    echo "  skillspector-register claude-code        Register the MCP server (also: codex, print)"
-    echo "  skillcheck --fail-on HIGH .claude/skills  Secrets, injection, privilege escalation"
-    echo "  claudelint [--fix]                       Lint the whole project (check-all)"
-    echo "  claudelint explain <rule>                Explain a rule"
-    echo "  cclint                                   Lint agents, commands, settings, CLAUDE.md"
-    echo "  skill-tools check <dir>                  Validate + lint + score SKILL.md files"
-    echo "  skill-tools route \"<query>\" -s <dir>     Which skill a query would trigger"
-    echo "  skill-validator check <dir>              Structure, links, content, contamination"
-    echo "  skill-validator check --skip links <dir> The same, without fetching links"
-}
-export -f agent-lint-info
-'''
-
-zsh = '''
-agent-lint-info() {
-    echo "agent-lint Environment Configuration"
-    echo ""
-    echo "Tools:"
-    echo "  skillspector     $(skillspector --version 2>/dev/null)"
-    echo "  skillcheck       $(skillcheck --version 2>/dev/null | sed 's/.* //')"
-    echo "  claudelint       $(claudelint --version 2>/dev/null | sed 's/.* //')"
-    echo "  cclint           $(cclint --version 2>/dev/null)"
-    echo "  skill-tools      (flox/skill-tools)"
-    echo "  skill-validator  $(skill-validator --version 2>/dev/null | sed 's/.* //')"
-    echo ""
-    if [ -n "$SKILLSPECTOR_PROVIDER" ]; then
-        echo "SkillSpector LLM: SKILLSPECTOR_PROVIDER=$SKILLSPECTOR_PROVIDER"
-    elif [ -n "$NVIDIA_INFERENCE_KEY" ]; then
-        echo "SkillSpector LLM: NVIDIA hosted API (NVIDIA_INFERENCE_KEY)"
-    elif [ -n "$OPENAI_API_KEY" ]; then
-        echo "SkillSpector LLM: ${OPENAI_BASE_URL:-api.openai.com} (OPENAI_API_KEY)"
-    else
-        echo "SkillSpector LLM: none set (use --no-llm)"
-    fi
-    echo "SkillSpector MCP launcher: $FLOX_ENV_CACHE/bin/skillspector-mcp"
-    if [ -n "$NO_UPDATE_NOTIFIER" ]; then
-        echo "Update notices: off (NO_UPDATE_NOTIFIER)"
-    else
-        echo "Update notices: on"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  skillspector scan --no-llm <skill-dir>   Static security scan"
-    echo "  skillspector scan -r --no-llm <dir>      Each subdirectory with a SKILL.md"
-    echo "  skillspector scan <git-url> --no-llm     Scan a skill before installing it"
-    echo "  skillspector-register claude-code        Register the MCP server (also: codex, print)"
-    echo "  skillcheck --fail-on HIGH .claude/skills  Secrets, injection, privilege escalation"
-    echo "  claudelint [--fix]                       Lint the whole project (check-all)"
-    echo "  claudelint explain <rule>                Explain a rule"
-    echo "  cclint                                   Lint agents, commands, settings, CLAUDE.md"
-    echo "  skill-tools check <dir>                  Validate + lint + score SKILL.md files"
-    echo "  skill-tools route \"<query>\" -s <dir>     Which skill a query would trigger"
-    echo "  skill-validator check <dir>              Structure, links, content, contamination"
-    echo "  skill-validator check --skip links <dir> The same, without fetching links"
-}
-'''
-
-fish = '''
-function agent-lint-info
-    echo "agent-lint Environment Configuration"
-    echo ""
-    echo "Tools:"
-    echo "  skillspector     "(skillspector --version 2>/dev/null)
-    echo "  skillcheck       "(skillcheck --version 2>/dev/null | sed 's/.* //')
-    echo "  claudelint       "(claudelint --version 2>/dev/null | sed 's/.* //')
-    echo "  cclint           "(cclint --version 2>/dev/null)
-    echo "  skill-tools      (flox/skill-tools)"
-    echo "  skill-validator  "(skill-validator --version 2>/dev/null | sed 's/.* //')
-    echo ""
-    if test -n "$SKILLSPECTOR_PROVIDER"
-        echo "SkillSpector LLM: SKILLSPECTOR_PROVIDER=$SKILLSPECTOR_PROVIDER"
-    else if test -n "$NVIDIA_INFERENCE_KEY"
-        echo "SkillSpector LLM: NVIDIA hosted API (NVIDIA_INFERENCE_KEY)"
-    else if test -n "$OPENAI_API_KEY"
-        set -l base api.openai.com
-        test -n "$OPENAI_BASE_URL"; and set base $OPENAI_BASE_URL
-        echo "SkillSpector LLM: $base (OPENAI_API_KEY)"
-    else
-        echo "SkillSpector LLM: none set (use --no-llm)"
-    end
-    echo "SkillSpector MCP launcher: $FLOX_ENV_CACHE/bin/skillspector-mcp"
-    if test -n "$NO_UPDATE_NOTIFIER"
-        echo "Update notices: off (NO_UPDATE_NOTIFIER)"
-    else
-        echo "Update notices: on"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  skillspector scan --no-llm <skill-dir>   Static security scan"
-    echo "  skillspector scan -r --no-llm <dir>      Each subdirectory with a SKILL.md"
-    echo "  skillspector scan <git-url> --no-llm     Scan a skill before installing it"
-    echo "  skillspector-register claude-code        Register the MCP server (also: codex, print)"
-    echo "  skillcheck --fail-on HIGH .claude/skills  Secrets, injection, privilege escalation"
-    echo "  claudelint [--fix]                       Lint the whole project (check-all)"
-    echo "  claudelint explain <rule>                Explain a rule"
-    echo "  cclint                                   Lint agents, commands, settings, CLAUDE.md"
-    echo "  skill-tools check <dir>                  Validate + lint + score SKILL.md files"
-    echo "  skill-tools route \"<query>\" -s <dir>     Which skill a query would trigger"
-    echo "  skill-validator check <dir>              Structure, links, content, contamination"
-    echo "  skill-validator check --skip links <dir> The same, without fetching links"
-end
 '''
 
 [options]

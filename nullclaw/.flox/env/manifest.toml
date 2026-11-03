@@ -19,6 +19,63 @@ NULLCLAW_GATEWAY_PORT = "8080"
 
 [hook]
 on-activate = '''
+# nullclaw-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- nullclaw-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_nullclaw_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_nullclaw_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.nullclaw-info.$$" << 'NULLCLAW_INFO'
+#!/usr/bin/env bash
+echo "NullClaw Environment Configuration"
+echo ""
+echo "NULLCLAW_HOME: ${NULLCLAW_HOME}"
+echo ""
+echo "API Keys:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+[ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+[ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
+echo ""
+echo "Commands:"
+echo "  nullclaw                     Interactive REPL"
+echo "  nullclaw agent -m \"<msg>\"    Single-message chat"
+echo "  nullclaw onboard             Quick API setup"
+echo "  nullclaw gateway             Start HTTP gateway"
+echo "  nullclaw status              System status"
+echo "  nullclaw doctor              Full diagnostics"
+echo "  nullclaw channel start <ch>  Start a messaging channel"
+echo "  nullclaw channel status      Channel health check"
+echo "  nullclaw migrate openclaw    Migrate from OpenClaw"
+echo "  flox activate -s             Start gateway as Flox service"
+echo ""
+echo "Providers: OpenRouter (recommended), Anthropic, OpenAI, Gemini,"
+echo "  Ollama, Groq, Mistral, xAI, DeepSeek, 50+ total"
+echo ""
+echo "Channels: CLI, Telegram, Signal, Discord, Slack, iMessage,"
+echo "  Matrix, WhatsApp, IRC, Email, 19 total"
+echo ""
+echo "Memory: SQLite (default), PostgreSQL, Redis, ClickHouse,"
+echo "  LanceDB, Markdown, 10 engines total"
+echo ""
+echo "Config: ~/.nullclaw/config.json"
+NULLCLAW_INFO
+    install_nullclaw_script "$bin_dir/.nullclaw-info.$$" "$bin_dir/nullclaw-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_nullclaw_info
+
 # === NULLCLAW HOME ===
 export NULLCLAW_HOME="${NULLCLAW_HOME:-$FLOX_ENV_CACHE/nullclaw}"
 mkdir -p "$NULLCLAW_HOME"
@@ -89,128 +146,6 @@ export NULLCLAW_HOME="${NULLCLAW_HOME:-$FLOX_ENV_CACHE/nullclaw}"
 exec nullclaw gateway --port "${NULLCLAW_GATEWAY_PORT:-8080}" 2>&1
 """
 is-daemon = false
-
-[profile]
-bash = '''
-nullclaw-info() {
-    echo "NullClaw Environment Configuration"
-    echo ""
-    echo "NULLCLAW_HOME: ${NULLCLAW_HOME}"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
-    echo ""
-    echo "Commands:"
-    echo "  nullclaw                     Interactive REPL"
-    echo "  nullclaw agent -m \"<msg>\"    Single-message chat"
-    echo "  nullclaw onboard             Quick API setup"
-    echo "  nullclaw gateway             Start HTTP gateway"
-    echo "  nullclaw status              System status"
-    echo "  nullclaw doctor              Full diagnostics"
-    echo "  nullclaw channel start <ch>  Start a messaging channel"
-    echo "  nullclaw channel status      Channel health check"
-    echo "  nullclaw migrate openclaw    Migrate from OpenClaw"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI, Gemini,"
-    echo "  Ollama, Groq, Mistral, xAI, DeepSeek, 50+ total"
-    echo ""
-    echo "Channels: CLI, Telegram, Signal, Discord, Slack, iMessage,"
-    echo "  Matrix, WhatsApp, IRC, Email, 19 total"
-    echo ""
-    echo "Memory: SQLite (default), PostgreSQL, Redis, ClickHouse,"
-    echo "  LanceDB, Markdown, 10 engines total"
-    echo ""
-    echo "Config: ~/.nullclaw/config.json"
-}
-export -f nullclaw-info
-'''
-
-zsh = '''
-nullclaw-info() {
-    echo "NullClaw Environment Configuration"
-    echo ""
-    echo "NULLCLAW_HOME: ${NULLCLAW_HOME}"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    [ -n "$OPENROUTER_API_KEY" ] && echo "  OpenRouter: set" || echo "  OpenRouter: not set"
-    echo ""
-    echo "Commands:"
-    echo "  nullclaw                     Interactive REPL"
-    echo "  nullclaw agent -m \"<msg>\"    Single-message chat"
-    echo "  nullclaw onboard             Quick API setup"
-    echo "  nullclaw gateway             Start HTTP gateway"
-    echo "  nullclaw status              System status"
-    echo "  nullclaw doctor              Full diagnostics"
-    echo "  nullclaw channel start <ch>  Start a messaging channel"
-    echo "  nullclaw channel status      Channel health check"
-    echo "  nullclaw migrate openclaw    Migrate from OpenClaw"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI, Gemini,"
-    echo "  Ollama, Groq, Mistral, xAI, DeepSeek, 50+ total"
-    echo ""
-    echo "Channels: CLI, Telegram, Signal, Discord, Slack, iMessage,"
-    echo "  Matrix, WhatsApp, IRC, Email, 19 total"
-    echo ""
-    echo "Memory: SQLite (default), PostgreSQL, Redis, ClickHouse,"
-    echo "  LanceDB, Markdown, 10 engines total"
-    echo ""
-    echo "Config: ~/.nullclaw/config.json"
-}
-'''
-
-fish = '''
-function nullclaw-info
-    echo "NullClaw Environment Configuration"
-    echo ""
-    echo "NULLCLAW_HOME: $NULLCLAW_HOME"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    if test -n "$OPENROUTER_API_KEY"
-        echo "  OpenRouter: set"
-    else
-        echo "  OpenRouter: not set"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  nullclaw                     Interactive REPL"
-    echo "  nullclaw agent -m \"<msg>\"    Single-message chat"
-    echo "  nullclaw onboard             Quick API setup"
-    echo "  nullclaw gateway             Start HTTP gateway"
-    echo "  nullclaw status              System status"
-    echo "  nullclaw doctor              Full diagnostics"
-    echo "  nullclaw channel start <ch>  Start a messaging channel"
-    echo "  nullclaw channel status      Channel health check"
-    echo "  nullclaw migrate openclaw    Migrate from OpenClaw"
-    echo "  flox activate -s             Start gateway as Flox service"
-    echo ""
-    echo "Providers: OpenRouter (recommended), Anthropic, OpenAI, Gemini,"
-    echo "  Ollama, Groq, Mistral, xAI, DeepSeek, 50+ total"
-    echo ""
-    echo "Channels: CLI, Telegram, Signal, Discord, Slack, iMessage,"
-    echo "  Matrix, WhatsApp, IRC, Email, 19 total"
-    echo ""
-    echo "Memory: SQLite (default), PostgreSQL, Redis, ClickHouse,"
-    echo "  LanceDB, Markdown, 10 engines total"
-    echo ""
-    echo "Config: ~/.nullclaw/config.json"
-end
-'''
 
 [options]
 systems = [

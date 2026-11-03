@@ -21,6 +21,52 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# iloom-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- iloom-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_iloom_cli_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_iloom_cli_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.iloom-info.$$" << 'ILOOM_INFO'
+#!/usr/bin/env bash
+echo "iloom Environment Configuration"
+echo ""
+echo "Version: $(il --version 2>/dev/null)"
+echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
+echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
+echo ""
+echo "Commands:"
+echo "  il init                 Configure iloom for this repository"
+echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
+echo "  il spin                 Launch Claude in the current loom"
+echo "  il list                 Show active looms (--all, --global)"
+echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
+echo "  il commit               Commit with an issue reference"
+echo "  il finish               Validate, merge, and clean up a loom"
+echo "  il telemetry off|on|status  Manage usage telemetry"
+echo ""
+echo "Global settings: ~/.config/iloom-ai/settings.json"
+echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
+echo "Looms: <repo>-looms/, next to the repository"
+echo "Source: https://github.com/iloom-ai/iloom-cli"
+ILOOM_INFO
+    install_iloom_cli_script "$bin_dir/.iloom-info.$$" "$bin_dir/iloom-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_iloom_cli_info
+
 # iloom treats this Nix store install as a global npm install, so it would
 # check the npm registry for updates once a day and `il update` would try
 # `npm install -g`. Any other value turns both off; upgrade with
@@ -89,83 +135,6 @@ echo "  il list                 Show active looms"
 echo "  il finish               Validate, merge, and clean up a loom"
 echo "  iloom-info              Show configuration"
 echo ""
-'''
-
-[profile]
-bash = '''
-iloom-info() {
-    echo "iloom Environment Configuration"
-    echo ""
-    echo "Version: $(il --version 2>/dev/null)"
-    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
-    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
-    echo ""
-    echo "Commands:"
-    echo "  il init                 Configure iloom for this repository"
-    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
-    echo "  il spin                 Launch Claude in the current loom"
-    echo "  il list                 Show active looms (--all, --global)"
-    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
-    echo "  il commit               Commit with an issue reference"
-    echo "  il finish               Validate, merge, and clean up a loom"
-    echo "  il telemetry off|on|status  Manage usage telemetry"
-    echo ""
-    echo "Global settings: ~/.config/iloom-ai/settings.json"
-    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
-    echo "Looms: <repo>-looms/, next to the repository"
-    echo "Source: https://github.com/iloom-ai/iloom-cli"
-}
-export -f iloom-info
-'''
-
-zsh = '''
-iloom-info() {
-    echo "iloom Environment Configuration"
-    echo ""
-    echo "Version: $(il --version 2>/dev/null)"
-    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
-    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
-    echo ""
-    echo "Commands:"
-    echo "  il init                 Configure iloom for this repository"
-    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
-    echo "  il spin                 Launch Claude in the current loom"
-    echo "  il list                 Show active looms (--all, --global)"
-    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
-    echo "  il commit               Commit with an issue reference"
-    echo "  il finish               Validate, merge, and clean up a loom"
-    echo "  il telemetry off|on|status  Manage usage telemetry"
-    echo ""
-    echo "Global settings: ~/.config/iloom-ai/settings.json"
-    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
-    echo "Looms: <repo>-looms/, next to the repository"
-    echo "Source: https://github.com/iloom-ai/iloom-cli"
-}
-'''
-
-fish = '''
-function iloom-info
-    echo "iloom Environment Configuration"
-    echo ""
-    echo "Version: "(il --version 2>/dev/null)
-    echo "Telemetry default: $ILOOM_TELEMETRY (ILOOM_TELEMETRY; il telemetry status shows the setting)"
-    echo "Install method: $OVERRIDE_INSTALLATION_METHOD (update checks off; use flox upgrade)"
-    echo ""
-    echo "Commands:"
-    echo "  il init                 Configure iloom for this repository"
-    echo "  il start <issue>        Create a loom (worktree + plan) for an issue"
-    echo "  il spin                 Launch Claude in the current loom"
-    echo "  il list                 Show active looms (--all, --global)"
-    echo "  il plan \"<topic>\"       Plan and decompose an epic into child issues"
-    echo "  il commit               Commit with an issue reference"
-    echo "  il finish               Validate, merge, and clean up a loom"
-    echo "  il telemetry off|on|status  Manage usage telemetry"
-    echo ""
-    echo "Global settings: ~/.config/iloom-ai/settings.json"
-    echo "Project settings: .iloom/settings.json, .iloom/settings.local.json"
-    echo "Looms: <repo>-looms/, next to the repository"
-    echo "Source: https://github.com/iloom-ai/iloom-cli"
-end
 '''
 
 [options]

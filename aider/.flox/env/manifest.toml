@@ -22,6 +22,64 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# aider-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- aider-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_aider_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_aider_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.aider-info.$$" << 'AIDER_INFO'
+#!/usr/bin/env bash
+echo "Aider Environment Configuration"
+echo ""
+echo "API Keys:"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
+[ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
+echo "  Ollama API base: $OLLAMA_API_BASE"
+echo ""
+echo "Settings:"
+echo "  Dark mode: ${AIDER_DARK_MODE}"
+echo "  Auto-commits: ${AIDER_AUTO_COMMITS}"
+echo "  Auto-gitignore: ${AIDER_GITIGNORE}"
+if [ -n "$AIDER_MODEL" ]; then
+    echo "  Model: ${AIDER_MODEL}"
+else
+    echo "  Model: (auto-detect)"
+fi
+echo ""
+echo "Commands:"
+echo "  aider                     Start aider"
+echo "  aider --model <model>     Use specific model"
+echo "  aider --browser           Web UI"
+echo "  aider /help               In-chat help"
+echo ""
+echo "Chat Commands (inside aider):"
+echo "  /add <file>      Add files to chat"
+echo "  /drop <file>     Remove files from chat"
+echo "  /ask <question>  Ask without editing"
+echo "  /run <cmd>       Run shell command"
+echo "  /undo            Revert last commit"
+echo "  /diff            Show changes"
+echo "  /voice           Voice input"
+echo "  /web <url>       Fetch webpage as context"
+AIDER_INFO
+    install_aider_script "$bin_dir/.aider-info.$$" "$bin_dir/aider-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_aider_info
+
 # === AIDER CONFIGURATION ===
 export AIDER_DARK_MODE="${AIDER_DARK_MODE:-true}"
 export AIDER_AUTO_COMMITS="${AIDER_AUTO_COMMITS:-true}"
@@ -82,130 +140,6 @@ echo ""
 unset _has_key
 '''
 
-[profile]
-bash = '''
-aider-info() {
-    echo "Aider Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo "  Ollama API base: $OLLAMA_API_BASE"
-    echo ""
-    echo "Settings:"
-    echo "  Dark mode: ${AIDER_DARK_MODE}"
-    echo "  Auto-commits: ${AIDER_AUTO_COMMITS}"
-    echo "  Auto-gitignore: ${AIDER_GITIGNORE}"
-    if [ -n "$AIDER_MODEL" ]; then
-        echo "  Model: ${AIDER_MODEL}"
-    else
-        echo "  Model: (auto-detect)"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  aider                     Start aider"
-    echo "  aider --model <model>     Use specific model"
-    echo "  aider --browser           Web UI"
-    echo "  aider /help               In-chat help"
-    echo ""
-    echo "Chat Commands (inside aider):"
-    echo "  /add <file>      Add files to chat"
-    echo "  /drop <file>     Remove files from chat"
-    echo "  /ask <question>  Ask without editing"
-    echo "  /run <cmd>       Run shell command"
-    echo "  /undo            Revert last commit"
-    echo "  /diff            Show changes"
-    echo "  /voice           Voice input"
-    echo "  /web <url>       Fetch webpage as context"
-}
-export -f aider-info
-'''
-
-zsh = '''
-aider-info() {
-    echo "Aider Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    [ -n "$ANTHROPIC_API_KEY" ] && echo "  Anthropic: set" || echo "  Anthropic: not set"
-    [ -n "$OPENAI_API_KEY" ] && echo "  OpenAI: set" || echo "  OpenAI: not set"
-    echo "  Ollama API base: $OLLAMA_API_BASE"
-    echo ""
-    echo "Settings:"
-    echo "  Dark mode: ${AIDER_DARK_MODE}"
-    echo "  Auto-commits: ${AIDER_AUTO_COMMITS}"
-    echo "  Auto-gitignore: ${AIDER_GITIGNORE}"
-    if [ -n "$AIDER_MODEL" ]; then
-        echo "  Model: ${AIDER_MODEL}"
-    else
-        echo "  Model: (auto-detect)"
-    fi
-    echo ""
-    echo "Commands:"
-    echo "  aider                     Start aider"
-    echo "  aider --model <model>     Use specific model"
-    echo "  aider --browser           Web UI"
-    echo "  aider /help               In-chat help"
-    echo ""
-    echo "Chat Commands (inside aider):"
-    echo "  /add <file>      Add files to chat"
-    echo "  /drop <file>     Remove files from chat"
-    echo "  /ask <question>  Ask without editing"
-    echo "  /run <cmd>       Run shell command"
-    echo "  /undo            Revert last commit"
-    echo "  /diff            Show changes"
-    echo "  /voice           Voice input"
-    echo "  /web <url>       Fetch webpage as context"
-}
-'''
-
-fish = '''
-function aider-info
-    echo "Aider Environment Configuration"
-    echo ""
-    echo "API Keys:"
-    if test -n "$ANTHROPIC_API_KEY"
-        echo "  Anthropic: set"
-    else
-        echo "  Anthropic: not set"
-    end
-    if test -n "$OPENAI_API_KEY"
-        echo "  OpenAI: set"
-    else
-        echo "  OpenAI: not set"
-    end
-    echo "  Ollama API base: $OLLAMA_API_BASE"
-    echo ""
-    echo "Settings:"
-    echo "  Dark mode: $AIDER_DARK_MODE"
-    echo "  Auto-commits: $AIDER_AUTO_COMMITS"
-    echo "  Auto-gitignore: $AIDER_GITIGNORE"
-    if test -n "$AIDER_MODEL"
-        echo "  Model: $AIDER_MODEL"
-    else
-        echo "  Model: (auto-detect)"
-    end
-    echo ""
-    echo "Commands:"
-    echo "  aider                     Start aider"
-    echo "  aider --model <model>     Use specific model"
-    echo "  aider --browser           Web UI"
-    echo "  aider /help               In-chat help"
-    echo ""
-    echo "Chat Commands (inside aider):"
-    echo "  /add <file>      Add files to chat"
-    echo "  /drop <file>     Remove files from chat"
-    echo "  /ask <question>  Ask without editing"
-    echo "  /run <cmd>       Run shell command"
-    echo "  /undo            Revert last commit"
-    echo "  /diff            Show changes"
-    echo "  /voice           Voice input"
-    echo "  /web <url>       Fetch webpage as context"
-end
-'''
-
-# Uncomment to compose with a local inference backend.
-# After uncommenting, run: flox activate -s
-# Then use: aider --model ollama_chat/<model>
 [include]
 # environments = [
 #   { remote = "flox/ollama" },

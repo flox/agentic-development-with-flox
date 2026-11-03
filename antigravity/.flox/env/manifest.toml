@@ -17,6 +17,53 @@ bat.pkg-path = "bat"
 
 [hook]
 on-activate = '''
+# antigravity-info is a script rather than a [profile] function, so it's written once
+# for every shell and also works in scripts, agents, and
+# `flox activate -- antigravity-info`. It reads the environment when it runs.
+# A script is moved into place only when it changed
+install_antigravity_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+        rm -f "$tmp"
+    else
+        chmod +x "$tmp"
+        mv -f "$tmp" "$dest"
+    fi
+}
+
+setup_antigravity_info() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    mkdir -p "$bin_dir"
+    cat > "$bin_dir/.antigravity-info.$$" << 'ANTIGRAVITY_INFO'
+#!/usr/bin/env bash
+echo "Google Antigravity Environment"
+echo ""
+echo "Commands:"
+echo "  antigravity                Open Antigravity IDE"
+echo "  antigravity <dir>          Open a project directory"
+echo "  antigravity --help         Show CLI options"
+echo ""
+echo "IDE Shortcuts:"
+echo "  Cmd/Ctrl+I       Inline AI command"
+echo "  Manager View     Spawn and monitor parallel agents"
+echo ""
+echo "Agent Configuration:"
+echo "  agents.md         Project-level agent instructions"
+echo "  skills.md         Reusable agent skills"
+echo ""
+echo "Supported Models:"
+echo "  Gemini 3.1 Pro, Gemini 3 Flash"
+echo "  Claude Sonnet 4.6, Claude Opus 4.6"
+echo ""
+echo "Account: Sign in at antigravity.google"
+echo "Docs:    https://antigravity.google/docs"
+ANTIGRAVITY_INFO
+    install_antigravity_script "$bin_dir/.antigravity-info.$$" "$bin_dir/antigravity-info"
+    case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
+}
+
+setup_antigravity_info
+
 echo ""
 echo "Google Antigravity environment ready"
 echo ""
@@ -29,86 +76,6 @@ echo "First run:"
 echo "  Sign in with your Google Account when prompted."
 echo "  Gemini models are available immediately on the free tier."
 echo ""
-'''
-
-[profile]
-bash = '''
-antigravity-info() {
-    echo "Google Antigravity Environment"
-    echo ""
-    echo "Commands:"
-    echo "  antigravity                Open Antigravity IDE"
-    echo "  antigravity <dir>          Open a project directory"
-    echo "  antigravity --help         Show CLI options"
-    echo ""
-    echo "IDE Shortcuts:"
-    echo "  Cmd/Ctrl+I       Inline AI command"
-    echo "  Manager View     Spawn and monitor parallel agents"
-    echo ""
-    echo "Agent Configuration:"
-    echo "  agents.md         Project-level agent instructions"
-    echo "  skills.md         Reusable agent skills"
-    echo ""
-    echo "Supported Models:"
-    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
-    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
-    echo ""
-    echo "Account: Sign in at antigravity.google"
-    echo "Docs:    https://antigravity.google/docs"
-}
-export -f antigravity-info
-'''
-
-zsh = '''
-antigravity-info() {
-    echo "Google Antigravity Environment"
-    echo ""
-    echo "Commands:"
-    echo "  antigravity                Open Antigravity IDE"
-    echo "  antigravity <dir>          Open a project directory"
-    echo "  antigravity --help         Show CLI options"
-    echo ""
-    echo "IDE Shortcuts:"
-    echo "  Cmd/Ctrl+I       Inline AI command"
-    echo "  Manager View     Spawn and monitor parallel agents"
-    echo ""
-    echo "Agent Configuration:"
-    echo "  agents.md         Project-level agent instructions"
-    echo "  skills.md         Reusable agent skills"
-    echo ""
-    echo "Supported Models:"
-    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
-    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
-    echo ""
-    echo "Account: Sign in at antigravity.google"
-    echo "Docs:    https://antigravity.google/docs"
-}
-'''
-
-fish = '''
-function antigravity-info
-    echo "Google Antigravity Environment"
-    echo ""
-    echo "Commands:"
-    echo "  antigravity                Open Antigravity IDE"
-    echo "  antigravity <dir>          Open a project directory"
-    echo "  antigravity --help         Show CLI options"
-    echo ""
-    echo "IDE Shortcuts:"
-    echo "  Cmd/Ctrl+I       Inline AI command"
-    echo "  Manager View     Spawn and monitor parallel agents"
-    echo ""
-    echo "Agent Configuration:"
-    echo "  agents.md         Project-level agent instructions"
-    echo "  skills.md         Reusable agent skills"
-    echo ""
-    echo "Supported Models:"
-    echo "  Gemini 3.1 Pro, Gemini 3 Flash"
-    echo "  Claude Sonnet 4.6, Claude Opus 4.6"
-    echo ""
-    echo "Account: Sign in at antigravity.google"
-    echo "Docs:    https://antigravity.google/docs"
-end
 '''
 
 [options]
