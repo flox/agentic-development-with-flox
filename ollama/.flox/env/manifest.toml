@@ -140,8 +140,9 @@ ollama-health() {
 ollama-health "$@"
 OLLAMA_HEALTH_SCRIPT
     install_ollama_script "$bin_dir/.ollama-health.$$" "$bin_dir/ollama-health"
-    cat > "$bin_dir/.helpf.$$" << 'HELPF_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'HELPF_SCRIPT'
 helpf() {
     local README_FILE="$FLOX_ENV_PROJECT/README.md"
 
@@ -162,6 +163,7 @@ helpf() {
 }
 helpf "$@"
 HELPF_SCRIPT
+    } > "$bin_dir/.helpf.$$"
     install_ollama_script "$bin_dir/.helpf.$$" "$bin_dir/helpf"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

@@ -33,8 +33,9 @@ install_agent_browser_script() {
 setup_agent_browser_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.agent-browser-info.$$" << 'AGENT_BROWSER_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AGENT_BROWSER_INFO'
 echo "agent-browser Environment Configuration"
 echo ""
 if [ "$(uname -s)" = "Darwin" ]; then
@@ -58,6 +59,7 @@ echo ""
 echo "Config: ~/.agent-browser/config.json, ./agent-browser.json"
 echo "Source: https://github.com/vercel-labs/agent-browser"
 AGENT_BROWSER_INFO
+    } > "$bin_dir/.agent-browser-info.$$"
     install_agent_browser_script "$bin_dir/.agent-browser-info.$$" "$bin_dir/agent-browser-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

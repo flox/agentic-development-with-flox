@@ -46,8 +46,9 @@ symphony-start() {
 symphony-start "$@"
 SYMPHONY_START_SCRIPT
     install_symphony_script "$bin_dir/.symphony-start.$$" "$bin_dir/symphony-start"
-    cat > "$bin_dir/.symphony-info.$$" << 'SYMPHONY_INFO_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'SYMPHONY_INFO_SCRIPT'
 symphony-info() {
     echo "Symphony Environment Configuration"
     echo ""
@@ -75,6 +76,7 @@ symphony-info() {
 }
 symphony-info "$@"
 SYMPHONY_INFO_SCRIPT
+    } > "$bin_dir/.symphony-info.$$"
     install_symphony_script "$bin_dir/.symphony-info.$$" "$bin_dir/symphony-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

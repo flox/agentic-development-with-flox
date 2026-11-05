@@ -36,8 +36,9 @@ install_honcho_script() {
 setup_honcho_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.honcho-info.$$" << 'HONCHO_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'HONCHO_INFO'
 honcho_info() {
     local cfg="$HONCHO_CONFIG_DIR/config.toml" health
     echo "Honcho Environment Configuration"
@@ -74,6 +75,7 @@ honcho_info() {
 }
 honcho_info "$@"
 HONCHO_INFO
+    } > "$bin_dir/.honcho-info.$$"
     install_honcho_script "$bin_dir/.honcho-info.$$" "$bin_dir/honcho-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

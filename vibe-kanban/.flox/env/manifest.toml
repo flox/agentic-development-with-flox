@@ -30,8 +30,9 @@ install_vibe_kanban_script() {
 setup_vibe_kanban_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.vibe-kanban-info.$$" << 'VIBE_KANBAN_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'VIBE_KANBAN_INFO'
 echo "Vibe Kanban Environment Configuration"
 echo ""
 echo "Service URL: http://$VIBE_KANBAN_HOST:$VIBE_KANBAN_PORT"
@@ -47,6 +48,7 @@ echo ""
 echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
 echo "Source: https://github.com/BloopAI/vibe-kanban"
 VIBE_KANBAN_INFO
+    } > "$bin_dir/.vibe-kanban-info.$$"
     install_vibe_kanban_script "$bin_dir/.vibe-kanban-info.$$" "$bin_dir/vibe-kanban-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

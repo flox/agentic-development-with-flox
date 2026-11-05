@@ -50,8 +50,9 @@ install_agent_lint_script() {
 setup_agent_lint_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.agent-lint-info.$$" << 'AGENT_LINT_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AGENT_LINT_INFO'
 echo "agent-lint Environment Configuration"
 echo ""
 echo "Tools:"
@@ -92,6 +93,7 @@ echo "  skill-tools route \"<query>\" -s <dir>     Which skill a query would tri
 echo "  skill-validator check <dir>              Structure, links, content, contamination"
 echo "  skill-validator check --skip links <dir> The same, without fetching links"
 AGENT_LINT_INFO
+    } > "$bin_dir/.agent-lint-info.$$"
     install_agent_lint_script "$bin_dir/.agent-lint-info.$$" "$bin_dir/agent-lint-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

@@ -56,8 +56,9 @@ install_basic_memory_launcher() {
 setup_basic_memory_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.basic-memory-info.$$" << 'BASIC_MEMORY_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'BASIC_MEMORY_INFO'
 basic_memory_info() {
     local config="${BASIC_MEMORY_CONFIG_DIR:-}"
     if [ -z "$config" ]; then
@@ -91,6 +92,7 @@ basic_memory_info() {
 }
 basic_memory_info "$@"
 BASIC_MEMORY_INFO
+    } > "$bin_dir/.basic-memory-info.$$"
     install_basic_memory_launcher "$bin_dir/.basic-memory-info.$$" "$bin_dir/basic-memory-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

@@ -98,8 +98,9 @@ setup_serena_launchers
 setup_serena_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.serena-info.$$" << 'SERENA_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'SERENA_INFO'
 echo "Serena Environment Configuration"
 echo ""
 echo "MCP launcher: $FLOX_ENV_CACHE/bin/serena-mcp"
@@ -115,6 +116,7 @@ echo ""
 echo "Config: ~/.serena/serena_config.yml (override the directory with SERENA_HOME)"
 echo "Source: https://github.com/oraios/serena"
 SERENA_INFO
+    } > "$bin_dir/.serena-info.$$"
     install_serena_launcher "$bin_dir/.serena-info.$$" "$bin_dir/serena-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

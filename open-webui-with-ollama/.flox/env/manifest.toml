@@ -47,8 +47,9 @@ install_open_webui_with_ollama_script() {
 setup_open_webui_with_ollama_helpers() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.webui_info.$$" << 'WEBUI_INFO_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'WEBUI_INFO_SCRIPT'
 webui_info() {
   echo "======================================"
   echo "  OpenWebUI Configuration"
@@ -72,6 +73,7 @@ webui_info() {
 }
 webui_info "$@"
 WEBUI_INFO_SCRIPT
+    } > "$bin_dir/.webui_info.$$"
     install_open_webui_with_ollama_script "$bin_dir/.webui_info.$$" "$bin_dir/webui_info"
     cat > "$bin_dir/.webui_status.$$" << 'WEBUI_STATUS_SCRIPT'
 #!/usr/bin/env bash
@@ -81,13 +83,15 @@ webui_status() {
 webui_status "$@"
 WEBUI_STATUS_SCRIPT
     install_open_webui_with_ollama_script "$bin_dir/.webui_status.$$" "$bin_dir/webui_status"
-    cat > "$bin_dir/.webui_logs.$$" << 'WEBUI_LOGS_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'WEBUI_LOGS_SCRIPT'
 webui_logs() {
   tail -f "$FLOX_ENV_CACHE/logs/openwebui.log"
 }
 webui_logs "$@"
 WEBUI_LOGS_SCRIPT
+    } > "$bin_dir/.webui_logs.$$"
     install_open_webui_with_ollama_script "$bin_dir/.webui_logs.$$" "$bin_dir/webui_logs"
     cat > "$bin_dir/.ollama_status.$$" << 'OLLAMA_STATUS_SCRIPT'
 #!/usr/bin/env bash

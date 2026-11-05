@@ -51,8 +51,9 @@ install_catnip_script() {
 setup_catnip_helpers() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.catnip-start.$$" << 'CATNIP_START_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'CATNIP_START_SCRIPT'
 setup_catnip_ssh_keys() {
   local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
   mkdir -p "$catnip_ssh_dir"
@@ -103,9 +104,11 @@ catnip-start() {
 }
 catnip-start "$@"
 CATNIP_START_SCRIPT
+    } > "$bin_dir/.catnip-start.$$"
     install_catnip_script "$bin_dir/.catnip-start.$$" "$bin_dir/catnip-start"
-    cat > "$bin_dir/.catnip-start-dind.$$" << 'CATNIP_START_DIND_SCRIPT'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'CATNIP_START_DIND_SCRIPT'
 setup_catnip_ssh_keys() {
   local catnip_ssh_dir="$FLOX_ENV_CACHE/catnip-ssh"
   mkdir -p "$catnip_ssh_dir"
@@ -154,6 +157,7 @@ catnip-start-dind() {
 }
 catnip-start-dind "$@"
 CATNIP_START_DIND_SCRIPT
+    } > "$bin_dir/.catnip-start-dind.$$"
     install_catnip_script "$bin_dir/.catnip-start-dind.$$" "$bin_dir/catnip-start-dind"
     cat > "$bin_dir/.catnip-info.$$" << 'CATNIP_INFO_SCRIPT'
 #!/usr/bin/env bash

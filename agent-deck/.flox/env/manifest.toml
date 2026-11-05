@@ -31,8 +31,9 @@ install_agent_deck_script() {
 setup_agent_deck_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.agent-deck-info.$$" << 'AGENT_DECK_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'AGENT_DECK_INFO'
 echo "Agent Deck Environment Configuration"
 echo ""
 echo "Web UI: http://$AGENT_DECK_WEB_HOST:$AGENT_DECK_WEB_PORT (flox activate -s)"
@@ -53,6 +54,7 @@ echo "Config: ~/.config/agent-deck/config.toml"
 echo "Data: ~/.local/share/agent-deck"
 echo "Source: https://github.com/asheshgoplani/agent-deck"
 AGENT_DECK_INFO
+    } > "$bin_dir/.agent-deck-info.$$"
     install_agent_deck_script "$bin_dir/.agent-deck-info.$$" "$bin_dir/agent-deck-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }

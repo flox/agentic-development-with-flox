@@ -32,8 +32,9 @@ install_ccusage_script() {
 setup_ccusage_info() {
     local bin_dir="$FLOX_ENV_CACHE/bin"
     mkdir -p "$bin_dir"
-    cat > "$bin_dir/.ccusage-info.$$" << 'CCUSAGE_INFO'
-#!/usr/bin/env bash
+    { echo '#!/usr/bin/env bash'
+      printf 'FLOX_ENV=%q FLOX_ENV_CACHE=%q FLOX_ENV_PROJECT=%q\n' "$FLOX_ENV" "$FLOX_ENV_CACHE" "$FLOX_ENV_PROJECT"
+      cat << 'CCUSAGE_INFO'
 echo "ccusage Environment Configuration"
 echo ""
 echo "Status line launcher: $FLOX_ENV_CACHE/bin/ccusage-statusline"
@@ -57,6 +58,7 @@ echo ""
 echo "Config: .ccusage/ccusage.json, or ccusage.json in ~/.claude or ~/.config/claude"
 echo "Source: https://github.com/ccusage/ccusage"
 CCUSAGE_INFO
+    } > "$bin_dir/.ccusage-info.$$"
     install_ccusage_script "$bin_dir/.ccusage-info.$$" "$bin_dir/ccusage-info"
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }
