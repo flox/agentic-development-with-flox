@@ -107,7 +107,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**agentic-lmstudio**](./agentic-lmstudio) - LM Studio with integrated CLI coding tools (Claude Code, Codex, OpenCode) via `lms-launch`, NVIDIA CUDA and Metal GPU support
 - [**agentic-ollama**](./agentic-ollama) - Ollama with integrated CLI coding tools (Claude Code, Codex, OpenCode, OpenClaw) via `ollama launch`
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
-- [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API **(x86_64-linux only)**
+- [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API, NVIDIA CUDA on Linux and Metal on macOS
 - [**lmstudio**](./lmstudio) - LM Studio local LLM inference server with OpenAI/Anthropic-compatible API, NVIDIA CUDA and Metal GPU support
 - [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama) **(x86_64-linux only)**

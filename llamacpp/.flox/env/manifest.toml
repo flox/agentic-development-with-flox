@@ -3,33 +3,35 @@ version = 1
 
 ## Install Packages --------------------------------------------------
 [install]
+# llama.cpp with CUDA on Linux
 llama-cpp.pkg-path = "flox-cuda/llama-cpp"
-llama-cpp.systems = ["x86_64-linux"]
-llamacpp-flox-runtime.pkg-path = "flox/llamacpp-flox-runtime"
-llamacpp-flox-runtime.pkg-group = "llamacpp-flox-runtime"
-llamacpp-flox-runtime.version = "0.9.2"
-llamacpp-flox-runtime.systems = ["x86_64-linux"]
+llama-cpp.systems = ["x86_64-linux", "aarch64-linux"]
+llama-cpp.pkg-group = "llama-cpp"
+# llama.cpp with Metal on Apple Silicon
+llama-cpp-metal.pkg-path = "llama-cpp"
+llama-cpp-metal.systems = ["aarch64-darwin"]
+llama-cpp-metal.pkg-group = "llama-cpp-metal"
+# hf CLI, for `hf auth login` (gated models) and pre-downloading models
 huggingface-hub.pkg-path = "python312Packages.huggingface-hub"
-#huggingface-hub.outputs = "all"
+
 
 ## Environment Variables ---------------------------------------------
 [vars]
 # All user-tunable vars live in [hook.on-activate] with ${VAR:-default}
 # fallbacks so they can be overridden via environment variables at
-# activation time (e.g., LLAMACPP_MODEL=MyModel flox activate).
+# activation time (e.g., LLAMACPP_MODEL=org/repo:Q4_K_M flox activate -s).
 
 
 ## Activation Hook ---------------------------------------------------
 [hook]
 on-activate = '''
-  # Model
-  export LLAMACPP_MODEL="${LLAMACPP_MODEL:-Phi-4-mini-instruct-Q8_0}"
-  export LLAMACPP_MODEL_ORG="${LLAMACPP_MODEL_ORG:-microsoft}"
-  export LLAMACPP_MODEL_ID="${LLAMACPP_MODEL_ID:-microsoft/Phi-4-mini-instruct-GGUF}"
-  export LLAMACPP_MODEL_FILE="${LLAMACPP_MODEL_FILE:-Phi-4-mini-instruct-Q8_0.gguf}"
-  export LLAMACPP_QUANT="${LLAMACPP_QUANT:-Q8_0}"
-  export LLAMACPP_MODEL_SOURCES="${LLAMACPP_MODEL_SOURCES:-local,hf-cache,hf-hub}"
+  # Model: a Hugging Face GGUF repo as org/repo[:quant], which llama-server
+  # downloads itself on first start (no token needed for public repos; set
+  # HF_TOKEN for gated ones), or a path to a local .gguf file
+  export LLAMACPP_MODEL="${LLAMACPP_MODEL:-unsloth/Phi-4-mini-instruct-GGUF:Q8_0}"
   export LLAMACPP_MODELS_DIR="${LLAMACPP_MODELS_DIR:-$FLOX_ENV_PROJECT/models}"
+  # llama-server keeps Hugging Face downloads here
+  export LLAMA_CACHE="${LLAMA_CACHE:-$LLAMACPP_MODELS_DIR}"
 
   # Server
   export LLAMACPP_HOST="${LLAMACPP_HOST:-0.0.0.0}"
@@ -56,6 +58,7 @@ on-activate = '''
   # Serving
   export LLAMACPP_ALIAS="${LLAMACPP_ALIAS:-}"
   export LLAMACPP_API_KEY="${LLAMACPP_API_KEY:-}"
+  export LLAMACPP_API_KEY_FILE="${LLAMACPP_API_KEY_FILE:-}"
   export LLAMACPP_METRICS="${LLAMACPP_METRICS:-true}"
   export LLAMACPP_JINJA="${LLAMACPP_JINJA:-true}"
   export LLAMACPP_CHAT_TEMPLATE="${LLAMACPP_CHAT_TEMPLATE:-}"
@@ -66,78 +69,91 @@ on-activate = '''
   # Misc
   export LLAMACPP_THREADS="${LLAMACPP_THREADS:-}"
   export LLAMACPP_TIMEOUT="${LLAMACPP_TIMEOUT:-}"
+  # Extra llama-server arguments, split on whitespace
+  export LLAMACPP_EXTRA_ARGS="${LLAMACPP_EXTRA_ARGS:-}"
 
   mkdir -p "$LLAMACPP_MODELS_DIR"
 
-  # ── Download default model from GitHub Releases (first activation) ──
-  _gh_release_model_download() {
-    local _default_model="Phi-4-mini-instruct-Q8_0"
-    # Only run for the default model; user overrides skip this entirely
-    if [[ "$LLAMACPP_MODEL" != "$_default_model" ]]; then
-      return 0
+  # llamacpp-serve builds the llama-server command line from the LLAMACPP_*
+  # variables and runs it; the llamacpp service runs it, and arguments given
+  # to it go to llama-server. It's a script rather than the service command
+  # because process-compose parses $ expressions in service commands and
+  # rejects bash arrays and positional parameters.
+  # A script is moved into place only when it changed
+  install_llamacpp_script() {
+    local tmp="$1" dest="$2"
+    if cmp -s "$tmp" "$dest"; then
+      rm -f "$tmp"
+    else
+      chmod +x "$tmp"
+      mv -f "$tmp" "$dest"
     fi
-
-    local _model_dir="$LLAMACPP_MODELS_DIR/${_default_model}"
-    local _model_file="Phi-4-mini-instruct-Q8_0.gguf"
-
-    # Idempotent: skip if already downloaded
-    if [[ -f "$_model_dir/$_model_file" ]]; then
-      return 0
-    fi
-
-    echo "══════════════════════════════════════════════════════════════"
-    echo "  Downloading ${_default_model} model weights …"
-    echo "  (one-time download, ~3.9 GB from GitHub Releases)"
-    echo "══════════════════════════════════════════════════════════════"
-
-    local _gh_tag="phi-4-mini-instruct-gguf-q8_0-v1.0"
-    local _gh_repo="barstoolbluz/build-hf-models"
-    local _base_url="https://github.com/${_gh_repo}/releases/download/${_gh_tag}"
-    local _parts=( "phi-4-mini-instruct-gguf-q8_0.tar.part-aa"
-                   "phi-4-mini-instruct-gguf-q8_0.tar.part-ab"
-                   "phi-4-mini-instruct-gguf-q8_0.tar.part-ac" )
-    local _checksums_file="phi-4-mini-instruct-gguf-q8_0.sha256sums"
-    local _tmp_dir
-    _tmp_dir="$(mktemp -d "${LLAMACPP_MODELS_DIR}/.dl-${_default_model}.XXXXXX")"
-
-    # Clean up on any failure
-    trap 'rm -rf "$_tmp_dir" "${_staging_dir:-}"; echo "ERROR: model download failed — cleaned up temp files." >&2' ERR
-
-    # Download checksums
-    echo "  Fetching checksums …"
-    curl -fSL --retry 3 -o "$_tmp_dir/$_checksums_file" "$_base_url/$_checksums_file"
-
-    # Download parts sequentially
-    for _part in "${_parts[@]}"; do
-      echo "  Downloading $_part …"
-      curl -fSL --retry 3 -o "$_tmp_dir/$_part" "$_base_url/$_part"
-    done
-
-    # Verify checksums
-    echo "  Verifying checksums …"
-    (cd "$_tmp_dir" && sha256sum -c "$_checksums_file")
-
-    # Extract into staging directory
-    local _staging_dir
-    _staging_dir="$(mktemp -d "${LLAMACPP_MODELS_DIR}/.staging-${_default_model}.XXXXXX")"
-    echo "  Extracting model …"
-    cat "$_tmp_dir"/phi-4-mini-instruct-gguf-q8_0.tar.part-* | tar xf - -C "$_staging_dir"
-
-    # Remove downloaded parts immediately to free disk
-    rm -f "$_tmp_dir"/phi-4-mini-instruct-gguf-q8_0.tar.part-*
-    rm -f "$_tmp_dir/$_checksums_file"
-    rmdir "$_tmp_dir"
-
-    # Atomic swap into final location
-    mv "$_staging_dir" "$_model_dir"
-
-    trap - ERR
-    echo "══════════════════════════════════════════════════════════════"
-    echo "  Model downloaded and verified successfully."
-    echo "  Location: $_model_dir"
-    echo "══════════════════════════════════════════════════════════════"
   }
-  _gh_release_model_download
+  llamacpp_bin_dir="$FLOX_ENV_CACHE/bin"
+  mkdir -p "$llamacpp_bin_dir"
+  cat > "$llamacpp_bin_dir/.llamacpp-serve.$$" << 'LLAMACPP_SERVE_SCRIPT'
+#!/usr/bin/env bash
+llamacpp_truthy() {
+  case "$1" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]|[Oo][Nn]) return 0 ;; *) return 1 ;; esac
+}
+# Prints the flag for a true value, the other one for false, nothing when unset
+llamacpp_toggle() {
+  [ -n "$1" ] || return 0
+  if llamacpp_truthy "$1"; then printf '%s\n' "$2"; else printf '%s\n' "$3"; fi
+}
+
+args=()
+case "$LLAMACPP_MODEL" in
+  "")
+    echo "LLAMACPP_MODEL is empty: set it to org/repo[:quant] or a .gguf path" >&2
+    exit 1
+    ;;
+  *.gguf)
+    model_path="$LLAMACPP_MODEL"
+    [ -f "$model_path" ] || model_path="$LLAMACPP_MODELS_DIR/$LLAMACPP_MODEL"
+    if [ ! -f "$model_path" ]; then
+      echo "GGUF file not found: $LLAMACPP_MODEL (also looked in $LLAMACPP_MODELS_DIR)" >&2
+      exit 1
+    fi
+    args+=(-m "$model_path")
+    ;;
+  *)
+    args+=(-hf "$LLAMACPP_MODEL")
+    ;;
+esac
+
+args+=(--host "$LLAMACPP_HOST" --port "$LLAMACPP_PORT"
+       -ngl "$LLAMACPP_N_GPU_LAYERS" -c "$LLAMACPP_CTX_SIZE" -np "$LLAMACPP_PARALLEL")
+[ -n "$LLAMACPP_BATCH_SIZE" ] && args+=(-b "$LLAMACPP_BATCH_SIZE")
+[ -n "$LLAMACPP_UBATCH_SIZE" ] && args+=(-ub "$LLAMACPP_UBATCH_SIZE")
+[ -n "$LLAMACPP_FLASH_ATTN" ] && args+=(-fa "$(llamacpp_toggle "$LLAMACPP_FLASH_ATTN" on off)")
+[ -n "$LLAMACPP_CONT_BATCHING" ] && args+=("$(llamacpp_toggle "$LLAMACPP_CONT_BATCHING" --cont-batching --no-cont-batching)")
+[ -n "$LLAMACPP_CACHE_TYPE_K" ] && args+=(-ctk "$LLAMACPP_CACHE_TYPE_K")
+[ -n "$LLAMACPP_CACHE_TYPE_V" ] && args+=(-ctv "$LLAMACPP_CACHE_TYPE_V")
+[ -n "$LLAMACPP_SPLIT_MODE" ] && args+=(-sm "$LLAMACPP_SPLIT_MODE")
+[ -n "$LLAMACPP_TENSOR_SPLIT" ] && args+=(-ts "$LLAMACPP_TENSOR_SPLIT")
+[ -n "$LLAMACPP_MAIN_GPU" ] && args+=(-mg "$LLAMACPP_MAIN_GPU")
+[ -n "$LLAMACPP_ALIAS" ] && args+=(-a "$LLAMACPP_ALIAS")
+# The key goes in the environment, not on the command line
+[ -n "$LLAMACPP_API_KEY" ] && export LLAMA_API_KEY="$LLAMACPP_API_KEY"
+[ -n "$LLAMACPP_API_KEY_FILE" ] && args+=(--api-key-file "$LLAMACPP_API_KEY_FILE")
+llamacpp_truthy "$LLAMACPP_METRICS" && args+=(--metrics)
+[ -n "$LLAMACPP_JINJA" ] && args+=("$(llamacpp_toggle "$LLAMACPP_JINJA" --jinja --no-jinja)")
+[ -n "$LLAMACPP_CHAT_TEMPLATE" ] && args+=(--chat-template "$LLAMACPP_CHAT_TEMPLATE")
+llamacpp_truthy "$LLAMACPP_EMBEDDING" && args+=(--embedding)
+[ -n "$LLAMACPP_WEBUI" ] && args+=("$(llamacpp_toggle "$LLAMACPP_WEBUI" --webui --no-webui)")
+[ -n "$LLAMACPP_TIMEOUT" ] && args+=(-to "$LLAMACPP_TIMEOUT")
+[ -n "$LLAMACPP_THREADS" ] && args+=(-t "$LLAMACPP_THREADS")
+[ -n "$LLAMACPP_REASONING_FORMAT" ] && args+=(--reasoning-format "$LLAMACPP_REASONING_FORMAT")
+# shellcheck disable=SC2206
+[ -n "$LLAMACPP_EXTRA_ARGS" ] && args+=($LLAMACPP_EXTRA_ARGS)
+
+echo "llama-server ${args[*]}" >&2
+exec llama-server "${args[@]}" "$@"
+LLAMACPP_SERVE_SCRIPT
+  install_llamacpp_script "$llamacpp_bin_dir/.llamacpp-serve.$$" "$llamacpp_bin_dir/llamacpp-serve"
+  case ":$PATH:" in *":$llamacpp_bin_dir:"*) ;; *) export PATH="$llamacpp_bin_dir:$PATH" ;; esac
+  unset llamacpp_bin_dir
 '''
 
 
@@ -147,7 +163,7 @@ on-activate = '''
 
 ## Services ---------------------------------------------------------
 [services]
-llamacpp.command = "llamacpp-preflight && llamacpp-resolve-model && llamacpp-serve"
+llamacpp.command = '"$FLOX_ENV_CACHE/bin/llamacpp-serve"'
 
 
 ## Include ----------------------------------------------------------
@@ -161,5 +177,7 @@ llamacpp.command = "llamacpp-preflight && llamacpp-resolve-model && llamacpp-ser
 ## Other Environment Options -----------------------------------------
 [options]
 systems = [
+  "aarch64-darwin",
+  "aarch64-linux",
   "x86_64-linux",
 ]
