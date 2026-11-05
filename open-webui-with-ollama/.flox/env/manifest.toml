@@ -1,5 +1,5 @@
 # this is a reproducible   f l o x   environment
-# run on macOS and linux, x86 and arm
+# run on linux, x86 and arm
 version = 1
 
 
@@ -161,8 +161,10 @@ command = '''
 
 
 [options]
+# Linux only. nixpkgs marks open-webui unfree, so no binary cache builds it
+# for any system and every platform compiles it from source on first
+# activation; that build has been tested on Linux, not on macOS
 systems = [
-  "aarch64-darwin",
   "aarch64-linux",
   "x86_64-linux",
 ]

@@ -88,7 +88,7 @@ aider --model ollama_chat/gemma4
 - [**nullclaw**](./nullclaw) - NullClaw ultra-minimal AI assistant in Zig with 50+ providers and 19 channels
 - [**openclaw**](./openclaw) - OpenClaw self-hosted AI assistant/agent
 - [**opencode**](./opencode) - OpenCode AI coding agent with TUI
-- [**openhands**](./openhands) - OpenHands AI-driven software development agent with sandboxed Docker execution
+- [**openhands**](./openhands) - OpenHands AI-driven software development agent with sandboxed Docker execution **(linux only)**
 - [**open-interpreter**](./open-interpreter) - Open Interpreter natural language interface for local code execution
 - [**pi**](./pi) - pi minimal, extensible terminal coding agent with multi-model support
 - [**qwen-code**](./qwen-code) - Qwen code model CLI
@@ -111,8 +111,8 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**lmstudio**](./lmstudio) - LM Studio local LLM inference server with OpenAI/Anthropic-compatible API, NVIDIA CUDA and Metal GPU support
 - [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends **(x86_64-linux only)**
 - [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
-- [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama)
-- [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience
+- [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama) **(x86_64-linux only)**
+- [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience **(linux only)**
 - [**sglang**](./sglang) - Production SGLang inference server with CUDA, multi-GPU tensor parallelism **(x86_64-linux only)**
 - [**vllm**](./vllm) - Production vLLM inference server with CUDA, OpenAI-compatible API **(x86_64-linux only)**
 

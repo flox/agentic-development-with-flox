@@ -7,7 +7,7 @@ AI-driven software development agent. Autonomous coding agents that write code, 
 - **Multi-provider** - Anthropic, OpenAI, Google Gemini, Ollama, AWS Bedrock, Mistral, and any litellm-supported provider
 - **MCP support** - Connect external tool servers via Model Context Protocol
 - **Security** - Confirmation mode with LLM-based or Invariant-based security analysis
-- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
+- **Linux** - x86_64 and aarch64. Not macOS: the macOS build of `flox/openhands` is missing the archive its PyInstaller binary loads, so it fails at startup
 
 ## Quick Start
 
@@ -23,11 +23,7 @@ flox activate
 OpenHands requires Docker for sandboxed code execution:
 
 ```bash
-# Linux
 sudo systemctl start docker
-
-# macOS
-open -a Docker
 ```
 
 ### 3. Set an API Key

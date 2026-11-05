@@ -86,9 +86,7 @@ else
   echo "  WARNING: Docker is not running"
   echo "  OpenHands requires Docker to spawn sandboxed containers."
   echo ""
-  echo "  Start Docker:"
-  echo "    Linux:  sudo systemctl start docker"
-  echo "    macOS:  open -a Docker"
+  echo "  Start Docker: sudo systemctl start docker"
   echo ""
 fi
 
@@ -125,8 +123,9 @@ unset _has_key
 '''
 
 [options]
+# Linux only: the macOS build of flox/openhands is missing the archive its
+# PyInstaller binary loads, so it fails at startup
 systems = [
-  "aarch64-darwin",
   "aarch64-linux",
   "x86_64-linux",
 ]

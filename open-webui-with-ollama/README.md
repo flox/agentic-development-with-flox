@@ -144,10 +144,6 @@ nvidia-smi                    # Should show your GPU
 ollama ps                     # Shows "GPU" under PROCESSOR when running
 ```
 
-### macOS
-
-Uses Metal acceleration automatically on Apple Silicon.
-
 ### Disable GPU
 
 Force CPU-only mode:
@@ -290,7 +286,7 @@ curl http://localhost:8080/api/chat/completions \
 ## Features
 
 - **Composable** - Includes `barstoolbluz/ollama` environment
-- **Cross-platform** - Linux (with CUDA) and macOS support
+- **Linux** - x86_64 and ARM64, with CUDA
 - **Persistent** - Chat history and settings preserved
 - **Secure** - Secret key auto-generated, telemetry disabled
 - **Flexible** - All settings configurable via environment variables
@@ -309,14 +305,17 @@ curl http://localhost:8080/api/chat/completions \
 
 ### Included Packages
 - `open-webui` (pinned version)
-- `ollama-cuda` (Linux) / `ollama` (macOS) - latest from Flox catalog
+- `ollama-cuda` - latest from Flox catalog
 - Ollama environment from `barstoolbluz/ollama`
 - Additional utilities: `bat`, `curl`
 
 ### Supported Platforms
 - Linux x86_64 (with CUDA support)
 - Linux ARM64 (with CUDA support)
-- macOS ARM64 (Apple Silicon)
+
+Not macOS. nixpkgs marks `open-webui` unfree, so no binary cache builds it for
+any system: the first activation compiles it from source on every platform,
+which takes a while. That build has been tested on Linux, not on macOS.
 
 ### Service Configuration
 
