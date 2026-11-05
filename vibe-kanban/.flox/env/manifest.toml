@@ -47,7 +47,7 @@ echo "  flox services status         Check the service"
 echo "  vibe-kanban                  Run in the foreground (random port, opens browser)"
 echo "  vibe-kanban-mcp --mode global  MCP server for managing tasks from an agent"
 echo ""
-echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support (macOS)"
+echo "Data: ~/.local/share/vibe-kanban (Linux), ~/Library/Application Support/ai.bloop.vibe-kanban (macOS)"
 echo "Source: https://github.com/BloopAI/vibe-kanban"
 VIBE_KANBAN_INFO
     } > "$bin_dir/.vibe-kanban-info.$$"

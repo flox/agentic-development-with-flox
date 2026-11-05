@@ -29,7 +29,7 @@ VIBE_KANBAN_HOST=0.0.0.0 flox activate -s      # reachable from other machines
 
 Vibe Kanban has no login of its own; only listen on a non-local address on a network you trust.
 
-The service doesn't open a browser tab when it starts. To have it do so, as `vibe-kanban` does in the foreground:
+On Linux, the service doesn't open a browser tab when it starts. On macOS it opens one every time it starts, whatever `VIBE_KANBAN_OPEN_BROWSER` is set to: Vibe Kanban opens the tab with `/usr/bin/open`, which the environment can't intercept. To have the service open a tab on Linux too, as `vibe-kanban` does in the foreground:
 
 ```bash
 VIBE_KANBAN_OPEN_BROWSER=true flox activate -s
@@ -60,6 +60,31 @@ Change this per agent in the web UI's agent settings.
 
 By default each agent is downloaded with `npx -y <agent>@<version>`. To use an agent from one of this repository's environments instead, set `base_command_override` for that agent's profile (in `profiles.json` in Vibe Kanban's data directory), for example to the full path from `echo "$FLOX_ENV/bin/claude"` inside the claude-code environment.
 
+## Codex on macOS
+
+Vibe Kanban 0.1.44 runs Codex 0.124.0 (`npx -y @openai/codex@0.124.0`), and macOS won't run that build: Apple has revoked the certificate it was signed with, so Codex is killed at launch. The run does nothing but still shows as completed. Linux isn't affected.
+
+Use Codex 0.148.0 instead. It's signed with a current certificate, and it's the newest release that still accepts the requests Vibe Kanban 0.1.44 sends. 0.149.0 and later reject them (``permissionProfile` is no longer supported for `thread/start` ``), so `@latest` doesn't work.
+
+Set the Codex profile's Base Command Override to `npx -y @openai/codex@0.148.0` in the web UI's agent settings, or put this in `profiles.json` in Vibe Kanban's data directory (`~/Library/Application Support/ai.bloop.vibe-kanban` on macOS) and restart the service:
+
+```json
+{
+  "executors": {
+    "CODEX": {
+      "DEFAULT": {
+        "CODEX": {
+          "sandbox": "danger-full-access",
+          "base_command_override": "npx -y @openai/codex@0.148.0"
+        }
+      }
+    }
+  }
+}
+```
+
+Keep the `sandbox` line: an entry in `profiles.json` replaces the default Codex profile instead of adding to it.
+
 ## MCP Server
 
 `vibe-kanban-mcp` lets an agent list, create, and update issues and start workspaces on a running Vibe Kanban. Register it with your agent, e.g. Claude Code:
@@ -82,7 +107,7 @@ The log is also written to `$FLOX_ENV_CACHE/logs/vibe-kanban.log`. The service s
 
 ## Privacy
 
-Vibe Kanban sends anonymous usage analytics by default and connects to `api.vibekanban.com` for its optional cloud features (remote access, sharing). To turn analytics off, stop the service and set `"analytics_enabled": false` in `config.json` in its data directory (`~/.local/share/vibe-kanban` on Linux).
+Vibe Kanban sends anonymous usage analytics by default and connects to `api.vibekanban.com` for its optional cloud features (remote access, sharing). To turn analytics off, stop the service and set `"analytics_enabled": false` in `config.json` in its data directory (`~/.local/share/vibe-kanban` on Linux, `~/Library/Application Support/ai.bloop.vibe-kanban` on macOS).
 
 The Flox catalog lists Vibe Kanban's license as unfree; `flox install` shows a notice, and the environment needs no extra configuration.
 
