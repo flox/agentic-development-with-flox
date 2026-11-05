@@ -9,6 +9,11 @@ jq.pkg-path = "jq"
 jq.pkg-group = "tools"
 bat.pkg-path = "bat"
 bat.pkg-group = "tools"
+# lms-service runs under `#!/usr/bin/env bash` and needs bash 4.4 or newer;
+# without this it gets macOS's /bin/bash 3.2 and fails
+bash.pkg-path = "bashInteractive"
+bash.pkg-group = "bash"
+bash.systems = ["aarch64-darwin"]
 
 [vars]
 # Server configuration - override at activation time

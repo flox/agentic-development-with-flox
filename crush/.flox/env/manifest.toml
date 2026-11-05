@@ -3,7 +3,7 @@ schema-version = "1.11.0"
 
 ## Install Packages --------------------------------------------------
 [install]
-crush.pkg-path = "crush"
+crush.pkg-path = "agent-stacks/crush"
 crush.pkg-group = "crush"
 gum.pkg-path = "gum"
 jq.pkg-path = "jq"

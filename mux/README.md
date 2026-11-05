@@ -39,6 +39,10 @@ mux run -m anthropic:claude-sonnet-4-5 "Fix the failing tests"
 mux run -r worktree "Refactor the auth module"
 ```
 
+On macOS, `mux run` isn't available: the macOS package is the desktop app
+(`mux.app`), which doesn't bundle the `run` command. `mux server`,
+`mux desktop`, and `mux acp` work there.
+
 ### 4. Start the Browser UI
 
 ```bash
@@ -91,7 +95,7 @@ Set in your shell profile or pass at activation time. Mux also reads from `~/.mu
 
 | Command | Description |
 |---------|-------------|
-| `mux run "<prompt>"` | Execute an agent task from CLI |
+| `mux run "<prompt>"` | Execute an agent task from CLI (Linux only) |
 | `mux server` | Start HTTP/WebSocket server for browser UI |
 | `mux desktop` | Launch the desktop application |
 | `mux acp` | Start ACP stdio bridge (Zed, Neovim, JetBrains) |

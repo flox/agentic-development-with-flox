@@ -7,6 +7,12 @@ schema-version = "1.11.0"
 # flox/, not agent-stacks/: agent-stacks/openclaw is older (2026.9.5 vs
 # 2026.10.5) and drops the clawdbot and moltbot commands
 openclaw.pkg-path = "flox/openclaw"
+openclaw.systems = ["aarch64-linux", "x86_64-linux"]
+# flox/openclaw 2026.10.5 has no macOS binary to download; 2026.10.4 does
+openclaw-darwin.pkg-path = "flox/openclaw"
+openclaw-darwin.version = "2026.10.4"
+openclaw-darwin.pkg-group = "openclaw-darwin"
+openclaw-darwin.systems = ["aarch64-darwin"]
 
 
 ## Environment Variables ---------------------------------------------

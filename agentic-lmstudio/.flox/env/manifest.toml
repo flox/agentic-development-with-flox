@@ -15,6 +15,11 @@ curl.outputs = "all"
 jq.pkg-path = "jq"
 jq.pkg-group = "tools"
 jq.outputs = "all"
+# lms-service runs under `#!/usr/bin/env bash` and needs bash 4.4 or newer;
+# without this it gets macOS's /bin/bash 3.2 and fails
+bash.pkg-path = "bashInteractive"
+bash.pkg-group = "bash"
+bash.systems = ["aarch64-darwin"]
 
 # agentic cli tools
 claude-code.pkg-path = "claude-code"

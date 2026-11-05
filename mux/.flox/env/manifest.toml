@@ -62,12 +62,19 @@ echo "Provider config: ~/.mux/providers.jsonc"
 echo "Secrets config:  ~/.mux/secrets.json"
 echo ""
 echo "Commands:"
+if [ "$(uname)" != "Darwin" ]; then
 echo "  mux run \"<prompt>\"         Run agent task (CLI)"
+fi
 echo "  mux server                  Start browser UI"
 echo "  mux desktop                 Launch desktop app"
 echo "  mux acp                     ACP bridge (editor integrations)"
 echo "  flox activate -s            Start browser UI as Flox service"
 echo ""
+if [ "$(uname)" = "Darwin" ]; then
+echo "mux run is not available on macOS: the macOS build is the desktop app,"
+echo "which doesn't bundle the run command."
+exit 0
+fi
 echo "Run options:"
 echo "  -m <model>       Model (e.g. anthropic:claude-sonnet-4-5)"
 echo "  -r <runtime>     Runtime: local, worktree, docker, ssh"
@@ -80,7 +87,24 @@ MUX_INFO
     case ":$PATH:" in *":$bin_dir:"*) ;; *) export PATH="$bin_dir:$PATH" ;; esac
 }
 
+# On macOS flox/mux ships only mux.app, with no bin/mux; put a mux launcher
+# for the app's binary on PATH
+setup_mux_darwin_launcher() {
+    local bin_dir="$FLOX_ENV_CACHE/bin"
+    local app_bin="$FLOX_ENV/Applications/mux.app/Contents/MacOS/mux"
+    if [ "$(uname)" != "Darwin" ] || [ -x "$FLOX_ENV/bin/mux" ] || [ ! -x "$app_bin" ]; then
+        rm -f "$bin_dir/mux"
+        return 0
+    fi
+    cat > "$bin_dir/.mux.$$" << EOF
+#!/usr/bin/env bash
+exec "$app_bin" "\$@"
+EOF
+    install_mux_script "$bin_dir/.mux.$$" "$bin_dir/mux"
+}
+
 setup_mux_info
+setup_mux_darwin_launcher
 
 # === SERVER CONFIGURATION ===
 export MUX_PORT="${MUX_PORT:-3000}"
@@ -118,17 +142,21 @@ if [ "$_has_key" = "0" ]; then
 fi
 
 echo "Commands:"
+if [ "$(uname)" != "Darwin" ]; then
 echo "  mux run \"<prompt>\"         Run an agent task from the CLI"
+fi
 echo "  mux server                  Start the browser UI (port $MUX_PORT)"
 echo "  mux desktop                 Launch the desktop app"
 echo "  mux-info                    Show configuration"
 echo ""
+if [ "$(uname)" != "Darwin" ]; then
 echo "Examples:"
 echo "  mux run \"Add error handling to the API routes\""
 echo "  mux run -m anthropic:claude-sonnet-4-5 \"Fix the failing tests\""
 echo "  mux run -r worktree \"Refactor auth module\"    # Isolated git worktree"
 echo "  flox activate -s                                # Start browser UI as service"
 echo ""
+fi
 
 unset _has_key
 '''
@@ -141,7 +169,10 @@ if [ "$MUX_AUTH" = "false" ]; then
 fi
 
 # Electron needs a display server; use xvfb-run on headless Linux
-if [ "$(uname)" = "Linux" ] && [ -z "$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then
+if [ "$(uname)" = "Darwin" ] && [ -x "$FLOX_ENV/Applications/mux.app/Contents/MacOS/mux" ] && [ ! -x "$FLOX_ENV/bin/mux" ]; then
+  # flox/mux on macOS ships only mux.app, with no bin/mux
+  exec "$FLOX_ENV/Applications/mux.app/Contents/MacOS/mux" server --host "$MUX_HOST" --port "$MUX_PORT" $AUTH_FLAG
+elif [ "$(uname)" = "Linux" ] && [ -z "$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then
   export ELECTRON_DISABLE_GPU=1
   exec xvfb-run --auto-servernum mux server --host "$MUX_HOST" --port "$MUX_PORT" $AUTH_FLAG
 else
