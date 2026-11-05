@@ -1,127 +1,29 @@
-## Flox Environment Manifest -----------------------------------------
-##
-##   _Everything_ you need to know about the _manifest_ is here:
-##
-##   https://flox.dev/docs/reference/command-reference/manifest.toml/
-##
-## -------------------------------------------------------------------
-# Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.11.0"
 
-
-## Install Packages --------------------------------------------------
-##  $ flox install gum  <- puts a package in [install] section below
-##  $ flox search gum   <- search for a package
-##  $ flox show gum     <- show all versions of a package
-## -------------------------------------------------------------------
 [install]
-# Custom-built package (commented out)
-# claude-code-acp.pkg-path = "flox/claude-code-acp"
-# claude-code-acp.systems = ["x86_64-linux"]
+# @agentclientprotocol/claude-agent-acp, the successor to the deprecated
+# @zed-industries/claude-code-acp. It runs its own Claude Code build
+# (CLAUDE_CODE_EXECUTABLE), so nothing else is needed
+claude-agent-acp.pkg-path = "agent-stacks/claude-agent-acp"
 
-# Node.js runtime for npm package installation
-nodejs.pkg-path = "nodejs"
-npm.pkg-path = "nodePackages.npm"
-
-## Environment Variables ---------------------------------------------
-##  ... available for use in the activated environment
-##      as well as [hook], [profile] scripts and [services] below.
-## -------------------------------------------------------------------
-[vars]
-# ANTHROPIC_API_KEY set via environment or ~/.config/claude-code-acp/
-
-
-## Activation Hook ---------------------------------------------------
-##  ... run by _bash_ shell when you run 'flox activate'.
-## -------------------------------------------------------------------
 [hook]
 on-activate = '''
-# Set npm prefix to writable location
-export NPM_CONFIG_PREFIX="$FLOX_ENV_CACHE/npm-global"
-export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
-
-# Install claude-code-acp if not already installed
-if [ ! -f "$NPM_CONFIG_PREFIX/bin/claude-code-acp" ]; then
-  echo "Installing @zed-industries/claude-code-acp..."
-  npm install -g @zed-industries/claude-code-acp --quiet
-fi
-
 echo ""
-echo "Claude Code ACP - Agent Client Protocol Adapter"
+echo "Claude Agent ACP - Agent Client Protocol adapter for Claude Code"
 echo ""
-
-# API key check
-if [ -z "$ANTHROPIC_API_KEY" ]; then
-  echo "Set API key: export ANTHROPIC_API_KEY=your-key-here"
+if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+  echo "Sign in: export ANTHROPIC_API_KEY=..., or log in to Claude Code once (claude /login)"
   echo ""
 fi
-
-echo "Usage:"
-echo "  ANTHROPIC_API_KEY=sk-... claude-code-acp   # Start ACP server"
-echo ""
-echo "ACP Clients: Zed, Neovim, Emacs, marimo"
-echo "Documentation: https://github.com/agentclientprotocol/claude-agent-acp"
+echo "An ACP client (Zed, Neovim, Emacs, marimo, ...) starts the adapter itself."
+echo "Point it at:"
+echo "  $FLOX_ENV/bin/claude-agent-acp"
 echo ""
 '''
 
-
-## Profile script ----------------------------------------------------
-## ... sourced by _your shell_ when you run 'flox activate'.
-## -------------------------------------------------------------------
-[profile]
-# common = '''
-#   gum style \
-#   --foreground 212 --border-foreground 212 --border double \
-#   --align center --width 50 --margin "1 2" --padding "2 4" \
-#     $INTRO_MESSAGE
-# '''
-## Shell-specific customizations such as setting aliases go here:
-# bash = ...
-# zsh  = ...
-# fish = ...
-
-
-## Services ---------------------------------------------------------
-##  $ flox services start             <- Starts all services
-##  $ flox services status            <- Status of running services
-##  $ flox activate --start-services  <- Activates & starts all
-## ------------------------------------------------------------------
-[services]
-# claude-code-acp runs as user-managed process after npm install -g
-# Start manually: ANTHROPIC_API_KEY=sk-... claude-code-acp
-
-
-## Include ----------------------------------------------------------
-## ... environments to create a composed environment
-## ------------------------------------------------------------------
-[include]
-# environments = [
-#     { dir = "../common" }
-# ]
-
-
-## Build and publish your own packages ------------------------------
-##  $ flox build
-##  $ flox publish
-## ------------------------------------------------------------------
-[build]
-# [build.myproject]
-# description = "The coolest project ever"
-# version = "0.0.1"
-# command = """
-#   mkdir -p $out/bin
-#   cargo build --release
-#   cp target/release/myproject $out/bin/myproject
-# """
-
-
-## Other Environment Options -----------------------------------------
 [options]
-# Systems that environment is compatible with
 systems = [
   "aarch64-darwin",
   "aarch64-linux",
   "x86_64-linux",
 ]
-# Uncomment to disable CUDA detection.
-# cuda-detection = false

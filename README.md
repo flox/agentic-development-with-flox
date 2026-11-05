@@ -145,7 +145,7 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 ### MCP and Integration
 
 - [**basic-memory**](./basic-memory) - Local-first agent memory: Markdown notes, knowledge graph, and semantic search over MCP
-- [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code
+- [**claude-code-acp**](./claude-code-acp) - Agent Client Protocol adapter for Claude Code (`claude-agent-acp`), for Zed, Neovim, Emacs, and other ACP clients
 - [**codex-acp**](./codex-acp) - Agent Client Protocol adapter for OpenAI Codex
 - [**honcho**](./honcho) - Self-hosted agent memory server (Plastic Labs): API, background reasoning worker, and Python SDK, with a private PostgreSQL + pgvector as Flox services
 - [**mcphost**](./mcphost) - CLI host for LLM interaction with external tools via Model Context Protocol

@@ -1,118 +1,56 @@
-# Flox Environment for Claude Code ACP
+# Claude Agent ACP
 
-A Flox environment for [Claude Code ACP](https://github.com/agentclientprotocol/claude-agent-acp), an Agent Client Protocol adapter that bridges Claude Code capabilities with ACP-compatible development environments.
+Use Claude Code from editors and tools that speak the [Agent Client Protocol](https://agentclientprotocol.com) (ACP), such as Zed, Neovim, Emacs, and marimo. This environment provides [`claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp), the ACP adapter for Claude Code built on the Claude Agent SDK.
 
-## Overview
+- **Ready to run** - Installs a prebuilt `claude-agent-acp` from the Flox catalog, with its own Claude Code; no Node.js or npm install
+- **Tool calls with permission requests** - Claude asks your editor before it runs a command or edits a file
+- **Editor features** - @-mentions, images, edit review, TODO lists, terminals, slash commands, and your client's MCP servers
+- **Cross-platform** - Linux (x86_64, aarch64), macOS (Apple Silicon)
 
-Claude Code ACP implements the Agent Client Protocol using the official Claude Code SDK, enabling AI-powered code assistance across multiple editors and development tools beyond platform-specific integrations.
+The adapter used to be published as `@zed-industries/claude-code-acp`, with a `claude-code-acp` command. That package is deprecated; this environment now installs its successor, and the command is `claude-agent-acp`.
 
-## Included Tools
+## Quick Start
 
-The environment provides:
-
-- Node.js runtime
-- npm package manager
-
-The adapter itself is installed via npm: `@zed-industries/claude-code-acp`
-
-## Prerequisites
-
-- [Flox](https://flox.dev/get) installed
-- Anthropic API key
-
-## Installation & Activation
+### 1. Get the Adapter's Path
 
 ```bash
-# Clone the repository
-git clone https://github.com/barstoolbluz/agentic-development-with-flox
-cd agentic-development-with-flox/claude-code-acp
-
-# Activate the environment
+cd claude-code-acp
 flox activate
-
-# Install Claude Code ACP globally
-npm install -g @zed-industries/claude-code-acp
+echo "$FLOX_ENV/bin/claude-agent-acp"
 ```
 
-## Configuration
+`$FLOX_ENV` is the environment's stable path, so the path stays the same when the environment is upgraded.
 
-The adapter requires an Anthropic API key. Configure via:
+### 2. Point Your Editor at It
 
-**Environment variable:**
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
+Your ACP client starts the adapter itself and talks to it over stdin and stdout. In the client's agent settings, add a custom agent whose command is the path from step 1, with no arguments. The client runs that path directly, not through `flox activate`, and the adapter needs nothing else from the environment.
 
-**Configuration directory:**
-```bash
-mkdir -p ~/.config/claude-code-acp
-# Create config file with API key
-```
+### 3. Sign In
 
-Per Flox conventions, credentials reside in `$HOME`, not in the project directory.
+The adapter uses Claude Code's sign-in. Either:
 
-## Usage
+- **Log in to Claude Code once** (`claude /login`, for example from this repository's claude-code environment). The adapter reads the same login.
+- **Use an API key.** Set `ANTHROPIC_API_KEY` in the environment your editor starts agents with, often in the custom agent's `env` setting. Exporting it in the shell where you ran `flox activate` doesn't reach an editor that's already running.
 
-Start the ACP server:
+## Permissions
 
-```bash
-# With environment variable
-ANTHROPIC_API_KEY=sk-ant-... claude-code-acp
+New sessions start in Manual mode: Claude asks before it runs a command or changes a file, and your editor shows the request. Switch modes from the editor (Accept edits, Plan, Auto, and others the adapter offers).
 
-# Or if configured in ~/.config/
-claude-code-acp
-```
+## Using Another Claude Code
 
-## ACP-Compatible Clients
+The adapter runs the Claude Code that's packaged with it. To use a different one, set `CLAUDE_CODE_EXECUTABLE` to its path in the environment your editor starts the adapter with.
 
-Connect the server from:
+## Resources
 
-- **Zed** - Native ACP support
-- **Neovim** - Via ACP plugin
-- **Emacs** - Via ACP mode
-- **marimo** - Notebook integration
+- [claude-agent-acp on GitHub](https://github.com/agentclientprotocol/claude-agent-acp)
+- [Agent Client Protocol](https://agentclientprotocol.com)
+- [Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview)
 
-Refer to client-specific documentation for connection configuration.
+## Support
 
-## Features
+For issues with this Flox environment:
+- Check the main README at the repository root
+- Review the manifest: `.flox/env/manifest.toml`
 
-The adapter provides:
-
-- **Context mentions** - @ symbol for referencing code/files
-- **Image attachments** - Visual context for assistance
-- **Tool invocations** - Execute tools with permission prompts
-- **Following mode** - Real-time assistance
-- **Edit review** - Code change inspection
-- **TODO management** - Task tracking integration
-- **Terminal access** - Interactive and background execution
-- **Slash commands** - Custom command extensions
-- **MCP integration** - Model Context Protocol server support
-
-## System Compatibility
-
-This environment works on:
-- Linux x86_64
-- Linux aarch64 (ARM64)
-- macOS ARM64 (Apple Silicon)
-
-## Upstream
-
-- **Source**: [github.com/agentclientprotocol/claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp)
-- **Package**: `@zed-industries/claude-code-acp` (npm)
-- **Maintainer**: Zed Industries
-- **License**: Apache 2.0
-
-## About Flox
-
-[Flox](https://flox.dev/docs) builds on [Nix](https://github.com/NixOS/nix) to provide:
-
-- **Declarative environments** - Dependencies and configuration in TOML
-- **Reproducibility** - Consistent environments across systems
-- **Package isolation** - No conflicts between project dependencies
-- **Nixpkgs integration** - Access to 150,000+ packages
-
-## License
-
-Claude Code ACP: Apache 2.0 (see upstream repository)
-
-This Flox environment configuration is provided as-is.
+For adapter issues:
+- [claude-agent-acp GitHub Issues](https://github.com/agentclientprotocol/claude-agent-acp/issues)
