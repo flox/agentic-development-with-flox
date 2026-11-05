@@ -109,7 +109,6 @@ Each of these includes a managed service. Use `flox activate -s` to start the se
 - [**comfyui-complete**](./comfyui-complete) - ComfyUI image generation with custom nodes, CUDA/MPS support
 - [**llamacpp**](./llamacpp) - Production llama.cpp inference server for GGUF models with GPU offload and OpenAI-compatible API **(x86_64-linux only)**
 - [**lmstudio**](./lmstudio) - LM Studio local LLM inference server with OpenAI/Anthropic-compatible API, NVIDIA CUDA and Metal GPU support
-- [**nvidia-triton**](./nvidia-triton) - NVIDIA Triton Inference Server with Python, ONNX, vLLM, and TensorRT backends **(x86_64-linux only)**
 - [**ollama**](./ollama) - Headless Ollama environment for local LLM inference with CUDA/GPU support
 - [**open-webui**](./open-webui) - Backend-agnostic Open WebUI frontend for any OpenAI-compatible server (vLLM, SGLang, Triton, llama.cpp, Ollama) **(x86_64-linux only)**
 - [**open-webui-with-ollama**](./open-webui-with-ollama) - Open WebUI bundled with Ollama for a turnkey local LLM chat experience **(linux only)**
