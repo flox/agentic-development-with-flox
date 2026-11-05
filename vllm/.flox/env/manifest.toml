@@ -13,9 +13,9 @@ vllm-flox-runtime.pkg-path = "flox/vllm-flox-runtime"
 vllm-flox-runtime.pkg-group = "vllm-flox-runtime"
 vllm-flox-runtime.version = "0.9.7+54716d4"
 
-# model served from the nix store
-vllm-phi-3-5-mini-instruct-awq.pkg-path = "flox/vllm-phi-3-5-mini-instruct-awq"
-vllm-phi-3-5-mini-instruct-awq.pkg-group = "vllm-phi-3-5-mini-instruct-awq"
+# hf CLI: vllm-resolve-model downloads models from Hugging Face with it
+huggingface-hub.pkg-path = "python313Packages.huggingface-hub"
+huggingface-hub.pkg-group = "huggingface-hub"
 
 # helper tooling
 coreutils.pkg-path = "coreutils"
@@ -27,12 +27,14 @@ curl.pkg-path = "curl"
 
 [hook]
 on-activate = '''
-  # Model
-  export VLLM_MODEL="${VLLM_MODEL:-Phi-3.5-mini-instruct-AWQ}"
-  export VLLM_MODEL_ORG="${VLLM_MODEL_ORG:-microsoft}"
-  export VLLM_MODEL_SOURCES="${VLLM_MODEL_SOURCES:-flox,local,hf-cache,hf-hub}"
+  # Model: Qwen/Qwen2.5-1.5B-Instruct-AWQ (Apache-2.0, not gated), downloaded
+  # from Hugging Face into $VLLM_MODELS_DIR on first start. Public models
+  # need no token; set HF_TOKEN for gated ones
+  export VLLM_MODEL="${VLLM_MODEL:-Qwen2.5-1.5B-Instruct-AWQ}"
+  export VLLM_MODEL_ORG="${VLLM_MODEL_ORG:-Qwen}"
+  export VLLM_MODEL_SOURCES="${VLLM_MODEL_SOURCES:-local,hf-cache,hf-hub}"
   export VLLM_MODELS_DIR="${VLLM_MODELS_DIR:-$FLOX_ENV_PROJECT/models}"
-  export VLLM_SERVED_MODEL_NAME="${VLLM_SERVED_MODEL_NAME:-Phi-3.5-mini-instruct}"
+  export VLLM_SERVED_MODEL_NAME="${VLLM_SERVED_MODEL_NAME:-Qwen2.5-1.5B-Instruct}"
 
   # Server
   export VLLM_HOST="${VLLM_HOST:-0.0.0.0}"

@@ -33,19 +33,17 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-vllm-local-dev" \
   -d '{
-    "model": "Phi-3.5-mini-instruct",
+    "model": "Qwen2.5-1.5B-Instruct",
     "messages": [{"role": "user", "content": "Hello!"}],
     "max_tokens": 256
   }'
 ```
 
-## Examples
+## Models
 
-The `examples/` directory contains self-contained demo scripts that start a vLLM server, run smoke tests (health, models, completions, chat), and shut down cleanly.
+### Default model (Qwen2.5-1.5B-Instruct-AWQ)
 
-### Default model (Phi-3.5-mini-instruct-AWQ)
-
-The default model is `microsoft/Phi-3.5-mini-instruct-AWQ` (~2.2 GB, AWQ 4-bit quantization). It is installed as a Flox package via Nix store-path and resolved via the `flox` source. No download required — the model is available immediately after activation. AWQ 4-bit quantization works on all CUDA GPUs including Tesla T4 (sm75).
+The default model is `Qwen/Qwen2.5-1.5B-Instruct-AWQ` (~1.6 GB, AWQ 4-bit quantization, Apache-2.0). `vllm-resolve-model` downloads it from Hugging Face into `$VLLM_MODELS_DIR` on the first start and reuses it afterwards. It's public and not gated, so no Hugging Face token is needed. AWQ 4-bit quantization works on all CUDA GPUs including Tesla T4 (sm75).
 
 ### Customizing
 
@@ -117,7 +115,7 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-vllm-local-dev" \
   -d '{
-    "model": "Phi-3.5-mini-instruct",
+    "model": "Qwen2.5-1.5B-Instruct",
     "messages": [
       {"role": "system", "content": "You are a helpful assistant."},
       {"role": "user", "content": "Explain TCP in one paragraph."}
@@ -134,7 +132,7 @@ curl --no-buffer http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-vllm-local-dev" \
   -d '{
-    "model": "Phi-3.5-mini-instruct",
+    "model": "Qwen2.5-1.5B-Instruct",
     "messages": [{"role": "user", "content": "Write a haiku about CUDA."}],
     "max_tokens": 64,
     "stream": true
@@ -148,7 +146,7 @@ curl http://127.0.0.1:8000/v1/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-vllm-local-dev" \
   -d '{
-    "model": "Phi-3.5-mini-instruct",
+    "model": "Qwen2.5-1.5B-Instruct",
     "prompt": "The capital of France is",
     "max_tokens": 32
   }'
@@ -183,11 +181,11 @@ VLLM_MAX_MODEL_LEN=16384 VLLM_KV_CACHE_DTYPE=fp8 flox activate --start-services
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VLLM_MODEL` | `Phi-3.5-mini-instruct-AWQ` | Model directory name. Must be a single safe path element (no `/`, `\`, `.`, `..`, or control characters) |
-| `VLLM_MODEL_ORG` | `microsoft` | HuggingFace org. Used to derive the model ID as `$VLLM_MODEL_ORG/$VLLM_MODEL` when `VLLM_MODEL_ID` is not set |
-| `VLLM_MODEL_SOURCES` | `flox,local,hf-cache,hf-hub` | Comma-separated source order for model provisioning. Available sources: `flox`, `local`, `hf-cache`, `r2`, `hf-hub` |
+| `VLLM_MODEL` | `Qwen2.5-1.5B-Instruct-AWQ` | Model directory name. Must be a single safe path element (no `/`, `\`, `.`, `..`, or control characters) |
+| `VLLM_MODEL_ORG` | `Qwen` | HuggingFace org. Used to derive the model ID as `$VLLM_MODEL_ORG/$VLLM_MODEL` when `VLLM_MODEL_ID` is not set |
+| `VLLM_MODEL_SOURCES` | `local,hf-cache,hf-hub` | Comma-separated source order for model provisioning. Available sources: `flox`, `local`, `hf-cache`, `r2`, `hf-hub` |
 | `VLLM_MODELS_DIR` | `$FLOX_ENV_PROJECT/models` | Root directory for model storage and HF cache. Created automatically on activation |
-| `VLLM_SERVED_MODEL_NAME` | `Phi-3.5-mini-instruct` | Model name returned in `/v1/models` responses and used in API requests |
+| `VLLM_SERVED_MODEL_NAME` | `Qwen2.5-1.5B-Instruct` | Model name returned in `/v1/models` responses and used in API requests |
 
 #### Server settings
 
@@ -222,7 +220,7 @@ Searches configured sources in order, validates the model directory, and writes 
 
 ### Source table
 
-Sources are tried in the order specified by `VLLM_MODEL_SOURCES`. The script's internal default is `flox,local,hf-cache,r2,hf-hub`; the manifest sets `flox,local,hf-cache,hf-hub`.
+Sources are tried in the order specified by `VLLM_MODEL_SOURCES`. The script's internal default is `flox,local,hf-cache,r2,hf-hub`; the manifest sets `local,hf-cache,hf-hub`.
 
 | Source | What it checks | Skip condition | Resolution |
 |--------|---------------|----------------|------------|
@@ -246,7 +244,7 @@ Sources are tried in the order specified by `VLLM_MODEL_SOURCES`. The script's i
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VLLM_MODEL_ID` | Derived from `$VLLM_MODEL_ORG/$VLLM_MODEL` | Explicit HuggingFace model ID (`org/name`). When empty, derived from `VLLM_MODEL_ORG` (which must then be set) |
-| `VLLM_MODEL_ORG` | _(none; manifest sets `microsoft`)_ | Org prefix for deriving model ID. Required when `VLLM_MODEL_ID` is empty |
+| `VLLM_MODEL_ORG` | _(none; manifest sets `Qwen`)_ | Org prefix for deriving model ID. Required when `VLLM_MODEL_ID` is empty |
 | `VLLM_MODEL_SOURCES` | `flox,local,hf-cache,r2,hf-hub` | Comma-separated source order |
 | `FLOX_ENV` | _(set by Flox)_ | Flox environment path. Required for `flox` source |
 | `FLOX_ENV_CACHE` | _(set by Flox)_ | Cache directory for env files. Required when `VLLM_MODEL_ENV_FILE` is not set |
@@ -585,6 +583,8 @@ Raw vLLM metrics are always available at `http://127.0.0.1:8000/metrics` without
 
 ## Kubernetes deployment
 
+> **Note:** the manifests in `k8s/` deploy the FloxHub environment `flox/vllm-runtime`, not this directory. That environment still installs the Phi-3.5-mini-instruct-AWQ model as a Flox package and pins it in its lockfile, which is what the Storage notes below describe.
+
 Deploy vLLM to Kubernetes using the Flox "Imageless Kubernetes" (uncontained) pattern. The Flox containerd shim pulls the environment from FloxHub at pod startup, replacing the need for a container image.
 
 ### Prerequisites
@@ -825,10 +825,6 @@ vllm-serve --dry-run     # print the argv and exit without running
 VLLM_LOGGING_LEVEL=DEBUG flox activate --start-services
 ```
 
-### "Casting torch.bfloat16 to torch.float16"
-
-This warning is expected with the shipped model. The base Phi-3.5-mini natively uses bfloat16, but the AWQ-quantized variant (`Phi-3.5-mini-instruct-AWQ`) was re-quantized to float16 to ensure compatibility with the widest range of CUDA hardware — not all GPUs support bfloat16 natively (e.g., Tesla T4 / sm75). The static config sets `dtype: float16` to match the quantized weights, so vLLM logs the cast from the model's declared bfloat16 to the requested float16. This is harmless and correct for AWQ models.
-
 ## File structure
 
 ```
@@ -837,7 +833,6 @@ vllm-runtime/
   .flox/cache/vllm-config.yaml  # vLLM server config (auto-copied from package on first run)
   k8s/                       # Kubernetes manifests (Flox uncontained pattern)
   models/                    # Model cache (created on activation)
-  examples/                  # Demo scripts (flox-bundled and HF-cached models)
   README.md                  # This file
 ```
 
